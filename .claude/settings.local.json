@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ipconfig)",
+      "Bash(./gradlew :androidApp:assembleDebug --console=plain)",
+      "Bash(./gradlew :shared:printSourceSets --console=plain)",
+      "Bash(./gradlew :shared:compileKotlinWasmJs :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 :webApp:compileKotlinWasmJs --console=plain)",
+      "Bash(xargs grep -l \"KtorNetworkFetcherFactory\\\\|class Ktor\")",
+      "Bash(unzip -o -q \"/c/Users/dkadi/.gradle/caches/modules-2/files-2.1/io.coil-kt.coil3/coil/3.1.0/c2af7936d411323b170a0cffc5ce766e27d9a2c2/coil-3.1.0-sources.jar\")",
+      "Bash(./gradlew :androidApp:assembleDebug :shared:compileKotlinWasmJs :webApp:compileKotlinWasmJs :shared:compileKotlinIosArm64 --console=plain)",
+      "Bash(curl -s -m 3 http://192.168.1.113:8000/)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(curl -s -m 3 http://192.168.1.113:8000/katalog)",
+      "Bash(curl -s -m 3 -D - -o /dev/null http://192.168.1.113:8000/katalog)",
+      "Bash(curl -s -m 3 -D - -o /dev/null -H \"Origin: http://localhost:8080\" http://192.168.1.113:8000/katalog)",
+      "Bash(curl -s -m 3 -D - -o /dev/null -X OPTIONS -H \"Origin: http://localhost:8080\" -H \"Access-Control-Request-Method: GET\" http://192.168.1.113:8000/katalog)",
+      "Bash(curl *)",
+      "Bash(netstat -ano)",
+      "Bash(powershell -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\\\"name='python.exe'\\\\\" | Select-Object ProcessId,CommandLine | Format-List\")",
+      "Bash(powershell -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\\\"name='python.exe'\\\\\" | Select-Object ProcessId,CreationDate,CommandLine | Format-List\" 2>/dev/null)",
+      "Bash(/c/vibecoding/KuzeyKapisi/.venv/Scripts/python.exe *)",
+      "Bash(powershell -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\\\"name='python.exe'\\\\\" | Select-Object ProcessId,CreationDate,CommandLine | Format-List\")",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 1544,19116 -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Get-CimInstance Win32_Process -Filter \\\\\"name='python.exe'\\\\\" | Select-Object ProcessId,CommandLine\")",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 25360,15464 -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1; netstat -ano | Select-String ':8000'\")",
+      "Bash(./gradlew :shared:compileKotlinWasmJs --console=plain)",
+      "Bash(./gradlew tasks *)",
+      "Bash(./gradlew :shared:compileAndroidMain --console=plain)",
+      "Bash(./gradlew :shared:compileKotlinIosSimulatorArm64 --console=plain)"
+    ]
+  }
+}
