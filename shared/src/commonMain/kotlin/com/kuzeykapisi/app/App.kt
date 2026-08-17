@@ -21,11 +21,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
@@ -71,6 +74,12 @@ private val CHAT_GENIS_EKRAN_ESIGI = 600.dp
 /** Geniş ekranda sohbet panelinin sabit genişliği. */
 private val CHAT_PANEL_GENISLIGI = 400.dp
 
+// BackHandler, CMP 1.11'de @ExperimentalComposeUiApi ve "NavigationEventHandler
+// kullanın" diye @Deprecated işaretli. Yerine gelen navigationevent-compose
+// paketinin bu sürümde yalnızca -android varyantı çözülüyor (wasm/iOS yok), bu
+// yüzden şimdilik CMP'nin kendi sağladığı BackHandler kullanılıyor.
+@OptIn(ExperimentalComposeUiApi::class)
+@Suppress("DEPRECATION")
 @Composable
 fun App() {
     remember {
@@ -79,9 +88,17 @@ fun App() {
         Unit
     }
     val repo = remember { KuzeyRepository(ApiService()) }
-    var screen by remember { mutableStateOf<Screen>(Screen.Home) }
+    // Ekran geçmişi bir yığın olarak tutulur: yeni ekrana geçişte push, geri
+    // gidişte pop. Böylece geri adımı her zaman SADECE bir üst seviyeye çıkar.
+    val ekranYigini = remember { mutableStateListOf<Screen>(Screen.Home) }
+    val screen = ekranYigini.last()
     var aktifBot by remember { mutableStateOf<BotRef?>(null) }
     var dialogTuru by remember { mutableStateOf(DialogTuru.YOK) }
+
+    val git: (Screen) -> Unit = { hedef -> ekranYigini.add(hedef) }
+    val geriGit: () -> Unit = {
+        if (ekranYigini.size > 1) ekranYigini.removeAt(ekranYigini.lastIndex)
+    }
 
     KuzeyKapisiTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -95,12 +112,12 @@ fun App() {
                     painter = painterResource(Res.drawable.sinop_arkaplan),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().blur(8.dp),
+                    modifier = Modifier.fillMaxSize().blur(7.dp),
                 )
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Kagit.copy(alpha = 0.90f)),
+                        .background(Kagit.copy(alpha = 0.85f)),
                 )
 
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -113,18 +130,20 @@ fun App() {
                             when (val s = screen) {
                                 is Screen.Home -> HomeScreen(
                                     onKartTiklandi = { kart ->
-                                        screen = when (kart.type) {
-                                            MainCardType.SUBMENU -> Screen.SubMenu(kart)
-                                            MainCardType.WIP -> Screen.Wip
-                                        }
+                                        git(
+                                            when (kart.type) {
+                                                MainCardType.SUBMENU -> Screen.SubMenu(kart)
+                                                MainCardType.WIP -> Screen.Wip
+                                            }
+                                        )
                                     },
                                     modifier = Modifier.fillMaxSize(),
                                 )
                                 is Screen.SubMenu -> SubMenuScreen(
                                     mainCard = s.mainCard,
-                                    onGeri = { screen = Screen.Home },
+                                    onGeri = geriGit,
                                     onSubTiklandi = { sub: SubCard ->
-                                        screen = Screen.BotList(kategori = sub.kategori, baslik = sub.ad)
+                                        git(Screen.BotList(kategori = sub.kategori, baslik = sub.ad))
                                     },
                                     modifier = Modifier.fillMaxSize(),
                                 )
@@ -132,14 +151,14 @@ fun App() {
                                     repo = repo,
                                     kategori = s.kategori,
                                     baslik = s.baslik,
-                                    onGeri = { screen = Screen.Home },
+                                    onGeri = geriGit,
                                     onBotTiklandi = { oge: KatalogOge ->
                                         aktifBot = BotRef(kategori = s.kategori, kod = oge.kod)
                                     },
                                     modifier = Modifier.fillMaxSize(),
                                 )
                                 is Screen.Wip -> WipScreen(
-                                    onGeri = { screen = Screen.Home },
+                                    onGeri = geriGit,
                                     modifier = Modifier.fillMaxSize(),
                                 )
                             }
@@ -158,6 +177,14 @@ fun App() {
                 var sonBot by remember { mutableStateOf<BotRef?>(null) }
                 LaunchedEffect(aktifBot) { aktifBot?.let { sonBot = it } }
                 val chatAcik = aktifBot != null
+
+                // Sistem geri tuşu/jesti: önce açık sohbeti kapatır, sonra
+                // ekran yığınında bir üst seviyeye çıkar. Home'da ve sohbet
+                // kapalıyken devre dışı kalır ki normal uygulamadan çıkış
+                // davranışı sisteme bırakılsın.
+                BackHandler(enabled = chatAcik || ekranYigini.size > 1) {
+                    if (chatAcik) aktifBot = null else geriGit()
+                }
 
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val genisEkran = maxWidth >= CHAT_GENIS_EKRAN_ESIGI

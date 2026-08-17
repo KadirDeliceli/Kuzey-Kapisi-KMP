@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -36,12 +37,22 @@ private val GENIS_EKRAN_ESIGI = 600.dp
 fun HomeScreen(onKartTiklandi: (MainCard) -> Unit, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
         val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
+        val viewportYuksekligi = maxHeight
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 8.dp),
+                .verticalScroll(rememberScrollState()),
         ) {
+            // Sticky footer: iç kolon en az viewport kadar yüksek olur ve
+            // SpaceBetween ile artan boşluğu içerik ile footer arasına dağıtır.
+            // İçerik kısaysa footer en alta itilir, uzunsa normal akışta kalır.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = viewportYuksekligi),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
             Column(modifier = Modifier.fillMaxWidth().padding(bottom = 28.dp)) {
                 // Üst etiket: harf aralığı açılarak "eyebrow" hissi verilir.
                 Text(
@@ -126,7 +137,9 @@ fun HomeScreen(onKartTiklandi: (MainCard) -> Unit, modifier: Modifier = Modifier
                     }
                 }
             }
-            Footer(modifier = Modifier.fillMaxWidth().padding(top = 24.dp))
+            }
+                Footer(modifier = Modifier.fillMaxWidth().padding(top = 24.dp))
+            }
         }
     }
 }

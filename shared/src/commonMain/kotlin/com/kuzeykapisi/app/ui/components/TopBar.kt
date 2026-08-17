@@ -3,6 +3,7 @@ package com.kuzeykapisi.app.ui.components
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -20,6 +21,11 @@ fun TopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            // Uygulama edge-to-edge çalışıyor (MainActivity'de enableEdgeToEdge
+            // + targetSdk 36 ile zorunlu), bu yüzden durum çubuğu inset'i elle
+            // uygulanır. Web'de bu inset sıfır olduğu için fazladan boşluk
+            // oluşmaz — platform dallanmasına gerek yok.
+            .statusBarsPadding()
             .padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,

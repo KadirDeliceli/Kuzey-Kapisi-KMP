@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -67,10 +70,14 @@ fun ChatSheet(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
     ) {
+        // Başlık çubuğu: dar ekranda panel tam ekran olduğu için durum çubuğu
+        // inset'i burada da uygulanır (edge-to-edge). Bu satır klavyeden
+        // etkilenmez — sabit üst bölge olarak kalır.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary)
+                .statusBarsPadding()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -128,9 +135,15 @@ fun ChatSheet(
             }
         }
 
+        // Girdi satırı: klavye açıldığında yalnızca BU bölge yukarı itilir
+        // (imePadding), böylece başlık çubuğu yerinde kalır ve yazma kutusu
+        // klavyenin hemen üstünde görünür. Klavye kapalıyken gezinme çubuğu
+        // inset'i devreye girer; klavye açıkken ime inset'i onu kapsar.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .imePadding()
+                .navigationBarsPadding()
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
