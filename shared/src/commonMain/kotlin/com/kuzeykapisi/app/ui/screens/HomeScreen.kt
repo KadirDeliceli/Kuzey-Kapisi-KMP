@@ -101,21 +101,33 @@ fun HomeScreen(onKartTiklandi: (MainCard) -> Unit, modifier: Modifier = Modifier
                 )
             }
             if (genisEkran) {
-                Row(
+                // 4 ana kart 2x2 ızgara olarak gösterilir; kart oranı/boyutu
+                // önceki 3'lü tek satırdaki ile aynı kalır (16:9, eşit genişlik).
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    for (kart in MAIN_CARDS) {
-                        CoverCard(
-                            kategori = "kart",
-                            kod = kart.kapak,
-                            baslik = kart.ad,
-                            etiket = kart.altBaslik,
-                            onClick = { onKartTiklandi(kart) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(16f / 9f),
-                        )
+                    for (satir in MAIN_CARDS.chunked(2)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        ) {
+                            for (kart in satir) {
+                                CoverCard(
+                                    kategori = "kart",
+                                    kod = kart.kapak,
+                                    baslik = kart.ad,
+                                    etiket = kart.altBaslik,
+                                    onClick = { onKartTiklandi(kart) },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(16f / 9f),
+                                )
+                            }
+                            if (satir.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             } else {

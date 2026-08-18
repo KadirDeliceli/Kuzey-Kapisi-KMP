@@ -134,6 +134,10 @@ fun App() {
                                             when (kart.type) {
                                                 MainCardType.SUBMENU -> Screen.SubMenu(kart)
                                                 MainCardType.WIP -> Screen.Wip
+                                                MainCardType.DIRECT -> Screen.BotList(
+                                                    kategori = "tescil",
+                                                    baslik = kart.ad,
+                                                )
                                             }
                                         )
                                     },
