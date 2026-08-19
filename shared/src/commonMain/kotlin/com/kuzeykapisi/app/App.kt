@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Surface
@@ -42,12 +43,14 @@ import com.kuzeykapisi.app.domain.MainCardType
 import com.kuzeykapisi.app.domain.SubCard
 import com.kuzeykapisi.app.ui.components.BIZ_KIMIZ_METNI
 import com.kuzeykapisi.app.ui.components.ChatSheet
+import com.kuzeykapisi.app.ui.components.Footer
 import com.kuzeykapisi.app.ui.components.InfoDialog
 import com.kuzeykapisi.app.ui.components.PROJE_HAKKINDA_METNI
 import com.kuzeykapisi.app.ui.components.TopBar
 import com.kuzeykapisi.app.ui.kurulumYapImageLoader
 import com.kuzeykapisi.app.ui.screens.BotListScreen
 import com.kuzeykapisi.app.ui.screens.HomeScreen
+import com.kuzeykapisi.app.ui.screens.RotaScreen
 import com.kuzeykapisi.app.ui.screens.SubMenuScreen
 import com.kuzeykapisi.app.ui.screens.WipScreen
 import com.kuzeykapisi.app.ui.theme.Deniz
@@ -62,6 +65,7 @@ sealed interface Screen {
     data class SubMenu(val mainCard: MainCard) : Screen
     data class BotList(val kategori: String, val baslik: String) : Screen
     data object Wip : Screen
+    data object Rota : Screen
 }
 
 data class BotRef(val kategori: String, val kod: String)
@@ -125,7 +129,10 @@ fun App() {
                         onBizKimizClick = { dialogTuru = DialogTuru.BIZ_KIMIZ },
                         onProjeHakkindaClick = { dialogTuru = DialogTuru.PROJE_HAKKINDA },
                     )
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                    Box(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
                         Box(modifier = Modifier.fillMaxHeight().widthIn(max = 1100.dp)) {
                             when (val s = screen) {
                                 is Screen.Home -> HomeScreen(
@@ -134,6 +141,7 @@ fun App() {
                                             when (kart.type) {
                                                 MainCardType.SUBMENU -> Screen.SubMenu(kart)
                                                 MainCardType.WIP -> Screen.Wip
+                                                MainCardType.ROTA_PLANLAYICI -> Screen.Rota
                                                 MainCardType.DIRECT -> Screen.BotList(
                                                     kategori = "tescil",
                                                     baslik = kart.ad,
@@ -165,9 +173,15 @@ fun App() {
                                     onGeri = geriGit,
                                     modifier = Modifier.fillMaxSize(),
                                 )
+                                is Screen.Rota -> RotaScreen(
+                                    repo = repo,
+                                    onGeri = geriGit,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
                             }
                         }
                     }
+                    Footer(modifier = Modifier.fillMaxWidth())
                 }
 
                 // Sohbet paneli: arkadaki içeriği yerinde bırakan bir overlay

@@ -2,6 +2,7 @@ package com.kuzeykapisi.app.data.repo
 
 import com.kuzeykapisi.app.data.model.Katalog
 import com.kuzeykapisi.app.data.model.OturumBaslatYaniti
+import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.remote.ApiService
 import io.ktor.client.plugins.ClientRequestException
 
@@ -14,6 +15,9 @@ class KuzeyRepository(private val api: ApiService) {
         api.oturumBaslat(kategori, oge)
 
     suspend fun oturumKapat(sessionId: String) = runCatching { api.oturumKapat(sessionId) }
+
+    suspend fun rotaOlustur(enlem: Double, boylam: Double, mesaj: String): RotaYaniti =
+        api.rotaOlustur(enlem, boylam, mesaj)
 
     suspend fun guvenliSohbet(kategori: String, oge: String, sessionId: String, mesaj: String): SohbetSonuc {
         return try {

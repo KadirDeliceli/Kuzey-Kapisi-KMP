@@ -2,7 +2,7 @@ package com.kuzeykapisi.app.domain
 
 data class SubCard(val id: String, val ad: String, val kategori: String, val kapak: String)
 
-enum class MainCardType { SUBMENU, WIP, DIRECT }
+enum class MainCardType { SUBMENU, WIP, DIRECT, ROTA_PLANLAYICI }
 
 data class MainCard(
     val id: String,
@@ -22,6 +22,6 @@ val MAIN_CARDS = listOf(
         SubCard("lezzetler", "Lezzetler", "lezzetler", "lezzetler"),
         SubCard("doga", "Doğa", "doga", "doga"),
     )),
-    MainCard("akilli-rota", "Akıllı Zaman ve Rota Düzenleyici", "Planlayıcı", "akilli-rota", MainCardType.WIP),
+    MainCard("akilli-rota", "Akıllı Zaman ve Rota Düzenleyici", "Planlayıcı", "akilli-rota", MainCardType.ROTA_PLANLAYICI),
     MainCard("tescil", "Tescilli Ürünler", "Sinop'un İmzası", "tescil", MainCardType.DIRECT),
 )

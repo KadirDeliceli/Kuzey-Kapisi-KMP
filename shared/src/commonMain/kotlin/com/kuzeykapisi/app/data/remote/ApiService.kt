@@ -5,6 +5,8 @@ import com.kuzeykapisi.app.data.model.Katalog
 import com.kuzeykapisi.app.data.model.OturumBaslatIstek
 import com.kuzeykapisi.app.data.model.OturumBaslatYaniti
 import com.kuzeykapisi.app.data.model.OturumKapatIstek
+import com.kuzeykapisi.app.data.model.RotaIstek
+import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.model.SohbetIstek
 import com.kuzeykapisi.app.data.model.SohbetYaniti
 import io.ktor.client.HttpClient
@@ -62,6 +64,19 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
             }
         }
         println("[KuzeyKapisi] POST /oturum/kapat ham cevap: $hamCevap")
+    }
+
+    suspend fun rotaOlustur(enlem: Double, boylam: Double, mesaj: String): RotaYaniti {
+        val istek = RotaIstek(enlem, boylam, mesaj)
+        println("[KuzeyKapisi] POST /rota/olustur istek gövdesi: ${apiJson.encodeToString(istek)}")
+        val hamCevap = calVeHamMetniAl {
+            client.post("${Config.BASE_URL}rota/olustur") {
+                contentType(ContentType.Application.Json)
+                setBody(istek)
+            }
+        }
+        println("[KuzeyKapisi] POST /rota/olustur ham cevap: $hamCevap")
+        return apiJson.decodeFromString(hamCevap)
     }
 
     /**
