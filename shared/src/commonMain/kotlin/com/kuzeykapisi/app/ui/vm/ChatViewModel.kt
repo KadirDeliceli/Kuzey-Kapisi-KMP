@@ -48,8 +48,10 @@ class ChatViewModel(
             yaziyor = true,
         )
         scope.launch {
+            println("[KuzeyKapisi] gonder(): guvenliSohbet çağrısı başlatılıyor (sessionId=$sessionId, mesaj=$mesaj)")
             try {
                 val sonuc = repo.guvenliSohbet(kategori, oge, sessionId, mesaj)
+                println("[KuzeyKapisi] gonder(): guvenliSohbet sonucu döndü — sessionId=${sonuc.sessionId}, yenilendi=${sonuc.yenilendi}, cevap=\"${sonuc.cevap}\"")
                 var mesajlar = _state.value.mesajlar
                 if (sonuc.yenilendi) {
                     mesajlar = mesajlar + Mesaj(
@@ -64,6 +66,7 @@ class ChatViewModel(
                     mesajlar = mesajlar,
                     yaziyor = false,
                 )
+                println("[KuzeyKapisi] gonder(): state güncellendi — yeni mesajlar.size=${_state.value.mesajlar.size}")
             } catch (e: Exception) {
                 println("[KuzeyKapisi] /sohbet hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
