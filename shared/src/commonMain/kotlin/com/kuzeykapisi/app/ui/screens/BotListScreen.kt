@@ -66,8 +66,8 @@ fun BotListScreen(
                     val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
                     val hucreMin = if (genisEkran) 230.dp else 140.dp
                     val oran = when {
-                        !genisEkran -> 4f / 3f
                         kategori == "kisiler" -> 3f / 4f
+                        !genisEkran -> 4f / 3f
                         else -> 16f / 9f
                     }
                     LazyVerticalGrid(

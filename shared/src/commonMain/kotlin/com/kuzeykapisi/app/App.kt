@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +42,8 @@ import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.domain.MainCard
 import com.kuzeykapisi.app.domain.MainCardType
 import com.kuzeykapisi.app.domain.SubCard
+import com.kuzeykapisi.app.ui.components.ACILIS_BILGILENDIRME_METNI
+import com.kuzeykapisi.app.ui.components.AdminGirisDialog
 import com.kuzeykapisi.app.ui.components.BIZ_KIMIZ_METNI
 import com.kuzeykapisi.app.ui.components.ChatSheet
 import com.kuzeykapisi.app.ui.components.Footer
@@ -48,14 +51,18 @@ import com.kuzeykapisi.app.ui.components.InfoDialog
 import com.kuzeykapisi.app.ui.components.PROJE_HAKKINDA_METNI
 import com.kuzeykapisi.app.ui.components.TopBar
 import com.kuzeykapisi.app.ui.kurulumYapImageLoader
+import com.kuzeykapisi.app.ui.screens.AdminAnaSayfaScreen
 import com.kuzeykapisi.app.ui.screens.BotListScreen
 import com.kuzeykapisi.app.ui.screens.HomeScreen
+import com.kuzeykapisi.app.ui.screens.PersonaEkleScreen
 import com.kuzeykapisi.app.ui.screens.RotaScreen
+import com.kuzeykapisi.app.ui.screens.RotaYerEkleScreen
 import com.kuzeykapisi.app.ui.screens.SubMenuScreen
 import com.kuzeykapisi.app.ui.screens.WipScreen
 import com.kuzeykapisi.app.ui.theme.Deniz
 import com.kuzeykapisi.app.ui.theme.Kagit
 import com.kuzeykapisi.app.ui.theme.KuzeyKapisiTheme
+import com.kuzeykapisi.app.ui.vm.AdminViewModel
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan
 import org.jetbrains.compose.resources.painterResource
@@ -66,6 +73,9 @@ sealed interface Screen {
     data class BotList(val kategori: String, val baslik: String) : Screen
     data object Wip : Screen
     data object Rota : Screen
+    data object AdminAnaSayfa : Screen
+    data object AdminPersonaEkle : Screen
+    data object AdminRotaYerEkle : Screen
 }
 
 data class BotRef(val kategori: String, val kod: String)
@@ -98,6 +108,14 @@ fun App() {
     val screen = ekranYigini.last()
     var aktifBot by remember { mutableStateOf<BotRef?>(null) }
     var dialogTuru by remember { mutableStateOf(DialogTuru.YOK) }
+    // Açılış bilgilendirme dialog'u: yalnızca uygulama bu oturumda ilk kez
+    // render edildiğinde gösterilir, kart/ekran geçişlerinde tekrar açılmaz.
+    var acilisBilgilendirmeAcik by remember { mutableStateOf(true) }
+
+    // Admin: token yalnızca bellekte tutulur, sade AdminViewModel + StateFlow.
+    val adminVm = remember(repo) { AdminViewModel(repo) }
+    val adminUi by adminVm.state.collectAsState()
+    var adminGirisDialoguAcik by remember { mutableStateOf(false) }
 
     val git: (Screen) -> Unit = { hedef -> ekranYigini.add(hedef) }
     val geriGit: () -> Unit = {
@@ -128,6 +146,9 @@ fun App() {
                     TopBar(
                         onBizKimizClick = { dialogTuru = DialogTuru.BIZ_KIMIZ },
                         onProjeHakkindaClick = { dialogTuru = DialogTuru.PROJE_HAKKINDA },
+                        onAdminIkonClick = {
+                            if (adminUi.token != null) git(Screen.AdminAnaSayfa) else adminGirisDialoguAcik = true
+                        },
                     )
                     Box(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -176,6 +197,34 @@ fun App() {
                                 is Screen.Rota -> RotaScreen(
                                     repo = repo,
                                     onGeri = geriGit,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.AdminAnaSayfa -> AdminAnaSayfaScreen(
+                                    onGeri = geriGit,
+                                    onPersonaEkleTiklandi = { git(Screen.AdminPersonaEkle) },
+                                    onRotaYeriEkleTiklandi = { git(Screen.AdminRotaYerEkle) },
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.AdminPersonaEkle -> PersonaEkleScreen(
+                                    repo = repo,
+                                    token = adminUi.token.orEmpty(),
+                                    onGeri = geriGit,
+                                    onYetkisiz = {
+                                        adminVm.oturumuSifirla()
+                                        geriGit()
+                                        adminGirisDialoguAcik = true
+                                    },
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.AdminRotaYerEkle -> RotaYerEkleScreen(
+                                    repo = repo,
+                                    token = adminUi.token.orEmpty(),
+                                    onGeri = geriGit,
+                                    onYetkisiz = {
+                                        adminVm.oturumuSifirla()
+                                        geriGit()
+                                        adminGirisDialoguAcik = true
+                                    },
                                     modifier = Modifier.fillMaxSize(),
                                 )
                             }
@@ -265,6 +314,27 @@ fun App() {
                         onDismiss = { dialogTuru = DialogTuru.YOK },
                     )
                     DialogTuru.YOK -> {}
+                }
+
+                if (acilisBilgilendirmeAcik) {
+                    InfoDialog(
+                        baslik = "Bilgilendirme",
+                        metin = ACILIS_BILGILENDIRME_METNI,
+                        onaylaMetni = "Anladım",
+                        dismissOnClickOutside = false,
+                        onDismiss = { acilisBilgilendirmeAcik = false },
+                    )
+                }
+
+                if (adminGirisDialoguAcik) {
+                    AdminGirisDialog(
+                        vm = adminVm,
+                        onDismiss = { adminGirisDialoguAcik = false },
+                        onBasarili = {
+                            adminGirisDialoguAcik = false
+                            git(Screen.AdminAnaSayfa)
+                        },
+                    )
                 }
             }
         }

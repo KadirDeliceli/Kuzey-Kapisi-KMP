@@ -4,6 +4,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.window.DialogProperties
 
 const val BIZ_KIMIZ_METNI = "Kuzey Kapısı, Kuzey Anadolu Kalkınma Ajansı (KUZKA) Sinop " +
     "Yatırım Destek Ofisi bünyesinde yürütülen bölgesel bir turizm ve yapay zeka " +
@@ -16,14 +17,25 @@ const val PROJE_HAKKINDA_METNI = "Kuzey Kapısı, Sinop'u dört başlık altınd
     "güzellikler. Her başlık, o konuya özel bir yapay zeka rehberiyle sohbet etme " +
     "imkânı sunar."
 
+const val ACILIS_BILGILENDIRME_METNI = "Buradaki karakterler kurgusaldır ve yapay zeka " +
+    "tarafından üretilmektedir. Yanlış veya eksik bilgi verebilirler. Verdikleri " +
+    "cevaplar kurumumuzun resmi görüşünü yansıtmaz."
+
 @Composable
-fun InfoDialog(baslik: String, metin: String, onDismiss: () -> Unit) {
+fun InfoDialog(
+    baslik: String,
+    metin: String,
+    onDismiss: () -> Unit,
+    onaylaMetni: String = "Kapat",
+    dismissOnClickOutside: Boolean = true,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(baslik) },
         text = { Text(metin) },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Kapat") }
+            TextButton(onClick = onDismiss) { Text(onaylaMetni) }
         },
+        properties = DialogProperties(dismissOnClickOutside = dismissOnClickOutside),
     )
 }
