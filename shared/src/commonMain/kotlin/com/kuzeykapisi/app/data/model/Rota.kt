@@ -4,7 +4,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class RotaIstek(val enlem: Double, val boylam: Double, val mesaj: String)
+data class RotaIstek(
+    val enlem: Double,
+    val boylam: Double,
+    @SerialName("sure_saat") val sureSaat: Int,
+    val turler: List<String>,
+)
 
 @Serializable
 data class RotaDurak(
@@ -23,9 +28,16 @@ data class RotaDurak(
 
 @Serializable
 data class RotaYaniti(
+    @SerialName("sure_saat") val sureSaat: Int,
     @SerialName("toplam_sure_dk") val toplamSureDk: Int,
     @SerialName("kullanilan_sure_dk") val kullanilanSureDk: Int,
     @SerialName("tercih_kategorisi") val tercihKategorisi: List<String>,
     val rota: List<RotaDurak>,
     val ozet: String,
 )
+
+@Serializable
+data class VarsayilanRotalarYaniti(val rotalar: List<RotaYaniti>)
+
+@Serializable
+data class KategoriBilgi(val ad: String, val aciklama: String)

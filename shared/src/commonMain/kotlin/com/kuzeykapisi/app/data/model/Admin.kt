@@ -18,7 +18,6 @@ data class RotaYerEkleIstek(
     val enlem: Double,
     val boylam: Double,
     @SerialName("sure_dk") val sureDk: Int,
-    val tur: String,
     val aciklama: String,
 )
 

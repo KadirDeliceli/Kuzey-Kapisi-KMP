@@ -4,6 +4,7 @@ import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.data.model.AdminGirisIstek
 import com.kuzeykapisi.app.data.model.AdminGirisYaniti
 import com.kuzeykapisi.app.data.model.Katalog
+import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.OturumBaslatIstek
 import com.kuzeykapisi.app.data.model.OturumBaslatYaniti
 import com.kuzeykapisi.app.data.model.OturumKapatIstek
@@ -15,6 +16,7 @@ import com.kuzeykapisi.app.data.model.RotaYerEkleYaniti
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.model.SohbetIstek
 import com.kuzeykapisi.app.data.model.SohbetYaniti
+import com.kuzeykapisi.app.data.model.VarsayilanRotalarYaniti
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ResponseException
@@ -22,6 +24,7 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -79,8 +82,27 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         println("[KuzeyKapisi] POST /oturum/kapat ham cevap: $hamCevap")
     }
 
-    suspend fun rotaOlustur(enlem: Double, boylam: Double, mesaj: String): RotaYaniti {
-        val istek = RotaIstek(enlem, boylam, mesaj)
+    suspend fun rotaKategorileriGetir(): Map<String, KategoriBilgi> {
+        println("[KuzeyKapisi] GET /rota/kategoriler isteği gönderiliyor")
+        val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}rota/kategoriler") }
+        println("[KuzeyKapisi] GET /rota/kategoriler ham cevap: $hamCevap")
+        return apiJson.decodeFromString(hamCevap)
+    }
+
+    suspend fun varsayilanRotalariGetir(enlem: Double, boylam: Double): List<RotaYaniti> {
+        println("[KuzeyKapisi] GET /rota/varsayilanlar isteği gönderiliyor (enlem=$enlem, boylam=$boylam)")
+        val hamCevap = calVeHamMetniAl {
+            client.get("${Config.BASE_URL}rota/varsayilanlar") {
+                parameter("enlem", enlem)
+                parameter("boylam", boylam)
+            }
+        }
+        println("[KuzeyKapisi] GET /rota/varsayilanlar ham cevap: $hamCevap")
+        return apiJson.decodeFromString<VarsayilanRotalarYaniti>(hamCevap).rotalar
+    }
+
+    suspend fun rotaOlustur(enlem: Double, boylam: Double, sureSaat: Int, turler: List<String>): RotaYaniti {
+        val istek = RotaIstek(enlem, boylam, sureSaat, turler)
         println("[KuzeyKapisi] POST /rota/olustur istek gövdesi: ${apiJson.encodeToString(istek)}")
         val hamCevap = calVeHamMetniAl {
             client.post("${Config.BASE_URL}rota/olustur") {

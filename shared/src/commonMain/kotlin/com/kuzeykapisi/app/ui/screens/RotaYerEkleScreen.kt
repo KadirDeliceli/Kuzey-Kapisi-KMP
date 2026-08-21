@@ -91,15 +91,6 @@ fun RotaYerEkleScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = ui.tur,
-            onValueChange = { vm.turDegisti(it) },
-            label = { Text("Tür") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
             value = ui.aciklama,
             onValueChange = { vm.aciklamaDegisti(it) },
             label = { Text("Açıklama") },

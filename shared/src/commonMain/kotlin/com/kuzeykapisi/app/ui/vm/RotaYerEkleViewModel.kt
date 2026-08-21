@@ -16,7 +16,6 @@ data class RotaYerEkleUiState(
     val enlem: String = "",
     val boylam: String = "",
     val sureDk: String = "",
-    val tur: String = "",
     val aciklama: String = "",
     val kaydediliyor: Boolean = false,
     val genelHata: String? = null,
@@ -33,7 +32,6 @@ class RotaYerEkleViewModel(private val repo: KuzeyRepository) {
     fun enlemDegisti(v: String) { _state.value = _state.value.copy(enlem = v) }
     fun boylamDegisti(v: String) { _state.value = _state.value.copy(boylam = v) }
     fun sureDkDegisti(v: String) { _state.value = _state.value.copy(sureDk = v) }
-    fun turDegisti(v: String) { _state.value = _state.value.copy(tur = v) }
     fun aciklamaDegisti(v: String) { _state.value = _state.value.copy(aciklama = v) }
 
     fun kaydet(token: String) {
@@ -41,8 +39,8 @@ class RotaYerEkleViewModel(private val repo: KuzeyRepository) {
         val enlem = s.enlem.trim().replace(',', '.').toDoubleOrNull()
         val boylam = s.boylam.trim().replace(',', '.').toDoubleOrNull()
         val sureDk = s.sureDk.trim().toIntOrNull()
-        if (s.ad.isBlank() || s.tur.isBlank() || s.aciklama.isBlank()) {
-            _state.value = s.copy(genelHata = "'Ad', 'Tür' ve 'Açıklama' alanları boş olamaz.")
+        if (s.ad.isBlank() || s.aciklama.isBlank()) {
+            _state.value = s.copy(genelHata = "'Ad' ve 'Açıklama' alanları boş olamaz.")
             return
         }
         if (enlem == null || boylam == null) {
@@ -63,7 +61,6 @@ class RotaYerEkleViewModel(private val repo: KuzeyRepository) {
                         enlem = enlem,
                         boylam = boylam,
                         sureDk = sureDk,
-                        tur = s.tur.trim(),
                         aciklama = s.aciklama.trim(),
                     ),
                 )

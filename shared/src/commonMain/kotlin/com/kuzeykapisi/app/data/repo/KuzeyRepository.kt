@@ -1,6 +1,7 @@
 package com.kuzeykapisi.app.data.repo
 
 import com.kuzeykapisi.app.data.model.Katalog
+import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.OturumBaslatYaniti
 import com.kuzeykapisi.app.data.model.PersonaEkleYaniti
 import com.kuzeykapisi.app.data.model.RotaYaniti
@@ -20,8 +21,13 @@ class KuzeyRepository(private val api: ApiService) {
 
     suspend fun oturumKapat(sessionId: String) = runCatching { api.oturumKapat(sessionId) }
 
-    suspend fun rotaOlustur(enlem: Double, boylam: Double, mesaj: String): RotaYaniti =
-        api.rotaOlustur(enlem, boylam, mesaj)
+    suspend fun rotaKategorileriGetir(): Map<String, KategoriBilgi> = api.rotaKategorileriGetir()
+
+    suspend fun varsayilanRotalariGetir(enlem: Double, boylam: Double): List<RotaYaniti> =
+        api.varsayilanRotalariGetir(enlem, boylam)
+
+    suspend fun rotaOlustur(enlem: Double, boylam: Double, sureSaat: Int, turler: List<String>): RotaYaniti =
+        api.rotaOlustur(enlem, boylam, sureSaat, turler)
 
     suspend fun adminGiris(kullaniciAdi: String, sifre: String): String =
         api.adminGiris(kullaniciAdi, sifre)
