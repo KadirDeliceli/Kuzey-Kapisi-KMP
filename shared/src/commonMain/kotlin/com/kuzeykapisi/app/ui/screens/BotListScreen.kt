@@ -38,6 +38,7 @@ fun BotListScreen(
     baslik: String,
     onGeri: () -> Unit,
     onBotTiklandi: (KatalogOge) -> Unit,
+    onSesTiklandi: (KatalogOge) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val vm = remember(repo) { CatalogViewModel(repo) }
@@ -84,6 +85,8 @@ fun BotListScreen(
                                 baslik = oge.ad,
                                 onClick = { onBotTiklandi(oge) },
                                 modifier = Modifier.aspectRatio(oran),
+                                anlatimVar = oge.anlatimVar,
+                                onSesTiklandi = { onSesTiklandi(oge) },
                             )
                         }
                     }

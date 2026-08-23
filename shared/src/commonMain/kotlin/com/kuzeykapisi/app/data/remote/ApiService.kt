@@ -3,6 +3,7 @@ package com.kuzeykapisi.app.data.remote
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.data.model.AdminGirisIstek
 import com.kuzeykapisi.app.data.model.AdminGirisYaniti
+import com.kuzeykapisi.app.data.model.AnlatimYaniti
 import com.kuzeykapisi.app.data.model.Katalog
 import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.OturumBaslatIstek
@@ -111,6 +112,14 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
             }
         }
         println("[KuzeyKapisi] POST /rota/olustur ham cevap: $hamCevap")
+        return apiJson.decodeFromString(hamCevap)
+    }
+
+    /** 404'te (backend'de anlatım yoksa) ClientRequestException fırlatır — repo katmanı bunu yakalar. */
+    suspend fun anlatimGetir(kategori: String, kod: String): AnlatimYaniti {
+        println("[KuzeyKapisi] GET /anlatim/$kategori/$kod isteği gönderiliyor")
+        val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}anlatim/$kategori/$kod") }
+        println("[KuzeyKapisi] GET /anlatim/$kategori/$kod ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 

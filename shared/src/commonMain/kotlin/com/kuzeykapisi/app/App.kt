@@ -52,6 +52,7 @@ import com.kuzeykapisi.app.ui.components.PROJE_HAKKINDA_METNI
 import com.kuzeykapisi.app.ui.components.TopBar
 import com.kuzeykapisi.app.ui.kurulumYapImageLoader
 import com.kuzeykapisi.app.ui.screens.AdminAnaSayfaScreen
+import com.kuzeykapisi.app.ui.screens.AnlatimEkrani
 import com.kuzeykapisi.app.ui.screens.BotListScreen
 import com.kuzeykapisi.app.ui.screens.HomeScreen
 import com.kuzeykapisi.app.ui.screens.PersonaEkleScreen
@@ -71,6 +72,7 @@ sealed interface Screen {
     data object Home : Screen
     data class SubMenu(val mainCard: MainCard) : Screen
     data class BotList(val kategori: String, val baslik: String) : Screen
+    data class Anlatim(val kategori: String, val kod: String, val baslik: String) : Screen
     data object Wip : Screen
     data object Rota : Screen
     data object AdminAnaSayfa : Screen
@@ -188,6 +190,17 @@ fun App() {
                                     onBotTiklandi = { oge: KatalogOge ->
                                         aktifBot = BotRef(kategori = s.kategori, kod = oge.kod)
                                     },
+                                    onSesTiklandi = { oge: KatalogOge ->
+                                        git(Screen.Anlatim(kategori = s.kategori, kod = oge.kod, baslik = oge.ad))
+                                    },
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.Anlatim -> AnlatimEkrani(
+                                    repo = repo,
+                                    kategori = s.kategori,
+                                    kod = s.kod,
+                                    baslik = s.baslik,
+                                    onGeri = geriGit,
                                     modifier = Modifier.fillMaxSize(),
                                 )
                                 is Screen.Wip -> WipScreen(

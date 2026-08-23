@@ -2,6 +2,7 @@ package com.kuzeykapisi.app.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,8 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -47,6 +55,8 @@ fun CoverCard(
     etiket: String? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    anlatimVar: Boolean = false,
+    onSesTiklandi: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hoverlu by interactionSource.collectIsHoveredAsState()
@@ -103,6 +113,73 @@ fun CoverCard(
                 text = baslik,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onPrimary,
+            )
+        }
+
+        if (anlatimVar && onSesTiklandi != null) {
+            SesIkonuButonu(
+                onClick = onSesTiklandi,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(10.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Kartın sağ alt köşesine bindirilen, yarı saydam yuvarlak zemin üzerinde
+ * hoparlör + ses dalgası ikonu. Kendi `clickable`ı kartın altındaki
+ * `clickable`a "bubble" ETMEZ (Compose'ta iç içe clickable'larda dokunuş
+ * en derindeki tarafından tüketilir) — bu yüzden ikona dokunmak karta
+ * dokunmuş gibi davranmaz.
+ */
+@Composable
+private fun SesIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .background(Color.Black.copy(alpha = 0.45f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.size(18.dp)) {
+            val w = size.width
+            val h = size.height
+            val renk = Color.White
+
+            // Hoparlör gövdesi: kare + sağa açılan huni.
+            val govde = Path().apply {
+                moveTo(0f, h * 0.35f)
+                lineTo(w * 0.35f, h * 0.35f)
+                lineTo(w * 0.62f, h * 0.1f)
+                lineTo(w * 0.62f, h * 0.9f)
+                lineTo(w * 0.35f, h * 0.65f)
+                lineTo(0f, h * 0.65f)
+                close()
+            }
+            drawPath(govde, color = renk)
+
+            // Ses dalgaları: hoparlörün sağında iki iç içe yay.
+            val kalinlik = w * 0.09f
+            drawArc(
+                color = renk,
+                startAngle = -45f,
+                sweepAngle = 90f,
+                useCenter = false,
+                topLeft = Offset(w * 0.55f, h * 0.15f),
+                size = Size(w * 0.35f, h * 0.7f),
+                style = Stroke(width = kalinlik, cap = StrokeCap.Round),
+            )
+            drawArc(
+                color = renk,
+                startAngle = -35f,
+                sweepAngle = 70f,
+                useCenter = false,
+                topLeft = Offset(w * 0.72f, h * 0.25f),
+                size = Size(w * 0.28f, h * 0.5f),
+                style = Stroke(width = kalinlik, cap = StrokeCap.Round),
             )
         }
     }
