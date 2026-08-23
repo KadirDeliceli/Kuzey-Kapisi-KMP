@@ -6,6 +6,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/** Ses hızı/perdesi — kolayca ayarlanabilir sabitler. */
+private const val KONUSMA_HIZI = 0.92
+private const val KONUSMA_PERDESI = 1.0
+
 // window.speechSynthesis native pause/resume destekler — konum kendisi tutulur.
 actual class AnlatimOynatici actual constructor() {
     private val _durum = MutableStateFlow(AnlatimDurumu.DURDU)
@@ -20,6 +24,15 @@ actual class AnlatimOynatici actual constructor() {
     // GÜNCEL jetonsa durum günceller.
     private var etkinJeton = 0
 
+    init {
+        // Ses listesini ERKENDEN ısıt: getVoices() ilk çağrıda boş dönebilir
+        // ve asenkron dolar. Bu nesne, kullanıcı "Dinle"ye basmadan çok önce
+        // (Anlatım ekranı açılırken) oluşturulduğu için liste o ana kadar
+        // hazır olur. Böylece oynat() içinde ASENKRON BEKLEMEYE GİRMEDEN
+        // (bkz. oynat) kaliteli ses seçilebilir.
+        runCatching { jsSesleriIsit() }
+    }
+
     actual fun oynat(metin: String) {
         _hata.value = null
         etkinJeton++
@@ -28,6 +41,8 @@ actual class AnlatimOynatici actual constructor() {
             jsKonusBaslat(
                 metin = metin,
                 dil = "tr-TR",
+                hiz = KONUSMA_HIZI,
+                perde = KONUSMA_PERDESI,
                 bitti = {
                     if (jeton == etkinJeton) _durum.value = AnlatimDurumu.DURDU
                 },
@@ -69,22 +84,93 @@ actual class AnlatimOynatici actual constructor() {
     }
 }
 
+/**
+ * Tarayıcının ses listesini önceden yükletir. getVoices() ilk çağrıda boş
+ * dönebilir; listeyi bir kez okumak yüklemeyi tetikler, "voiceschanged"
+ * dinleyicisi de liste hazır olduğunda tekrar okuyup tarayıcının kendi
+ * önbelleğini sıcak tutar. Burada HİÇBİR ses referansı SAKLANMAZ — Chrome
+ * bazı sürümlerde her getVoices() çağrısında yeni nesneler üretir ve eski
+ * bir referansı utterance.voice'a atamak sessizce başarısız olur; bu yüzden
+ * seçim her zaman oynat() içinde TAZE listeden yapılır.
+ */
+private fun jsSesleriIsit() {
+    js(
+        """
+        (function() {
+            var sentez = window.speechSynthesis;
+            if (!sentez) return;
+            sentez.getVoices();
+            // onvoiceschanged'i EZMEK yerine dinleyici ekle (başka kod da
+            // aynı olayı kullanıyor olabilir).
+            sentez.addEventListener('voiceschanged', function() { sentez.getVoices(); });
+        })();
+        """,
+    )
+}
+
+/**
+ * Konuşmayı başlatır. TAMAMEN SENKRONDUR: speak() çağrısı kullanıcının
+ * dokunma olayıyla AYNI görevde (task) yapılmalıdır — setTimeout /
+ * voiceschanged gibi ertelenmiş bir görevden çağrılırsa Chrome, kullanıcı
+ * etkileşimi bağlamı kaybolduğu için konuşmayı SESSİZCE reddeder (ne ses
+ * duyulur, ne onstart/onerror tetiklenir; utterance kuyrukta asılı kalır).
+ *
+ * Ses seçimi güvenli bir düşüş zinciriyle yapılır:
+ *  1) localService === false (ağ/bulut tabanlı, genelde daha kaliteli) tr sesi,
+ *  2) yoksa herhangi bir tr sesi (masaüstü Chrome/Edge'de çoğu zaman TÜM
+ *     sesler localService === true'dur — bu normaldir),
+ *  3) hiç tr sesi yoksa voice HİÇ ATANMAZ, yalnızca lang verilip tarayıcının
+ *     kendi varsayılanına bırakılır (liste henüz dolmadıysa da bu yola girilir
+ *     ve ses yine de çıkar).
+ */
 private fun jsKonusBaslat(
     metin: String,
     dil: String,
+    hiz: Double,
+    perde: Double,
     bitti: () -> Unit,
     hataOldu: () -> Unit,
 ) {
     js(
         """
         (function() {
-            if (!window.speechSynthesis) { hataOldu(); return; }
-            window.speechSynthesis.cancel();
+            var sentez = window.speechSynthesis;
+            if (!sentez) { hataOldu(); return; }
+
+            // Askıda kalmış bir konuşma yeni speak()'i sessizce engelleyebilir.
+            // cancel() tek başına global "paused" bayrağını TEMİZLEMEZ: daha
+            // önce Duraklat'a basılmışsa sentezleyici duraklatılmış kalır ve
+            // sonraki her speak() sessiz olur — bu yüzden resume() da çağrılır.
+            sentez.cancel();
+            sentez.resume();
+
+            var sesler = sentez.getVoices() || [];
+            var trSesler = [];
+            for (var i = 0; i < sesler.length; i++) {
+                var lang = sesler[i].lang;
+                if (lang && lang.toLowerCase().indexOf('tr') === 0) {
+                    trSesler.push(sesler[i]);
+                }
+            }
+
+            var secilen = null;
+            for (var j = 0; j < trSesler.length; j++) {
+                if (trSesler[j].localService === false) { secilen = trSesler[j]; break; }
+            }
+            if (secilen === null && trSesler.length > 0) { secilen = trSesler[0]; }
+
             var utterance = new SpeechSynthesisUtterance(metin);
-            utterance.lang = dil;
+            if (secilen !== null) {
+                utterance.voice = secilen;
+                utterance.lang = secilen.lang;
+            } else {
+                utterance.lang = dil;
+            }
+            utterance.rate = hiz;
+            utterance.pitch = perde;
             utterance.onend = function() { bitti(); };
             utterance.onerror = function() { hataOldu(); };
-            window.speechSynthesis.speak(utterance);
+            sentez.speak(utterance);
         })();
         """,
     )

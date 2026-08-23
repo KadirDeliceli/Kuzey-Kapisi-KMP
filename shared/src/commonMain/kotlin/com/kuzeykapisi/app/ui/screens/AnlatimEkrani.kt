@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -141,22 +143,56 @@ private fun OynatimKontrolleri(
             dolgu = true,
             onClick = onDuraklat,
         )
-        AnlatimDurumu.DURAKLATILDI -> Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AnlatimButonu(
-                metin = "Kaldığı Yerden Devam Et",
-                simge = AnlatimSimgesi.OYNAT,
-                dolgu = true,
-                onClick = onDevamEt,
-            )
-            AnlatimButonu(
-                metin = "Baştan Başla",
-                simge = AnlatimSimgesi.BASTAN_BASLA,
-                dolgu = false,
-                onClick = onBastanBasla,
-            )
+        AnlatimDurumu.DURAKLATILDI -> BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            // Dar (mobil) ekranlarda iki buton yan yana taşıyor/sıkışıyor —
+            // bu genişlikte alt alta (Column, tam genişlik) dizilir; geniş
+            // ekranda (web/tablet) yan yana (Row, eşit paylaşımlı) kalır.
+            val darEkran = maxWidth < 420.dp
+            if (darEkran) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    AnlatimButonu(
+                        metin = "Devam Et",
+                        simge = AnlatimSimgesi.OYNAT,
+                        dolgu = true,
+                        kompakt = true,
+                        onClick = onDevamEt,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    AnlatimButonu(
+                        metin = "Baştan Başla",
+                        simge = AnlatimSimgesi.BASTAN_BASLA,
+                        dolgu = false,
+                        kompakt = true,
+                        onClick = onBastanBasla,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AnlatimButonu(
+                        metin = "Devam Et",
+                        simge = AnlatimSimgesi.OYNAT,
+                        dolgu = true,
+                        kompakt = true,
+                        onClick = onDevamEt,
+                        modifier = Modifier.weight(1f),
+                    )
+                    AnlatimButonu(
+                        metin = "Baştan Başla",
+                        simge = AnlatimSimgesi.BASTAN_BASLA,
+                        dolgu = false,
+                        kompakt = true,
+                        onClick = onBastanBasla,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
         }
     }
 }
@@ -169,11 +205,15 @@ private fun AnlatimButonu(
     simge: AnlatimSimgesi,
     dolgu: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    kompakt: Boolean = false,
 ) {
     val zeminRenk = MaterialTheme.colorScheme.primary
     val vurguRenk = if (dolgu) MaterialTheme.colorScheme.onPrimary else zeminRenk
+    val yatayBosluk = if (kompakt) 16.dp else 22.dp
+    val dikeyBosluk = if (kompakt) 12.dp else 14.dp
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(28.dp))
             .let {
                 if (dolgu) {
@@ -183,11 +223,11 @@ private fun AnlatimButonu(
                 }
             }
             .clickable(onClick = onClick)
-            .padding(horizontal = 22.dp, vertical = 14.dp),
+            .padding(horizontal = yatayBosluk, vertical = dikeyBosluk),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
-        Canvas(modifier = Modifier.size(18.dp)) {
+        Canvas(modifier = Modifier.size(if (kompakt) 16.dp else 18.dp)) {
             when (simge) {
                 AnlatimSimgesi.DURAKLAT -> {
                     // İki dikey çubuk.
@@ -237,8 +277,10 @@ private fun AnlatimButonu(
         }
         Text(
             text = metin,
-            style = MaterialTheme.typography.titleMedium,
+            style = if (kompakt) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
             color = vurguRenk,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

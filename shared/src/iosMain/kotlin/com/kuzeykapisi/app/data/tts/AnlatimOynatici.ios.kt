@@ -5,10 +5,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import platform.AVFAudio.AVSpeechBoundary
 import platform.AVFAudio.AVSpeechSynthesisVoice
+import platform.AVFAudio.AVSpeechSynthesisVoiceQuality
 import platform.AVFAudio.AVSpeechSynthesizer
 import platform.AVFAudio.AVSpeechSynthesizerDelegateProtocol
 import platform.AVFAudio.AVSpeechUtterance
+import platform.AVFAudio.AVSpeechUtteranceDefaultSpeechRate
 import platform.darwin.NSObject
+
+/** Ses hızı katsayısı/perdesi — kolayca ayarlanabilir sabitler. */
+private const val KONUSMA_HIZI_KATSAYISI = 0.92f
+private const val KONUSMA_PERDESI = 1.0f
 
 actual class AnlatimOynatici actual constructor() {
     private val _durum = MutableStateFlow(AnlatimDurumu.DURDU)
@@ -41,9 +47,25 @@ actual class AnlatimOynatici actual constructor() {
 
     private val synthesizer = AVSpeechSynthesizer().apply { delegate = this@AnlatimOynatici.delegate }
 
+    /**
+     * tr-TR sesleri arasından en iyi kaliteliyi seçer: Premium varsa o,
+     * yoksa Enhanced, o da yoksa Default kalitedeki tr-TR sesi. Kullanıcı
+     * Enhanced/Premium bir ses indirmemişse sistemde yalnızca Default
+     * bulunur — bu normaldir, indirmeyi programatik olarak zorlayamayız.
+     */
+    private val enIyiTrSesi: AVSpeechSynthesisVoice? by lazy {
+        val trSesler = AVSpeechSynthesisVoice.speechVoices()
+            .filterIsInstance<AVSpeechSynthesisVoice>()
+            .filter { it.language.startsWith("tr") }
+        trSesler.firstOrNull { it.quality == AVSpeechSynthesisVoiceQuality.AVSpeechSynthesisVoiceQualityPremium }
+            ?: trSesler.firstOrNull { it.quality == AVSpeechSynthesisVoiceQuality.AVSpeechSynthesisVoiceQualityEnhanced }
+            ?: trSesler.firstOrNull { it.quality == AVSpeechSynthesisVoiceQuality.AVSpeechSynthesisVoiceQualityDefault }
+            ?: AVSpeechSynthesisVoice.voiceWithLanguage("tr-TR")
+    }
+
     actual fun oynat(metin: String) {
         _hata.value = null
-        val ses = AVSpeechSynthesisVoice.voiceWithLanguage("tr-TR")
+        val ses = enIyiTrSesi
         if (ses == null) {
             _hata.value = "Bu cihazda Türkçe seslendirme desteklenmiyor."
             return
@@ -51,7 +73,11 @@ actual class AnlatimOynatici actual constructor() {
         if (synthesizer.speaking || synthesizer.paused) {
             synthesizer.stopSpeaking(atBoundary = AVSpeechBoundary.AVSpeechBoundaryImmediate)
         }
-        val utterance = AVSpeechUtterance(string = metin).apply { voice = ses }
+        val utterance = AVSpeechUtterance(string = metin).apply {
+            voice = ses
+            rate = AVSpeechUtteranceDefaultSpeechRate * KONUSMA_HIZI_KATSAYISI
+            pitchMultiplier = KONUSMA_PERDESI
+        }
         synthesizer.speakUtterance(utterance)
     }
 
