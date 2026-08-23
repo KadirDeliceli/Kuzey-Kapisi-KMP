@@ -50,6 +50,9 @@ import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.GeriButonu
 import com.kuzeykapisi.app.ui.components.KonumIzniEfekti
+import com.kuzeykapisi.app.ui.components.RotaHaritasiWebView
+import com.kuzeykapisi.app.ui.components.rotaHaritasiHtmlOlustur
+import com.kuzeykapisi.app.ui.components.tumRotaGoogleMapsUrl
 import com.kuzeykapisi.app.ui.vm.RotaUiState
 import com.kuzeykapisi.app.ui.vm.RotaViewModel
 import kotlinx.coroutines.delay
@@ -393,6 +396,43 @@ private fun RotaDetayGorunumu(
             }
         } else {
             items(rota.rota) { durak -> RotaDurakKart(durak) }
+
+            item {
+                RotaHaritasiBolumu(duraklar = rota.rota)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>) {
+    val uriHandler = LocalUriHandler.current
+    val html = remember(duraklar) { rotaHaritasiHtmlOlustur(duraklar) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Rota Haritası",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .shadow(2.dp, RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surface),
+        ) {
+            RotaHaritasiWebView(html = html, modifier = Modifier.fillMaxSize())
+        }
+        Button(
+            onClick = { uriHandler.openUri(tumRotaGoogleMapsUrl(duraklar)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+        ) {
+            Text("Rotayı Google Maps'te Aç")
         }
     }
 }
