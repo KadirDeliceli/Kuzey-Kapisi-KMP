@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
 import com.kuzeykapisi.app.ui.components.GeriButonu
+import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.vm.AnlatimViewModel
 
 // BackHandler, App.kt/RotaScreen.kt'deki aynı gerekçeyle (CMP 1.11'de
@@ -51,13 +52,12 @@ import com.kuzeykapisi.app.ui.vm.AnlatimViewModel
 @Composable
 fun AnlatimEkrani(
     repo: KuzeyRepository,
-    kategori: String,
-    kod: String,
+    kaynak: AnlatimKaynagi,
     baslik: String,
     onGeri: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo, kategori, kod) { AnlatimViewModel(repo, kategori, kod) }
+    val vm = remember(repo, kaynak) { AnlatimViewModel(repo, kaynak) }
     val ui by vm.state.collectAsState()
     val durum by vm.oynatici.durum.collectAsState()
     val sesHatasi by vm.oynatici.hata.collectAsState()

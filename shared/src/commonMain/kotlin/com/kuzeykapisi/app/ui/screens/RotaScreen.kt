@@ -34,7 +34,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -51,8 +53,10 @@ import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.GeriButonu
 import com.kuzeykapisi.app.ui.components.KonumIzniEfekti
 import com.kuzeykapisi.app.ui.components.RotaHaritasiWebView
+import com.kuzeykapisi.app.ui.components.SesIkonuButonu
 import com.kuzeykapisi.app.ui.components.rotaHaritasiHtmlOlustur
 import com.kuzeykapisi.app.ui.components.tumRotaGoogleMapsUrl
+import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.vm.RotaUiState
 import com.kuzeykapisi.app.ui.vm.RotaViewModel
 import kotlinx.coroutines.delay
@@ -78,9 +82,19 @@ fun RotaScreen(
         onDispose { }
     }
 
+    // Rota durağı anlatım overlay'i: RotaDetayGorunumu'nun ÜSTÜNE bindirilir,
+    // altındaki içerik (dolayısıyla vm'nin gosterilenRota state'i ve
+    // LazyColumn scroll pozisyonu) hiç kaldırılmaz — App.kt'deki sohbet
+    // overlay'iyle aynı "state'i canlı tut" yaklaşımı.
+    var acikDurakAnlatimi by remember { mutableStateOf<RotaDurak?>(null) }
+
     // Sistem/donanım geri tuşu: önce açık detay görünümünü kapatır (galeriye
     // döner), galerideyken tekrar basılırsa RotaScreen'den çıkılır — App.kt'deki
-    // sohbet overlay'inin BackHandler deseniyle aynı yaklaşım.
+    // sohbet overlay'inin BackHandler deseniyle aynı yaklaşım. Anlatım overlay'i
+    // açıkken AnlatimEkrani'nin KENDİ BackHandler'ı (daha içeride kayıtlı
+    // olduğu için) önce devreye girer ve overlay'i kapatır — burada ayrıca
+    // ele almaya gerek yok (Screen.Anlatim'de de aynı iç içe BackHandler
+    // deseni kullanılıyor).
     BackHandler(enabled = true) {
         if (ui.gosterilenRota != null) vm.detaydanCik() else onGeri()
     }
@@ -88,11 +102,24 @@ fun RotaScreen(
     val gosterilenRota = ui.gosterilenRota
     val ilkYuklemeHatasi = ui.ilkYuklemeHatasi
     when {
-        gosterilenRota != null -> RotaDetayGorunumu(
-            rota = gosterilenRota,
-            onGeri = { vm.detaydanCik() },
-            modifier = modifier,
-        )
+        gosterilenRota != null -> Box(modifier = modifier.fillMaxSize()) {
+            RotaDetayGorunumu(
+                rota = gosterilenRota,
+                onGeri = { vm.detaydanCik() },
+                onDurakSesTiklandi = { durak -> acikDurakAnlatimi = durak },
+                modifier = Modifier.fillMaxSize(),
+            )
+            val acikDurak = acikDurakAnlatimi
+            if (acikDurak != null) {
+                AnlatimEkrani(
+                    repo = repo,
+                    kaynak = AnlatimKaynagi.RotaDuragi(mekanId = acikDurak.id),
+                    baslik = acikDurak.ad,
+                    onGeri = { acikDurakAnlatimi = null },
+                    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+                )
+            }
+        }
         // Konum + varsayılan rotalar tamamlanana kadar galerinin HİÇBİR
         // parçası çizilmez — tek bir tam ekran gösterge yeterli.
         !ui.ilkYuklemeTamamlandi -> RotaTamEkranYukleniyor(modifier = modifier)
@@ -358,6 +385,7 @@ private fun TurKart(
 private fun RotaDetayGorunumu(
     rota: RotaYaniti,
     onGeri: () -> Unit,
+    onDurakSesTiklandi: (RotaDurak) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -395,7 +423,9 @@ private fun RotaDetayGorunumu(
                 )
             }
         } else {
-            items(rota.rota) { durak -> RotaDurakKart(durak) }
+            items(rota.rota) { durak ->
+                RotaDurakKart(durak = durak, onSesTiklandi = { onDurakSesTiklandi(durak) })
+            }
 
             item {
                 RotaHaritasiBolumu(duraklar = rota.rota)
@@ -438,7 +468,7 @@ private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>) {
 }
 
 @Composable
-private fun RotaDurakKart(durak: RotaDurak) {
+private fun RotaDurakKart(durak: RotaDurak, onSesTiklandi: () -> Unit) {
     val uriHandler = LocalUriHandler.current
     Column(
         modifier = Modifier
@@ -468,6 +498,9 @@ private fun RotaDurakKart(durak: RotaDurak) {
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
+            if (durak.anlatimVar) {
+                SesIkonuButonu(onClick = onSesTiklandi)
+            }
         }
         Text(
             text = durak.tur,

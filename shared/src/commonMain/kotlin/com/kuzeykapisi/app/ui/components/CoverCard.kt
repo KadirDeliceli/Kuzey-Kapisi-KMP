@@ -135,7 +135,7 @@ fun CoverCard(
  * dokunmuş gibi davranmaz.
  */
 @Composable
-private fun SesIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SesIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(34.dp)

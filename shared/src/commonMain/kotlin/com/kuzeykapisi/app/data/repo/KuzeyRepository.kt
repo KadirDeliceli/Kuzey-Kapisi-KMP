@@ -58,6 +58,19 @@ class KuzeyRepository(private val api: ApiService) {
         }
     }
 
+    /** 404'te (backend'de bu durak için anlatım yoksa) anlaşılır bir hata fırlatır. */
+    suspend fun rotaAnlatimGetir(mekanId: Int): String {
+        return try {
+            api.rotaAnlatimGetir(mekanId).metin
+        } catch (e: ClientRequestException) {
+            if (e.response.status.value == 404) {
+                throw IllegalStateException("Bu durak için anlatım bulunamadı.")
+            } else {
+                throw e
+            }
+        }
+    }
+
     suspend fun guvenliSohbet(kategori: String, oge: String, sessionId: String, mesaj: String): SohbetSonuc {
         return try {
             val y = api.sohbet(sessionId, mesaj)

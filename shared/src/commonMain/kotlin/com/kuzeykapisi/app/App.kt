@@ -58,6 +58,7 @@ import com.kuzeykapisi.app.ui.screens.HomeScreen
 import com.kuzeykapisi.app.ui.screens.PersonaEkleScreen
 import com.kuzeykapisi.app.ui.screens.RotaScreen
 import com.kuzeykapisi.app.ui.screens.RotaYerEkleScreen
+import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.screens.SubMenuScreen
 import com.kuzeykapisi.app.ui.screens.WipScreen
 import com.kuzeykapisi.app.ui.theme.Deniz
@@ -72,7 +73,7 @@ sealed interface Screen {
     data object Home : Screen
     data class SubMenu(val mainCard: MainCard) : Screen
     data class BotList(val kategori: String, val baslik: String) : Screen
-    data class Anlatim(val kategori: String, val kod: String, val baslik: String) : Screen
+    data class Anlatim(val kaynak: AnlatimKaynagi, val baslik: String) : Screen
     data object Wip : Screen
     data object Rota : Screen
     data object AdminAnaSayfa : Screen
@@ -191,14 +192,18 @@ fun App() {
                                         aktifBot = BotRef(kategori = s.kategori, kod = oge.kod)
                                     },
                                     onSesTiklandi = { oge: KatalogOge ->
-                                        git(Screen.Anlatim(kategori = s.kategori, kod = oge.kod, baslik = oge.ad))
+                                        git(
+                                            Screen.Anlatim(
+                                                kaynak = AnlatimKaynagi.Persona(kategori = s.kategori, kod = oge.kod),
+                                                baslik = oge.ad,
+                                            ),
+                                        )
                                     },
                                     modifier = Modifier.fillMaxSize(),
                                 )
                                 is Screen.Anlatim -> AnlatimEkrani(
                                     repo = repo,
-                                    kategori = s.kategori,
-                                    kod = s.kod,
+                                    kaynak = s.kaynak,
                                     baslik = s.baslik,
                                     onGeri = geriGit,
                                     modifier = Modifier.fillMaxSize(),

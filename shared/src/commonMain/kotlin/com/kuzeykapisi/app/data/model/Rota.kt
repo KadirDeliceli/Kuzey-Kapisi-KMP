@@ -24,6 +24,7 @@ data class RotaDurak(
     @SerialName("ziyaret_suresi_dk") val ziyaretSuresiDk: Int,
     @SerialName("varis_toplam_dk") val varisToplamDk: Int,
     @SerialName("google_maps_url") val googleMapsUrl: String,
+    @SerialName("anlatim_var") val anlatimVar: Boolean = false,
 )
 
 @Serializable

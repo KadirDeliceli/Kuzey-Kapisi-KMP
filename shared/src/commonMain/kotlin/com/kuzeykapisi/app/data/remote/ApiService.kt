@@ -123,6 +123,14 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         return apiJson.decodeFromString(hamCevap)
     }
 
+    /** 404'te (backend'de bu durak için anlatım yoksa) ClientRequestException fırlatır — repo katmanı bunu yakalar. */
+    suspend fun rotaAnlatimGetir(mekanId: Int): AnlatimYaniti {
+        println("[KuzeyKapisi] GET /rota-anlatim/$mekanId isteği gönderiliyor")
+        val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}rota-anlatim/$mekanId") }
+        println("[KuzeyKapisi] GET /rota-anlatim/$mekanId ham cevap: $hamCevap")
+        return apiJson.decodeFromString(hamCevap)
+    }
+
     suspend fun adminGiris(kullaniciAdi: String, sifre: String): String {
         val istek = AdminGirisIstek(kullaniciAdi, sifre)
         return try {

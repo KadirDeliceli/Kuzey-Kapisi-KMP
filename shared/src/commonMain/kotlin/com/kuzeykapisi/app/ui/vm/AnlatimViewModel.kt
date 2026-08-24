@@ -10,6 +10,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** Anlatım ekranının metni nereden çekeceğini belirten kaynak — persona (kategori+kod) ya da rota durağı (mekan id). */
+sealed interface AnlatimKaynagi {
+    data class Persona(val kategori: String, val kod: String) : AnlatimKaynagi
+    data class RotaDuragi(val mekanId: Int) : AnlatimKaynagi
+}
+
 data class AnlatimUiState(
     val metin: String? = null,
     val yukleniyor: Boolean = true,
@@ -18,8 +24,7 @@ data class AnlatimUiState(
 
 class AnlatimViewModel(
     private val repo: KuzeyRepository,
-    private val kategori: String,
-    private val kod: String,
+    private val kaynak: AnlatimKaynagi,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _state = MutableStateFlow(AnlatimUiState())
@@ -31,7 +36,10 @@ class AnlatimViewModel(
         scope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
             try {
-                val metin = repo.anlatimGetir(kategori, kod)
+                val metin = when (kaynak) {
+                    is AnlatimKaynagi.Persona -> repo.anlatimGetir(kaynak.kategori, kaynak.kod)
+                    is AnlatimKaynagi.RotaDuragi -> repo.rotaAnlatimGetir(kaynak.mekanId)
+                }
                 _state.value = _state.value.copy(metin = metin, yukleniyor = false)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(yukleniyor = false, hata = "Anlatım yüklenemedi.")
