@@ -38,6 +38,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.content.PartData
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
@@ -206,24 +207,37 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         gorsel: SecilenResim?,
     ) {
         try {
+            val parcalar = formData {
+                append("ad", ad)
+                append("karsilama", karsilama)
+                append("icerik", icerik)
+                // anlatim == null: "dokunma" (alan hiç gönderilmez).
+                // anlatim == "": "kaldır" (boş bir alan olarak GÖNDERİLMELİ,
+                // isNullOrBlank() burada YANLIŞ olurdu — "" da atlanırdı).
+                if (anlatim != null) append("anlatim", anlatim)
+                if (gorsel != null) {
+                    append(
+                        "gorsel",
+                        gorsel.bytes,
+                        Headers.build {
+                            append(HttpHeaders.ContentType, mimeTipiIcin(gorsel.uzanti))
+                            append(HttpHeaders.ContentDisposition, "filename=\"${gorsel.dosyaAdi}\"")
+                        },
+                    )
+                }
+            }
+            println("[KuzeyKapisi][DEBUG] persona-guncelle formData'ya eklenen parçalar:")
+            parcalar.forEach { parca ->
+                when (parca) {
+                    is PartData.FormItem ->
+                        println("  ${parca.name} = \"${parca.value}\" (uzunluk=${parca.value.length})")
+                    is PartData.FileItem -> println("  ${parca.name} = <dosya: ${parca.originalFileName}>")
+                    else -> println("  ${parca.name} = <diğer parça türü>")
+                }
+            }
             val yanit = client.submitFormWithBinaryData(
                 url = "${Config.BASE_URL}admin/persona-guncelle/$kategori/$kod",
-                formData = formData {
-                    append("ad", ad)
-                    append("karsilama", karsilama)
-                    append("icerik", icerik)
-                    if (!anlatim.isNullOrBlank()) append("anlatim", anlatim)
-                    if (gorsel != null) {
-                        append(
-                            "gorsel",
-                            gorsel.bytes,
-                            Headers.build {
-                                append(HttpHeaders.ContentType, mimeTipiIcin(gorsel.uzanti))
-                                append(HttpHeaders.ContentDisposition, "filename=\"${gorsel.dosyaAdi}\"")
-                            },
-                        )
-                    }
-                },
+                formData = parcalar,
             ) {
                 method = HttpMethod.Put
                 header("X-Admin-Token", token)

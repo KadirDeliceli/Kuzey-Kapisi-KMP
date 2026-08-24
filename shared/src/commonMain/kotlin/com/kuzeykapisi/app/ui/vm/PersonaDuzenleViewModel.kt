@@ -88,6 +88,15 @@ class PersonaDuzenleViewModel(
         scope.launch {
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, basariMesaji = null)
             try {
+                val gonderilecekAnlatim = anlatimGonderilecek(s)
+                println(
+                    "[KuzeyKapisi][DEBUG] persona-guncelle anlatim kararı: " +
+                        when {
+                            gonderilecekAnlatim == null -> "null (dokunma)"
+                            gonderilecekAnlatim.isEmpty() -> "\"\" (kaldır)"
+                            else -> "gerçek metin (${gonderilecekAnlatim.length} karakter)"
+                        },
+                )
                 repo.personaGuncelle(
                     token = token,
                     kategori = kategori,
@@ -95,7 +104,7 @@ class PersonaDuzenleViewModel(
                     ad = s.ad.trim(),
                     karsilama = s.karsilama.trim(),
                     icerik = s.icerik.trim(),
-                    anlatim = anlatimGonderilecek(s),
+                    anlatim = gonderilecekAnlatim,
                     gorsel = s.gorsel,
                 )
                 _state.value = _state.value.copy(kaydediliyor = false, basariMesaji = "Güncellendi.")

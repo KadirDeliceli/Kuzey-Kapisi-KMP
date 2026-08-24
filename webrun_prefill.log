@@ -116,3 +116,29 @@ asset modules 35.6 MiB (asset) 84 bytes (javascript)
   ./kotlin/KuzeyKapisiApp-webApp.wasm 27.3 MiB (asset) 42 bytes (javascript) [built] [code generated]
   ./kotlin/skiko.wasm 8.25 MiB (asset) 42 bytes (javascript) [built] [code generated]
 webpack 5.101.3 compiled with 1 warning in 1537 ms
+assets by status 35.6 MiB [cached] 2 assets
+Critical dependency: the request of a dependency is an expression
+assets by path . 5 MiB
+  asset webApp.js 3.87 MiB [emitted] (name: main)
+  asset main.dfedfefa28da54d55297.hot-update.js 1.12 MiB [emitted] [immutable] [hmr] (name: main)
+  asset main.dfedfefa28da54d55297.hot-update.json 28 bytes [emitted] [immutable] [hmr]
+Entrypoint main 5 MiB (35.6 MiB) = webApp.js 3.87 MiB main.dfedfefa28da54d55297.hot-update.js 1.12 MiB 2 auxiliary assets
+<i> [webpack-dev-middleware] wait until bundle finished: /main.dfedfefa28da54d55297.hot-update.json
+cached modules 1020 KiB (javascript) 35.6 MiB (asset) [cached] 21 modules
+runtime modules 30.1 KiB 13 modules
+javascript modules 469 KiB
+  ./kotlin/KuzeyKapisiApp-webApp.import-object.mjs 469 KiB [built] [code generated] [1 warning]
+  ./kotlin/ lazy strict namespace object 160 bytes [built]
+webpack 5.101.3 compiled with 1 warning in 889 ms
+Critical dependency: the request of a dependency is an expression
+assets by status 8.25 MiB [cached] 1 asset
+assets by info 27.4 MiB [immutable]
+  asset 229cb5442e16b58e9526.wasm 27.4 MiB [emitted] [immutable] [from: kotlin/KuzeyKapisiApp-webApp.wasm] [hmr] (name: main) (auxiliary name: main)
+  asset main.b2929cda010f5e8bf18a.hot-update.js 1.16 KiB [emitted] [immutable] [hmr] (name: main)
+  asset main.b2929cda010f5e8bf18a.hot-update.json 28 bytes [emitted] [immutable] [hmr]
+asset webApp.js 3.87 MiB [emitted] (name: main)
+Entrypoint main 31.2 MiB (35.6 MiB) = webApp.js 3.87 MiB main.b2929cda010f5e8bf18a.hot-update.js 1.16 KiB 229cb5442e16b58e9526.wasm 27.4 MiB 2 auxiliary assets
+cached modules 1.45 MiB (javascript) 8.25 MiB (asset) [cached] 22 modules
+runtime modules 30.1 KiB 13 modules
+./kotlin/KuzeyKapisiApp-webApp.wasm 27.4 MiB (asset) 42 bytes (javascript) [built] [code generated]
+webpack 5.101.3 compiled with 1 warning in 574 ms
