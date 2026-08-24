@@ -203,7 +203,8 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         ad: String,
         karsilama: String,
         icerik: String,
-        anlatim: String?,
+        anlatim: String,
+        anlatimKaldir: Boolean,
         gorsel: SecilenResim?,
     ) {
         try {
@@ -211,10 +212,10 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
                 append("ad", ad)
                 append("karsilama", karsilama)
                 append("icerik", icerik)
-                // anlatim == null: "dokunma" (alan hiç gönderilmez).
-                // anlatim == "": "kaldır" (boş bir alan olarak GÖNDERİLMELİ,
-                // isNullOrBlank() burada YANLIŞ olurdu — "" da atlanırdı).
-                if (anlatim != null) append("anlatim", anlatim)
+                // Backend artık ikisini de HER İSTEKTE bekliyor — boş string'e
+                // güvenilmiyor, "kaldır" niyeti ayrı bir alanla taşınıyor.
+                append("anlatim", anlatim)
+                append("anlatim_kaldir", if (anlatimKaldir) "true" else "false")
                 if (gorsel != null) {
                     append(
                         "gorsel",

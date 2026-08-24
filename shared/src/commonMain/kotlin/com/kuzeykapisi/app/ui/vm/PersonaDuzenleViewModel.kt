@@ -30,8 +30,8 @@ data class PersonaDuzenleUiState(
 /**
  * kategori/kod SABİTTİR. Form artık `initial` (repo.personaGetir ile önceden
  * çekilmiş içerik) ile ÖN-DOLU açılır. anlatim alanı ayrıca `anlatimiKaldir`
- * checkbox'ı ile birlikte "dokunulmadıysa gönderme" mantığıyla çalışır —
- * bkz. [anlatimGonderilecek].
+ * checkbox'ı ile birlikte, metin ve kaldırma niyeti ayrı form alanları olarak
+ * HER İSTEKTE gönderilecek şekilde çalışır — bkz. [anlatimGonderilecek].
  */
 class PersonaDuzenleViewModel(
     private val repo: KuzeyRepository,
@@ -65,16 +65,17 @@ class PersonaDuzenleViewModel(
         }
     }
 
+    private data class AnlatimGonderim(val metin: String, val kaldir: Boolean)
+
     /**
-     * Kullanıcı anlatım alanına hiç dokunmadıysa (metin çekilen orijinalle
-     * aynıysa) null döner — backend bunu "mevcut anlatıma dokunma" olarak
-     * yorumluyor. Checkbox işaretliyse her durumda "" (kaldır) döner.
-     * Kullanıcı metni gerçekten değiştirdiyse yeni metni döner.
+     * Backend artık "anlatim" ve "anlatim_kaldir" alanlarını HER İSTEKTE
+     * ayrı ayrı bekliyor. metin: kullanıcı orijinal değeri değiştirdiyse
+     * güncel metin, değiştirmediyse "" (dokunmama niyeti anlatim_kaldir=false
+     * ile taşınır). kaldir: checkbox'ın durumu.
      */
-    private fun anlatimGonderilecek(s: PersonaDuzenleUiState): String? = when {
-        s.anlatimiKaldir -> ""
-        s.anlatim.trim() == anlatimOrijinal.trim() -> null
-        else -> s.anlatim.trim()
+    private fun anlatimGonderilecek(s: PersonaDuzenleUiState): AnlatimGonderim {
+        val metin = if (s.anlatim.trim() != anlatimOrijinal.trim()) s.anlatim.trim() else ""
+        return AnlatimGonderim(metin = metin, kaldir = s.anlatimiKaldir)
     }
 
     fun kaydet(token: String) {
@@ -88,14 +89,11 @@ class PersonaDuzenleViewModel(
         scope.launch {
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, basariMesaji = null)
             try {
-                val gonderilecekAnlatim = anlatimGonderilecek(s)
+                val anlatimGonderim = anlatimGonderilecek(s)
                 println(
                     "[KuzeyKapisi][DEBUG] persona-guncelle anlatim kararı: " +
-                        when {
-                            gonderilecekAnlatim == null -> "null (dokunma)"
-                            gonderilecekAnlatim.isEmpty() -> "\"\" (kaldır)"
-                            else -> "gerçek metin (${gonderilecekAnlatim.length} karakter)"
-                        },
+                        "metin=\"${anlatimGonderim.metin}\" (uzunluk=${anlatimGonderim.metin.length}), " +
+                        "anlatim_kaldir=${anlatimGonderim.kaldir}",
                 )
                 repo.personaGuncelle(
                     token = token,
@@ -104,7 +102,8 @@ class PersonaDuzenleViewModel(
                     ad = s.ad.trim(),
                     karsilama = s.karsilama.trim(),
                     icerik = s.icerik.trim(),
-                    anlatim = gonderilecekAnlatim,
+                    anlatim = anlatimGonderim.metin,
+                    anlatimKaldir = anlatimGonderim.kaldir,
                     gorsel = s.gorsel,
                 )
                 _state.value = _state.value.copy(kaydediliyor = false, basariMesaji = "Güncellendi.")

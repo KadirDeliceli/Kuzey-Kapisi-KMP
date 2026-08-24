@@ -142,3 +142,5 @@ cached modules 1.45 MiB (javascript) 8.25 MiB (asset) [cached] 22 modules
 runtime modules 30.1 KiB 13 modules
 ./kotlin/KuzeyKapisiApp-webApp.wasm 27.4 MiB (asset) 42 bytes (javascript) [built] [code generated]
 webpack 5.101.3 compiled with 1 warning in 574 ms
+
+Timed out waiting for finished message from client socket connection from /127.0.0.1:60639 to /127.0.0.1:53253. Discarding connection.

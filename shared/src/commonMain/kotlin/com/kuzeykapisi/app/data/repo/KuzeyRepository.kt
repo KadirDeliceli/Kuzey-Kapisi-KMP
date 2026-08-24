@@ -53,9 +53,10 @@ class KuzeyRepository(private val api: ApiService) {
         ad: String,
         karsilama: String,
         icerik: String,
-        anlatim: String?,
+        anlatim: String,
+        anlatimKaldir: Boolean,
         gorsel: SecilenResim?,
-    ) = api.personaGuncelle(token, kategori, kod, ad, karsilama, icerik, anlatim, gorsel)
+    ) = api.personaGuncelle(token, kategori, kod, ad, karsilama, icerik, anlatim, anlatimKaldir, gorsel)
 
     suspend fun personaSil(token: String, kategori: String, kod: String) =
         api.personaSil(token, kategori, kod)
