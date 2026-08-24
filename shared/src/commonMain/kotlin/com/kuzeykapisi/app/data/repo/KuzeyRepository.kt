@@ -3,10 +3,13 @@ package com.kuzeykapisi.app.data.repo
 import com.kuzeykapisi.app.data.model.Katalog
 import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.OturumBaslatYaniti
+import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.model.PersonaEkleYaniti
+import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.model.RotaYerEkleIstek
 import com.kuzeykapisi.app.data.model.RotaYerEkleYaniti
+import com.kuzeykapisi.app.data.model.RotaYeriDetay
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.remote.ApiService
 import io.ktor.client.plugins.ClientRequestException
@@ -39,11 +42,41 @@ class KuzeyRepository(private val api: ApiService) {
         kod: String,
         karsilama: String,
         icerik: String,
+        anlatim: String?,
         gorsel: SecilenResim,
-    ): PersonaEkleYaniti = api.personaEkle(token, kategori, ad, kod, karsilama, icerik, gorsel)
+    ): PersonaEkleYaniti = api.personaEkle(token, kategori, ad, kod, karsilama, icerik, anlatim, gorsel)
+
+    suspend fun personaGuncelle(
+        token: String,
+        kategori: String,
+        kod: String,
+        ad: String,
+        karsilama: String,
+        icerik: String,
+        anlatim: String?,
+        gorsel: SecilenResim?,
+    ) = api.personaGuncelle(token, kategori, kod, ad, karsilama, icerik, anlatim, gorsel)
+
+    suspend fun personaSil(token: String, kategori: String, kod: String) =
+        api.personaSil(token, kategori, kod)
+
+    suspend fun personaGetir(kategori: String, kod: String, token: String): PersonaDetay =
+        api.personaGetir(token, kategori, kod)
 
     suspend fun rotaYerEkle(token: String, istek: RotaYerEkleIstek): RotaYerEkleYaniti =
         api.rotaYerEkle(token, istek)
+
+    suspend fun rotaYerleriListele(token: String): List<RotaMekaniAdmin> =
+        api.rotaYerleriListele(token)
+
+    suspend fun rotaYeriGuncelle(token: String, mekanId: Int, istek: RotaYerEkleIstek) =
+        api.rotaYeriGuncelle(token, mekanId, istek)
+
+    suspend fun rotaYeriSil(token: String, mekanId: Int) =
+        api.rotaYeriSil(token, mekanId)
+
+    suspend fun rotaYeriGetir(mekanId: Int, token: String): RotaYeriDetay =
+        api.rotaYeriGetir(token, mekanId)
 
     /** 404'te (backend'de bu öge için anlatım yoksa) anlaşılır bir hata fırlatır. */
     suspend fun anlatimGetir(kategori: String, kod: String): String {

@@ -20,6 +20,7 @@ data class PersonaEkleUiState(
     val kodElleDuzenlendi: Boolean = false,
     val karsilama: String = "",
     val icerik: String = "",
+    val anlatim: String = "",
     val gorsel: SecilenResim? = null,
     val kaydediliyor: Boolean = false,
     val genelHata: String? = null,
@@ -55,6 +56,10 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) {
         _state.value = _state.value.copy(icerik = v)
     }
 
+    fun anlatimDegisti(v: String) {
+        _state.value = _state.value.copy(anlatim = v)
+    }
+
     fun gorselSec() {
         scope.launch {
             val secilen = runCatching { resimSec() }.getOrNull()
@@ -84,6 +89,7 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) {
                     kod = s.kod.trim(),
                     karsilama = s.karsilama.trim(),
                     icerik = s.icerik.trim(),
+                    anlatim = s.anlatim.trim().ifBlank { null },
                     gorsel = s.gorsel,
                 )
                 _state.value = PersonaEkleUiState(

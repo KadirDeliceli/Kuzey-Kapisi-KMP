@@ -37,6 +37,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.data.model.KatalogOge
+import com.kuzeykapisi.app.data.model.PersonaDetay
+import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.remote.ApiService
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.domain.MainCard
@@ -55,16 +57,20 @@ import com.kuzeykapisi.app.ui.screens.AdminAnaSayfaScreen
 import com.kuzeykapisi.app.ui.screens.AnlatimEkrani
 import com.kuzeykapisi.app.ui.screens.BotListScreen
 import com.kuzeykapisi.app.ui.screens.HomeScreen
+import com.kuzeykapisi.app.ui.screens.PersonaDuzenleScreen
 import com.kuzeykapisi.app.ui.screens.PersonaEkleScreen
+import com.kuzeykapisi.app.ui.screens.PersonaYonetScreen
 import com.kuzeykapisi.app.ui.screens.RotaScreen
+import com.kuzeykapisi.app.ui.screens.RotaYerDuzenleScreen
 import com.kuzeykapisi.app.ui.screens.RotaYerEkleScreen
-import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
+import com.kuzeykapisi.app.ui.screens.RotaYerYonetScreen
 import com.kuzeykapisi.app.ui.screens.SubMenuScreen
 import com.kuzeykapisi.app.ui.screens.WipScreen
 import com.kuzeykapisi.app.ui.theme.Deniz
 import com.kuzeykapisi.app.ui.theme.Kagit
 import com.kuzeykapisi.app.ui.theme.KuzeyKapisiTheme
 import com.kuzeykapisi.app.ui.vm.AdminViewModel
+import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan
 import org.jetbrains.compose.resources.painterResource
@@ -79,6 +85,10 @@ sealed interface Screen {
     data object AdminAnaSayfa : Screen
     data object AdminPersonaEkle : Screen
     data object AdminRotaYerEkle : Screen
+    data object AdminPersonaYonet : Screen
+    data class AdminPersonaDuzenle(val detay: PersonaDetay) : Screen
+    data object AdminRotaYerYonet : Screen
+    data class AdminRotaYerDuzenle(val mekan: RotaMekaniAdmin, val mevcutAnlatim: String?) : Screen
 }
 
 data class BotRef(val kategori: String, val kod: String)
@@ -123,6 +133,13 @@ fun App() {
     val git: (Screen) -> Unit = { hedef -> ekranYigini.add(hedef) }
     val geriGit: () -> Unit = {
         if (ekranYigini.size > 1) ekranYigini.removeAt(ekranYigini.lastIndex)
+    }
+    // Tüm admin ekranlarında 401 alındığında ortak davranış: token sıfırlanır,
+    // ekrandan çıkılır ve giriş dialogu tekrar açılır.
+    val onAdminYetkisiz: () -> Unit = {
+        adminVm.oturumuSifirla()
+        geriGit()
+        adminGirisDialoguAcik = true
     }
 
     KuzeyKapisiTheme {
@@ -221,28 +238,57 @@ fun App() {
                                     onGeri = geriGit,
                                     onPersonaEkleTiklandi = { git(Screen.AdminPersonaEkle) },
                                     onRotaYeriEkleTiklandi = { git(Screen.AdminRotaYerEkle) },
+                                    onPersonalariYonetTiklandi = { git(Screen.AdminPersonaYonet) },
+                                    onRotaYerleriniYonetTiklandi = { git(Screen.AdminRotaYerYonet) },
                                     modifier = Modifier.fillMaxSize(),
                                 )
                                 is Screen.AdminPersonaEkle -> PersonaEkleScreen(
                                     repo = repo,
                                     token = adminUi.token.orEmpty(),
                                     onGeri = geriGit,
-                                    onYetkisiz = {
-                                        adminVm.oturumuSifirla()
-                                        geriGit()
-                                        adminGirisDialoguAcik = true
-                                    },
+                                    onYetkisiz = onAdminYetkisiz,
                                     modifier = Modifier.fillMaxSize(),
                                 )
                                 is Screen.AdminRotaYerEkle -> RotaYerEkleScreen(
                                     repo = repo,
                                     token = adminUi.token.orEmpty(),
                                     onGeri = geriGit,
-                                    onYetkisiz = {
-                                        adminVm.oturumuSifirla()
-                                        geriGit()
-                                        adminGirisDialoguAcik = true
+                                    onYetkisiz = onAdminYetkisiz,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.AdminPersonaYonet -> PersonaYonetScreen(
+                                    repo = repo,
+                                    token = adminUi.token.orEmpty(),
+                                    onGeri = geriGit,
+                                    onDuzenleTiklandi = { detay -> git(Screen.AdminPersonaDuzenle(detay = detay)) },
+                                    onYetkisiz = onAdminYetkisiz,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.AdminPersonaDuzenle -> PersonaDuzenleScreen(
+                                    repo = repo,
+                                    detay = s.detay,
+                                    token = adminUi.token.orEmpty(),
+                                    onGeri = geriGit,
+                                    onYetkisiz = onAdminYetkisiz,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.AdminRotaYerYonet -> RotaYerYonetScreen(
+                                    repo = repo,
+                                    token = adminUi.token.orEmpty(),
+                                    onGeri = geriGit,
+                                    onDuzenleTiklandi = { mekan, mevcutAnlatim ->
+                                        git(Screen.AdminRotaYerDuzenle(mekan = mekan, mevcutAnlatim = mevcutAnlatim))
                                     },
+                                    onYetkisiz = onAdminYetkisiz,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                is Screen.AdminRotaYerDuzenle -> RotaYerDuzenleScreen(
+                                    repo = repo,
+                                    mekan = s.mekan,
+                                    mevcutAnlatim = s.mevcutAnlatim,
+                                    token = adminUi.token.orEmpty(),
+                                    onGeri = geriGit,
+                                    onYetkisiz = onAdminYetkisiz,
                                     modifier = Modifier.fillMaxSize(),
                                 )
                             }

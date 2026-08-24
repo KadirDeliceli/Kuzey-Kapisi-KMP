@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -19,21 +20,25 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.GeriButonu
-import com.kuzeykapisi.app.ui.vm.RotaYerEkleViewModel
+import com.kuzeykapisi.app.ui.vm.RotaYerDuzenleViewModel
 
 @Composable
-fun RotaYerEkleScreen(
+fun RotaYerDuzenleScreen(
     repo: KuzeyRepository,
+    mekan: RotaMekaniAdmin,
+    mevcutAnlatim: String?,
     token: String,
     onGeri: () -> Unit,
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo) { RotaYerEkleViewModel(repo) }
+    val vm = remember(repo, mekan.id) { RotaYerDuzenleViewModel(repo, mekan.id, mekan, mevcutAnlatim) }
     val ui by vm.state.collectAsState()
 
     LaunchedEffect(ui.oturumGecersiz) {
@@ -48,7 +53,7 @@ fun RotaYerEkleScreen(
     ) {
         GeriButonu(metin = "Geri", onClick = onGeri)
         Text(
-            text = "Rota İçin Yeni Yer Ekle",
+            text = "Düzenle: ${mekan.ad}",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
@@ -103,12 +108,27 @@ fun RotaYerEkleScreen(
             value = ui.anlatim,
             onValueChange = { vm.anlatimDegisti(it) },
             label = { Text("Anlatım Metni (opsiyonel)") },
+            enabled = !ui.anlatimiKaldir,
             supportingText = {
-                Text("Doldurursan sesli dinleme özelliği de eklenir. Boş bırakabilirsin.")
+                Text(
+                    "Mevcut anlatımın üzerine yazmak için doldurun, dokunmadan bırakırsanız " +
+                        "mevcut anlatım (varsa) korunur.",
+                )
             },
             minLines = 4,
             modifier = Modifier.fillMaxWidth(),
         )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = 4.dp),
+        ) {
+            Checkbox(checked = ui.anlatimiKaldir, onCheckedChange = { vm.anlatimiKaldirDegisti(it) })
+            Text(
+                text = "Anlatımı kaldır",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Spacer(modifier = Modifier.height(20.dp))
 
         val genelHata = ui.genelHata

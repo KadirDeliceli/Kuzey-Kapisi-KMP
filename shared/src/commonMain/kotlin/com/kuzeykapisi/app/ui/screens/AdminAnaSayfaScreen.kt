@@ -29,6 +29,8 @@ fun AdminAnaSayfaScreen(
     onGeri: () -> Unit,
     onPersonaEkleTiklandi: () -> Unit,
     onRotaYeriEkleTiklandi: () -> Unit,
+    onPersonalariYonetTiklandi: () -> Unit,
+    onRotaYerleriniYonetTiklandi: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -48,19 +50,35 @@ fun AdminAnaSayfaScreen(
             )
 
             if (genisEkran) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    AdminKart(
-                        baslik = "Persona Ekle",
-                        aciklama = "Yeni bir tarihi kişilik, mekan, lezzet, doğa ya da tescilli ürün botu ekle",
-                        onClick = onPersonaEkleTiklandi,
-                        modifier = Modifier.weight(1f),
-                    )
-                    AdminKart(
-                        baslik = "Rota İçin Yeni Yer Ekle",
-                        aciklama = "Akıllı Rota Planlayıcı'nın önerebileceği yeni bir mekan ekle",
-                        onClick = onRotaYeriEkleTiklandi,
-                        modifier = Modifier.weight(1f),
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        AdminKart(
+                            baslik = "Persona Ekle",
+                            aciklama = "Yeni bir tarihi kişilik, mekan, lezzet, doğa ya da tescilli ürün botu ekle",
+                            onClick = onPersonaEkleTiklandi,
+                            modifier = Modifier.weight(1f),
+                        )
+                        AdminKart(
+                            baslik = "Personaları Yönet",
+                            aciklama = "Mevcut personaları listele, düzenle ya da sil",
+                            onClick = onPersonalariYonetTiklandi,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        AdminKart(
+                            baslik = "Rota İçin Yeni Yer Ekle",
+                            aciklama = "Akıllı Rota Planlayıcı'nın önerebileceği yeni bir mekan ekle",
+                            onClick = onRotaYeriEkleTiklandi,
+                            modifier = Modifier.weight(1f),
+                        )
+                        AdminKart(
+                            baslik = "Rota Yerlerini Yönet",
+                            aciklama = "Mevcut rota mekanlarını listele, düzenle ya da sil",
+                            onClick = onRotaYerleriniYonetTiklandi,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -71,9 +89,21 @@ fun AdminAnaSayfaScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     AdminKart(
+                        baslik = "Personaları Yönet",
+                        aciklama = "Mevcut personaları listele, düzenle ya da sil",
+                        onClick = onPersonalariYonetTiklandi,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    AdminKart(
                         baslik = "Rota İçin Yeni Yer Ekle",
                         aciklama = "Akıllı Rota Planlayıcı'nın önerebileceği yeni bir mekan ekle",
                         onClick = onRotaYeriEkleTiklandi,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    AdminKart(
+                        baslik = "Rota Yerlerini Yönet",
+                        aciklama = "Mevcut rota mekanlarını listele, düzenle ya da sil",
+                        onClick = onRotaYerleriniYonetTiklandi,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

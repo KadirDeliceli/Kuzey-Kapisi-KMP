@@ -141,3 +141,47 @@ Critical dependency: the request of a dependency is an expression
 assets by status 39 MiB [cached] 3 assets
 cached modules 1.45 MiB (javascript) 35.1 MiB (asset) 30.1 KiB (runtime) [cached] 36 modules
 webpack 5.101.3 compiled with 1 warning in 29 ms
+Critical dependency: the request of a dependency is an expression
+assets by status 35.1 MiB [cached] 2 assets
+assets by path . 5 MiB
+  asset webApp.js 3.87 MiB [emitted] (name: main)
+  asset main.d0003de54c372fdccef2.hot-update.js 1.12 MiB [emitted] [immutable] [hmr] (name: main)
+  asset main.d0003de54c372fdccef2.hot-update.json 28 bytes [emitted] [immutable] [hmr]
+Entrypoint main 5 MiB (35.1 MiB) = webApp.js 3.87 MiB main.d0003de54c372fdccef2.hot-update.js 1.12 MiB 2 auxiliary assets
+cached modules 1020 KiB (javascript) 35.1 MiB (asset) [cached] 21 modules
+runtime modules 30.1 KiB 13 modules
+javascript modules 469 KiB
+  ./kotlin/KuzeyKapisiApp-webApp.import-object.mjs 469 KiB [built] [code generated] [1 warning]
+  ./kotlin/ lazy strict namespace object 160 bytes [built]
+webpack 5.101.3 compiled with 1 warning in 1283 ms
+Critical dependency: the request of a dependency is an expression
+assets by status 8.25 MiB [cached] 1 asset
+assets by info 27.2 MiB [immutable]
+  asset cb4f9f02b5fa6b726de0.wasm 27.2 MiB [emitted] [immutable] [from: kotlin/KuzeyKapisiApp-webApp.wasm] [hmr] (name: main) (auxiliary name: main)
+  asset main.05da23f4491ca4a510a0.hot-update.js 1.16 KiB [emitted] [immutable] [hmr] (name: main)
+  asset main.05da23f4491ca4a510a0.hot-update.json 28 bytes [emitted] [immutable] [hmr]
+asset webApp.js 3.87 MiB [emitted] (name: main)
+Entrypoint main 31.1 MiB (35.5 MiB) = webApp.js 3.87 MiB main.05da23f4491ca4a510a0.hot-update.js 1.16 KiB cb4f9f02b5fa6b726de0.wasm 27.2 MiB 2 auxiliary assets
+cached modules 1.45 MiB (javascript) 8.25 MiB (asset) [cached] 22 modules
+runtime modules 30.1 KiB 13 modules
+./kotlin/KuzeyKapisiApp-webApp.wasm 27.2 MiB (asset) 42 bytes (javascript) [built] [code generated]
+webpack 5.101.3 compiled with 1 warning in 373 ms
+assets by status 8.25 MiB [cached] 1 asset
+Critical dependency: the request of a dependency is an expression
+assets by info 27.3 MiB [immutable]
+  asset 5e93d8fb794fb76397ea.wasm 27.3 MiB [emitted] [immutable] [from: kotlin/KuzeyKapisiApp-webApp.wasm] [hmr] (name: main) (auxiliary name: main)
+  asset main.67f5f3bdf14f86ab1499.hot-update.js 1.16 KiB [emitted] [immutable] [hmr] (name: main)
+  asset main.67f5f3bdf14f86ab1499.hot-update.json 28 bytes [emitted] [immutable] [hmr]
+asset webApp.js 3.87 MiB [emitted] (name: main)
+Entrypoint main 31.2 MiB (35.6 MiB) = webApp.js 3.87 MiB main.67f5f3bdf14f86ab1499.hot-update.js 1.16 KiB 5e93d8fb794fb76397ea.wasm 27.3 MiB 2 auxiliary assets
+cached modules 1.45 MiB (javascript) 8.25 MiB (asset) [cached] 21 modules
+runtime modules 30.1 KiB 13 modules
+modules by layer 27.3 MiB (asset) 202 bytes (javascript)
+  ./kotlin/KuzeyKapisiApp-webApp.wasm 27.3 MiB (asset) 42 bytes (javascript) [built] [code generated]
+  ./kotlin/ lazy strict namespace object 160 bytes [built]
+webpack 5.101.3 compiled with 1 warning in 684 ms
+Critical dependency: the request of a dependency is an expression
+assets by status 39.5 MiB [cached] 3 assets
+cached modules 1.45 MiB (javascript) 8.25 MiB (asset) 30.1 KiB (runtime) [cached] 35 modules
+./kotlin/KuzeyKapisiApp-webApp.wasm 27.3 MiB (asset) 42 bytes (javascript) [built]
+webpack 5.101.3 compiled with 1 warning in 128 ms
