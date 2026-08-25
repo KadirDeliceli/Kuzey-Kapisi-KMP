@@ -51,7 +51,7 @@ val KumGece = Color(0xFF3E2F1B)
 
 // Koyu tema: içinde bir tutam deniz tonu taşıyan, mürekkep gibi nötrler.
 /** Koyu tema zemini. */
-val NotrGece = Color(0xFF0A1014)
+val NotrGece = Color(0xFF181F24)
 /** Koyu tema temel yüzeyi (kart, panel). */
 val NotrGeceYuzey = Color(0xFF101A1F)
 /** Zemine yakın, hafifçe ayrışan yüzey: form alanı, liste satırı. */
