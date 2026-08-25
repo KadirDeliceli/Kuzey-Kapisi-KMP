@@ -1,51 +1,59 @@
 package com.kuzeykapisi.app.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kuzeykapisi.app.config.Config
+import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.KartSekli
+import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
+import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.default_kapak
 import org.jetbrains.compose.resources.painterResource
-
-private val KART_KOSE_YARICAPI = 16.dp
 
 /**
  * Tüm kart tipleri (ana kart, alt kart, bot/kişilik kartı) için TEK paylaşılan
  * kapak bileşeni. Dış boyut (aspectRatio) çağıran taraf tarafından `modifier`
  * ile verilir; bu bileşen sadece o sabit alanı görselle eksiksiz doldurur.
+ *
+ * Görsel dil:
+ *  - Sağ-alt köşesi kesik "elle kesilmiş taş" formu ([KartSekli]).
+ *  - Durağan hâlde neredeyse görünmez kenarlık; hover/basılıyken fener alevi.
+ *  - Koyu palete ayarlanmış, alta doğru koyulaşan degrade — başlık her zaman
+ *    okunur kalır.
+ *  - [hale] yalnızca ana sayfa kartlarında açılır (web'de fener halesi).
+ *  - [muhur] yalnızca Tescilli Ürünler kategorisinde açılır; sağ-üst köşeye
+ *    ince bir [SinopKirmizisi] coğrafi işaret mührü koyar.
  */
 @Composable
 fun CoverCard(
@@ -57,72 +65,141 @@ fun CoverCard(
     modifier: Modifier = Modifier,
     anlatimVar: Boolean = false,
     onSesTiklandi: (() -> Unit)? = null,
+    hale: Boolean = false,
+    muhur: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val hoverlu by interactionSource.collectIsHoveredAsState()
-    val olcek by animateFloatAsState(
-        targetValue = if (hoverlu) 1.04f else 1f,
-        animationSpec = tween(durationMillis = 220),
-        label = "kartOlcek",
-    )
+    val etkilesim = kartEtkilesimi(interactionSource)
 
-    Box(
-        modifier = modifier
-            .scale(olcek)
-            .clip(RoundedCornerShape(KART_KOSE_YARICAPI))
-            .shadow(4.dp, RoundedCornerShape(KART_KOSE_YARICAPI))
-            .hoverable(interactionSource = interactionSource)
-            .clickable(onClick = onClick),
-    ) {
-        AsyncImage(
-            model = Config.gorselUrl(kategori, kod),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            error = painterResource(Res.drawable.default_kapak),
-            placeholder = painterResource(Res.drawable.default_kapak),
-            modifier = Modifier
-                .matchParentSize()
-                .clip(RoundedCornerShape(KART_KOSE_YARICAPI)),
-        )
+    Box(modifier = modifier.scale(etkilesim.olcek)) {
+        if (hale) FenerHalesi(gorunur = etkilesim.hoverlu, sekil = KartSekli)
+
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.45f),
-                            Color.Black.copy(alpha = 0.55f),
-                        ),
-                    )
+                .clip(KartSekli)
+                .background(KaranlikLacivert)
+                .hoverable(interactionSource = interactionSource)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick,
                 ),
-        )
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .padding(16.dp),
         ) {
-            if (etiket != null) {
+            AsyncImage(
+                model = Config.gorselUrl(kategori, kod),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                error = painterResource(Res.drawable.default_kapak),
+                placeholder = painterResource(Res.drawable.default_kapak),
+                modifier = Modifier.matchParentSize(),
+            )
+            // Koyu palete göre yeniden ayarlanmış okunabilirlik katmanı:
+            // üstte hafif, altta yoğun gece denizi.
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0f to KaranlikLacivert.copy(alpha = 0.10f),
+                                0.45f to KaranlikLacivert.copy(alpha = 0.45f),
+                                1f to KaranlikLacivert.copy(alpha = 0.92f),
+                            ),
+                        ),
+                    ),
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(start = 18.dp, end = 18.dp, bottom = 16.dp, top = 16.dp),
+            ) {
+                if (etiket != null) {
+                    Text(
+                        text = etiket.uppercase(),
+                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
+                        color = FenerAlevi,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(bottom = 5.dp),
+                    )
+                }
                 Text(
-                    text = etiket,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.secondary,
+                    text = baslik,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = TasBeyazi,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(
-                text = baslik,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onPrimary,
-            )
+
+            if (muhur) {
+                CografiIsaretMuhru(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp),
+                )
+            }
+
+            if (anlatimVar && onSesTiklandi != null) {
+                SesIkonuButonu(
+                    onClick = onSesTiklandi,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(10.dp),
+                )
+            }
         }
 
-        if (anlatimVar && onSesTiklandi != null) {
-            SesIkonuButonu(
-                onClick = onSesTiklandi,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(10.dp),
+        // Kenarlık en üstte çizilir ki görsel ve degrade onu örtmesin.
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, KartSekli),
+        )
+    }
+}
+
+/**
+ * Tescilli ürün kartlarına konan küçük mühür/damga detayı — resmi bir coğrafi
+ * işaret hissi verir, göze batmaz. [SinopKirmizisi]'nin izin verilen iki
+ * kullanımından biri (diğeri: admin panelindeki yıkıcı eylemler).
+ */
+@Composable
+private fun CografiIsaretMuhru(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(26.dp)
+            .clip(CircleShape)
+            .background(KaranlikLacivert.copy(alpha = 0.55f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.size(15.dp)) {
+            val w = size.width
+            val h = size.height
+            val kalinlik = w * 0.09f
+            // Dış halka + içeride tırtıklı bir yıldız izlenimi: mühür baskısı.
+            drawCircle(
+                color = SinopKirmizisi,
+                radius = w * 0.46f,
+                style = Stroke(width = kalinlik),
             )
+            val yildiz = Path().apply {
+                moveTo(w * 0.5f, h * 0.20f)
+                lineTo(w * 0.60f, h * 0.44f)
+                lineTo(w * 0.82f, h * 0.46f)
+                lineTo(w * 0.65f, h * 0.62f)
+                lineTo(w * 0.71f, h * 0.83f)
+                lineTo(w * 0.5f, h * 0.71f)
+                lineTo(w * 0.29f, h * 0.83f)
+                lineTo(w * 0.35f, h * 0.62f)
+                lineTo(w * 0.18f, h * 0.46f)
+                lineTo(w * 0.40f, h * 0.44f)
+                close()
+            }
+            drawPath(yildiz, color = SinopKirmizisi)
         }
     }
 }
@@ -136,18 +213,27 @@ fun CoverCard(
  */
 @Composable
 fun SesIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+    val renk = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else TasBeyazi
+
     Box(
         modifier = modifier
+            .scale(etkilesim.olcek)
             .size(34.dp)
             .clip(CircleShape)
-            .background(Color.Black.copy(alpha = 0.45f))
-            .clickable(onClick = onClick),
+            .background(KaranlikLacivert.copy(alpha = 0.62f))
+            .hoverable(interactionSource = interactionSource)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
             val w = size.width
             val h = size.height
-            val renk = Color.White
 
             // Hoparlör gövdesi: kare + sağa açılan huni.
             val govde = Path().apply {

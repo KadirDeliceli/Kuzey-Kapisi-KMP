@@ -1,10 +1,6 @@
 package com.kuzeykapisi.app.ui.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.window.DialogProperties
 
 const val BIZ_KIMIZ_METNI = "Kuzey Kapısı, Kuzey Anadolu Kalkınma Ajansı (KUZKA) Sinop " +
     "Yatırım Destek Ofisi bünyesinde yürütülen bölgesel bir turizm ve yapay zeka " +
@@ -29,13 +25,14 @@ fun InfoDialog(
     onaylaMetni: String = "Kapat",
     dismissOnClickOutside: Boolean = true,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(baslik) },
-        text = { Text(metin) },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(onaylaMetni) }
-        },
-        properties = DialogProperties(dismissOnClickOutside = dismissOnClickOutside),
-    )
+    KuzeyDialogKabugu(
+        onDismiss = onDismiss,
+        dismissOnClickOutside = dismissOnClickOutside,
+    ) {
+        DialogBasligi(baslik)
+        DialogMetni(metin)
+        DialogEylemleri {
+            BirincilButon(metin = onaylaMetni, onClick = onDismiss)
+        }
+    }
 }

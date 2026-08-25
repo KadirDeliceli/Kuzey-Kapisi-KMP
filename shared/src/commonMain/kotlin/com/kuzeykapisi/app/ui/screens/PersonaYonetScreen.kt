@@ -1,7 +1,9 @@
 package com.kuzeykapisi.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +15,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,10 +34,22 @@ import com.kuzeykapisi.app.data.model.ADMIN_PERSONA_KATEGORILERI
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.ui.components.AlanBasligi
+import com.kuzeykapisi.app.ui.components.BosDurumGorunumu
 import com.kuzeykapisi.app.ui.components.DuzenleIkonuButonu
-import com.kuzeykapisi.app.ui.components.GeriButonu
+import com.kuzeykapisi.app.ui.components.EkranBasligi
+import com.kuzeykapisi.app.ui.components.HataMetni
+import com.kuzeykapisi.app.ui.components.KuzeyChip
+import com.kuzeykapisi.app.ui.components.NabizGostergesi
 import com.kuzeykapisi.app.ui.components.OnayDialog
 import com.kuzeykapisi.app.ui.components.SilIkonuButonu
+import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
+import com.kuzeykapisi.app.ui.components.kartEtkilesimi
+import com.kuzeykapisi.app.ui.theme.DerinDeniz
+import com.kuzeykapisi.app.ui.theme.LocalVeriStili
+import com.kuzeykapisi.app.ui.theme.SatirSekli
+import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.vm.PersonaListeViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -64,53 +76,41 @@ fun PersonaYonetScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
-        GeriButonu(metin = "Geri", onClick = onGeri)
-        Text(
-            text = "Personaları Yönet",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+        EkranBasligi(
+            baslik = "Personaları Yönet",
+            etiket = "Yönetim",
+            geriMetni = "Geri",
+            onGeri = onGeri,
+            modifier = Modifier.padding(bottom = 24.dp),
         )
 
-        Text(
-            text = "Kategori",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        AlanBasligi("Kategori")
+        Spacer(modifier = Modifier.height(10.dp))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ADMIN_PERSONA_KATEGORILERI.forEach { (kod, etiket) ->
-                YonetimKategoriChip(
-                    secili = ui.kategori == kod,
+                KuzeyChip(
                     etiket = etiket,
+                    secili = ui.kategori == kod,
                     onClick = { vm.kategoriSec(kod) },
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(22.dp))
 
         when {
-            ui.yukleniyor -> Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            ui.hata != null -> Text(
-                text = ui.hata ?: "",
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
+            ui.yukleniyor -> YukleniyorGorunumu(
+                modifier = Modifier.fillMaxWidth().height(140.dp),
             )
+            ui.hata != null -> HataMetni(ui.hata ?: "")
             else -> {
                 val ogeler = ui.katalog[ui.kategori]?.ogeler ?: emptyList()
                 if (ogeler.isEmpty()) {
-                    Text(
-                        text = "Bu kategoride henüz içerik yok.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    BosDurumGorunumu("Bu kategoride henüz içerik yok.")
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         ogeler.forEach { oge ->
                             PersonaSatiri(
                                 oge = oge,
@@ -128,21 +128,11 @@ fun PersonaYonetScreen(
 
         val silmeHatasi = ui.silmeHatasi
         if (silmeHatasi != null) {
-            Text(
-                text = silmeHatasi,
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 12.dp),
-            )
+            HataMetni(silmeHatasi, modifier = Modifier.padding(top = 14.dp))
         }
         val duzenlemeHatasi = ui.duzenlemeHatasi
         if (duzenlemeHatasi != null) {
-            Text(
-                text = duzenlemeHatasi,
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 12.dp),
-            )
+            HataMetni(duzenlemeHatasi, modifier = Modifier.padding(top = 14.dp))
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -152,7 +142,7 @@ fun PersonaYonetScreen(
     if (silinecekOge != null) {
         OnayDialog(
             baslik = "Silinsin mi?",
-            metin = "'${silinecekOge.ad}' silinsin mi? Görsel ve anlatım da silinir, geri alınamaz.",
+            metin = "'${silinecekOge.ad}' silinecek. Görseli ve anlatımı da gider, bu işlem geri alınamaz.",
             onOnay = { vm.silmeyiOnayla(token) },
             onVazgec = { vm.silmeyiVazgec() },
         )
@@ -166,52 +156,44 @@ private fun PersonaSatiri(
     onDuzenle: () -> Unit,
     onSil: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .clip(SatirSekli)
+            .background(DerinDeniz)
+            .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, SatirSekli)
+            .hoverable(interactionSource = interactionSource)
+            .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
             Text(
                 text = oge.ad,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = TasBeyazi,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            // Kod bir tanımlayıcıdır — veri yazı tipiyle yazılır.
             Text(
                 text = oge.kod,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = LocalVeriStili.current,
+                color = SisGrisi,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 3.dp),
             )
         }
         if (duzenlemeYukleniyor) {
-            Box(modifier = Modifier.padding(8.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.height(18.dp).width(18.dp), strokeWidth = 2.dp)
+            Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                NabizGostergesi(boyut = 22.dp)
             }
         } else {
             DuzenleIkonuButonu(onClick = onDuzenle)
         }
         SilIkonuButonu(onClick = onSil)
-    }
-}
-
-@Composable
-private fun YonetimKategoriChip(secili: Boolean, etiket: String, onClick: () -> Unit) {
-    val zemin = if (secili) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val metinRenk = if (secili) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(zemin)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-    ) {
-        Text(text = etiket, color = metinRenk, style = MaterialTheme.typography.labelLarge)
     }
 }

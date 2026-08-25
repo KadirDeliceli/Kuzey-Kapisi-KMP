@@ -7,38 +7,46 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.ui.theme.FenerAlevi
 
+/**
+ * "Yazıyor…" göstergesi — üç noktanın fener alevi tonunda nabız gibi
+ * canlanması; opaklıkla birlikte hafif bir ölçek değişimi de var, böylece
+ * yanıp sönmek yerine soluk alıp veriyormuş gibi görünür.
+ */
 @Composable
 fun TypingIndicator(modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition()
-    Row(modifier = modifier) {
-        repeat(3) { index ->
-            val alpha by transition.animateFloat(
-                initialValue = 0.2f,
+    val gecis = rememberInfiniteTransition(label = "yaziyor")
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        repeat(3) { sira ->
+            val nabiz by gecis.animateFloat(
+                initialValue = 0f,
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(600, delayMillis = index * 150, easing = LinearEasing),
+                    animation = tween(620, delayMillis = sira * 160, easing = LinearEasing),
                     repeatMode = RepeatMode.Reverse,
                 ),
+                label = "nokta$sira",
             )
-            androidx.compose.foundation.layout.Box(
+            Box(
                 modifier = Modifier
-                    .padding(horizontal = 2.dp)
-                    .size(8.dp)
+                    .padding(horizontal = 3.dp)
+                    .size(7.dp)
+                    .scale(0.72f + 0.28f * nabiz)
                     .clip(CircleShape)
-                    .alpha(alpha)
-                    .background(MaterialTheme.colorScheme.secondary),
+                    .background(FenerAlevi.copy(alpha = 0.28f + 0.62f * nabiz)),
             )
         }
     }

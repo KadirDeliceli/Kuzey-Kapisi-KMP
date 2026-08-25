@@ -1,9 +1,13 @@
 package com.kuzeykapisi.app.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -11,15 +15,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -31,17 +34,27 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
-import com.kuzeykapisi.app.ui.components.GeriButonu
+import com.kuzeykapisi.app.ui.components.EkranBasligi
+import com.kuzeykapisi.app.ui.components.HataGorunumu
+import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
+import com.kuzeykapisi.app.ui.components.kartEtkilesimi
+import com.kuzeykapisi.app.ui.theme.ButonSekli
+import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.vm.AnlatimViewModel
 
@@ -73,22 +86,21 @@ fun AnlatimEkrani(
     BackHandler(enabled = true) { onGeri() }
 
     Column(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
-            GeriButonu(metin = "Geri", onClick = onGeri)
-            Text(
-                text = baslik,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        EkranBasligi(
+            baslik = baslik,
+            etiket = "Sesli Anlatım",
+            geriMetni = "Geri",
+            onGeri = onGeri,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+        )
 
         when {
-            ui.yukleniyor -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            ui.hata != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(ui.hata ?: "", color = MaterialTheme.colorScheme.tertiary)
-            }
+            ui.yukleniyor -> YukleniyorGorunumu(modifier = Modifier.fillMaxSize())
+            ui.hata != null -> HataGorunumu(
+                mesaj = ui.hata ?: "Anlatım yüklenemedi.",
+                modifier = Modifier.fillMaxSize(),
+                onTekrarDene = { vm.yukle() },
+            )
             else -> Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     OynatimKontrolleri(
@@ -102,21 +114,30 @@ fun AnlatimEkrani(
                 if (sesHatasi != null) {
                     Text(
                         text = sesHatasi ?: "",
-                        color = MaterialTheme.colorScheme.tertiary,
+                        color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                         textAlign = TextAlign.Center,
                     )
                 }
-                Text(
-                    text = ui.metin ?: "",
-                    style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 26.sp),
-                    color = MaterialTheme.colorScheme.onSurface,
+                // Uzun anlatım metni bir "okuma sütunu" gibi ele alınır:
+                // satır uzunluğu sınırlı, ortalanmış, ferah satır arası.
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 24.dp, bottom = 24.dp)
-                        .verticalScroll(rememberScrollState()),
-                )
+                        .padding(top = 24.dp, bottom = 24.dp),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    Text(
+                        text = ui.metin ?: "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TasBeyazi.copy(alpha = 0.92f),
+                        modifier = Modifier
+                            .widthIn(max = 680.dp)
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                    )
+                }
             }
         }
     }
@@ -199,6 +220,11 @@ private fun OynatimKontrolleri(
 
 private enum class AnlatimSimgesi { OYNAT, DURAKLAT, BASTAN_BASLA }
 
+/**
+ * Anlatım kontrol butonu. Dolu hâli fener alevidir (birincil eylem: dinle /
+ * duraklat), çerçeveli hâli ikincildir (baştan başla) ve üzerine gelindiğinde
+ * kenarı fener alevine döner — tüm kart/buton dilinde olduğu gibi.
+ */
 @Composable
 private fun AnlatimButonu(
     metin: String,
@@ -208,26 +234,44 @@ private fun AnlatimButonu(
     modifier: Modifier = Modifier,
     kompakt: Boolean = false,
 ) {
-    val zeminRenk = MaterialTheme.colorScheme.primary
-    val vurguRenk = if (dolgu) MaterialTheme.colorScheme.onPrimary else zeminRenk
-    val yatayBosluk = if (kompakt) 16.dp else 22.dp
-    val dikeyBosluk = if (kompakt) 12.dp else 14.dp
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+    val vurgulu = etkilesim.hoverlu || etkilesim.basili
+
+    val zemin by animateColorAsState(
+        targetValue = if (vurgulu) FenerAlevi else FenerAlevi.copy(alpha = 0.92f),
+        animationSpec = tween(MIKRO_SURE),
+        label = "anlatimZemin",
+    )
+    val cerceveMetin by animateColorAsState(
+        targetValue = if (vurgulu) FenerAlevi else TasBeyazi,
+        animationSpec = tween(MIKRO_SURE),
+        label = "anlatimCerceveMetin",
+    )
+    val vurguRenk = if (dolgu) KaranlikLacivert else cerceveMetin
+
+    val yatayBosluk = if (kompakt) 16.dp else 24.dp
+    val dikeyBosluk = if (kompakt) 12.dp else 15.dp
+
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(28.dp))
-            .let {
+            .scale(etkilesim.olcek)
+            .clip(ButonSekli)
+            .then(
                 if (dolgu) {
-                    it.background(zeminRenk)
+                    Modifier.background(zemin)
                 } else {
-                    it.border(1.5.dp, zeminRenk, RoundedCornerShape(28.dp))
-                }
-            }
-            .clickable(onClick = onClick)
+                    Modifier.border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, ButonSekli)
+                },
+            )
+            .hoverable(interactionSource = interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .heightIn(min = 48.dp)
             .padding(horizontal = yatayBosluk, vertical = dikeyBosluk),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(9.dp, Alignment.CenterHorizontally),
     ) {
-        Canvas(modifier = Modifier.size(if (kompakt) 16.dp else 18.dp)) {
+        Canvas(modifier = Modifier.size(if (kompakt) 15.dp else 17.dp)) {
             when (simge) {
                 AnlatimSimgesi.DURAKLAT -> {
                     // İki dikey çubuk.
@@ -277,8 +321,8 @@ private fun AnlatimButonu(
         }
         Text(
             text = metin,
-            style = if (kompakt) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
-            color = vurguRenk,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (dolgu) KaranlikLacivert else cerceveMetin,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

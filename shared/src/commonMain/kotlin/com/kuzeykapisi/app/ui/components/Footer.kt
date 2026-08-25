@@ -1,20 +1,25 @@
 package com.kuzeykapisi.app.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.ui.theme.SisGrisi
 
 private val GENIS_EKRAN_ESIGI = 600.dp
 
@@ -24,9 +29,20 @@ private const val ILETISIM_METNI =
 @Composable
 fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
     Column(modifier = modifier.fillMaxWidth()) {
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+        // Üst çubuktaki ışık hattının eşi — uçlara doğru sönen ince ayraç.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            SisGrisi.copy(alpha = 0.30f),
+                            Color.Transparent,
+                        ),
+                    ),
+                ),
         )
         BoxWithConstraints {
             val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
@@ -37,7 +53,7 @@ fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(horizontal = 24.dp, vertical = 18.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -50,8 +66,9 @@ fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(horizontal = 24.dp, vertical = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     FooterMetni(ILETISIM_METNI, TextAlign.Center)
                     FooterMetni(telifMetni, TextAlign.Center)
@@ -65,8 +82,8 @@ fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
 private fun FooterMetni(metin: String, hizalama: TextAlign? = null) {
     Text(
         text = metin,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall,
+        color = SisGrisi,
         textAlign = hizalama,
     )
 }

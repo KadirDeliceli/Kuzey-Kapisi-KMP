@@ -14,7 +14,25 @@ private const val HTML_SABLONU = """<!DOCTYPE html>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>html, body, #map { height: 100%; margin: 0; padding: 0; }</style>
+<style>
+  /* Harita, uygulamanın gece denizi paletine oturur: karo katmanı hafifçe
+     karartılıp doygunluğu düşürülür, üzerindeki rota ve pinler fener
+     aleviyle öne çıkar. */
+  html, body, #map { height: 100%; margin: 0; padding: 0; background: #0B1E2D; }
+  .leaflet-tile-pane { filter: brightness(0.72) saturate(0.55) contrast(1.05); }
+  .leaflet-container { background: #0B1E2D; }
+  .kk-pin {
+    width: 24px; height: 24px; border-radius: 50% 50% 50% 4px;
+    background: #E8A33D; color: #0B1E2D;
+    font: 600 12px/24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    text-align: center; box-shadow: 0 0 0 2px rgba(11,30,45,0.85);
+  }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: #16455A; color: #F2EFE7; border-radius: 10px 10px 10px 4px;
+  }
+  .leaflet-control-attribution { background: rgba(11,30,45,0.75) !important; color: #7C8B93 !important; }
+  .leaflet-control-attribution a { color: #7C8B93 !important; }
+</style>
 </head>
 <body>
 <div id="map"></div>
@@ -28,12 +46,19 @@ private const val HTML_SABLONU = """<!DOCTYPE html>
   }).addTo(map);
   var noktalar = [];
   duraklar.forEach(function(d) {
-    var marker = L.marker([d.lat, d.lng]).addTo(map);
+    var ikon = L.divIcon({
+      className: '',
+      html: '<div class="kk-pin">' + d.sira + '</div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 24],
+      popupAnchor: [0, -22]
+    });
+    var marker = L.marker([d.lat, d.lng], {icon: ikon}).addTo(map);
     marker.bindPopup('<b>' + d.sira + '. ' + d.ad + '</b>');
     noktalar.push([d.lat, d.lng]);
   });
   if (noktalar.length > 1) {
-    L.polyline(noktalar, {color: '#1C6178', weight: 4, opacity: 0.8}).addTo(map);
+    L.polyline(noktalar, {color: '#E8A33D', weight: 3, opacity: 0.9}).addTo(map);
   }
   if (noktalar.length > 0) {
     map.fitBounds(noktalar, {padding: [30, 30]});

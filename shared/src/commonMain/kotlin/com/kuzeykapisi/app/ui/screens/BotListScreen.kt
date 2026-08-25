@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,11 +22,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.ui.components.BosDurumGorunumu
 import com.kuzeykapisi.app.ui.components.CoverCard
-import com.kuzeykapisi.app.ui.components.GeriButonu
+import com.kuzeykapisi.app.ui.components.EkranBasligi
+import com.kuzeykapisi.app.ui.components.HataGorunumu
+import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
 import com.kuzeykapisi.app.ui.vm.CatalogViewModel
 
 private val GENIS_EKRAN_ESIGI = 600.dp
+
+/** Coğrafi işaret mührünü taşıyan tek katalog kategorisi. */
+private const val TESCIL_KATEGORISI = "tescil"
 
 @Composable
 fun BotListScreen(
@@ -46,48 +49,56 @@ fun BotListScreen(
     LaunchedEffect(vm) { vm.yukle() }
 
     Column(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
-            GeriButonu(metin = "Geri", onClick = onGeri)
-            Text(
-                text = baslik,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        EkranBasligi(
+            baslik = baslik,
+            geriMetni = "Geri",
+            onGeri = onGeri,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+        )
         when {
-            ui.yukleniyor -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            ui.hata != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(ui.hata ?: "", color = MaterialTheme.colorScheme.tertiary)
-            }
+            ui.yukleniyor -> YukleniyorGorunumu(modifier = Modifier.fillMaxSize())
+            ui.hata != null -> HataGorunumu(
+                mesaj = ui.hata ?: "Bağlantı kurulamadı.",
+                modifier = Modifier.fillMaxSize(),
+                onTekrarDene = { vm.yukle() },
+            )
             else -> {
                 val ogeler = ui.katalog[kategori]?.ogeler ?: emptyList()
-                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
-                    val hucreMin = if (genisEkran) 230.dp else 140.dp
-                    val oran = when {
-                        kategori == "kisiler" -> 3f / 4f
-                        !genisEkran -> 4f / 3f
-                        else -> 16f / 9f
+                if (ogeler.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+                        BosDurumGorunumu(
+                            mesaj = "Bu başlıkta henüz içerik yok.",
+                            modifier = Modifier.padding(horizontal = 30.dp),
+                        )
                     }
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(hucreMin),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        items(ogeler) { oge ->
-                            CoverCard(
-                                kategori = kategori,
-                                kod = oge.kod,
-                                baslik = oge.ad,
-                                onClick = { onBotTiklandi(oge) },
-                                modifier = Modifier.aspectRatio(oran),
-                                anlatimVar = oge.anlatimVar,
-                                onSesTiklandi = { onSesTiklandi(oge) },
-                            )
+                } else {
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
+                        val hucreMin = if (genisEkran) 230.dp else 140.dp
+                        val oran = when {
+                            kategori == "kisiler" -> 3f / 4f
+                            !genisEkran -> 4f / 3f
+                            else -> 16f / 9f
+                        }
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(hucreMin),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            items(ogeler) { oge ->
+                                CoverCard(
+                                    kategori = kategori,
+                                    kod = oge.kod,
+                                    baslik = oge.ad,
+                                    onClick = { onBotTiklandi(oge) },
+                                    modifier = Modifier.fillMaxWidth().aspectRatio(oran),
+                                    anlatimVar = oge.anlatimVar,
+                                    onSesTiklandi = { onSesTiklandi(oge) },
+                                    muhur = kategori == TESCIL_KATEGORISI,
+                                )
+                            }
                         }
                     }
                 }

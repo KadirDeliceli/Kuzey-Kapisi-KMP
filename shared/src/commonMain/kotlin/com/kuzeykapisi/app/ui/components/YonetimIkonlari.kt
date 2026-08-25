@@ -1,18 +1,34 @@
 package com.kuzeykapisi.app.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.ui.theme.ButonSekli
+import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
+import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.YosunAcik
 
 /**
  * Liste satırlarındaki "düzenle" (kalem) ikon butonu. Diğer ikonlar gibi
@@ -22,11 +38,22 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun DuzenleIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val renk = MaterialTheme.colorScheme.secondary
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+    val renk by animateColorAsState(
+        targetValue = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else SisGrisi,
+        animationSpec = tween(MIKRO_SURE),
+        label = "duzenleRengi",
+    )
+
     Box(
         modifier = modifier
+            .scale(etkilesim.olcek)
             .size(40.dp)
-            .clickable(onClick = onClick),
+            .clip(ButonSekli)
+            .background(renk.copy(alpha = 0.08f))
+            .hoverable(interactionSource = interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
@@ -52,14 +79,38 @@ fun DuzenleIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** Liste satırlarındaki "sil" (çöp kutusu) ikon butonu. */
+/**
+ * Liste satırlarındaki "sil" (çöp kutusu) ikon butonu.
+ *
+ * YIKICI eylem olduğu için [SinopKirmizisi] kullanır — bu rengin uygulamadaki
+ * iki dar rolünden biri. Durağan hâlde soluk, üzerine gelindiğinde tam
+ * doygunlukta görünür; böylece yanlışlıkla dokunulacak kadar davetkâr olmaz
+ * ama nişan alındığında niyeti net söyler.
+ */
 @Composable
 fun SilIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val renk = MaterialTheme.colorScheme.tertiary
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+    val vurgulu = etkilesim.hoverlu || etkilesim.basili
+    val renk by animateColorAsState(
+        targetValue = if (vurgulu) SinopKirmizisi else SinopKirmizisi.copy(alpha = 0.62f),
+        animationSpec = tween(MIKRO_SURE),
+        label = "silRengi",
+    )
+    val zemin by animateColorAsState(
+        targetValue = SinopKirmizisi.copy(alpha = if (vurgulu) 0.16f else 0f),
+        animationSpec = tween(MIKRO_SURE),
+        label = "silZemin",
+    )
+
     Box(
         modifier = modifier
+            .scale(etkilesim.olcek)
             .size(40.dp)
-            .clickable(onClick = onClick),
+            .clip(ButonSekli)
+            .background(zemin)
+            .hoverable(interactionSource = interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
@@ -87,10 +138,12 @@ fun SilIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** Rota mekan listesinde anlatım metni olduğunu belirten, tıklanamaz küçük ses rozeti. */
+/**
+ * Rota mekan listesinde anlatım metni olduğunu belirten, tıklanamaz küçük ses
+ * rozeti. Bilgi verir, eylem değildir — bu yüzden sakin [YosunAcik] tonunda.
+ */
 @Composable
 fun AnlatimRozeti(modifier: Modifier = Modifier) {
-    val renk = MaterialTheme.colorScheme.secondary
     Box(
         modifier = modifier.size(22.dp),
         contentAlignment = Alignment.Center,
@@ -107,19 +160,15 @@ fun AnlatimRozeti(modifier: Modifier = Modifier) {
                 lineTo(0f, h * 0.65f)
                 close()
             }
-            drawPath(govde, color = renk)
-            val kalinlik = w * 0.09f
+            drawPath(govde, color = YosunAcik)
             drawArc(
-                color = renk,
+                color = YosunAcik,
                 startAngle = -45f,
                 sweepAngle = 90f,
                 useCenter = false,
                 topLeft = Offset(w * 0.55f, h * 0.15f),
                 size = Size(w * 0.35f, h * 0.7f),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                    width = kalinlik,
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                ),
+                style = Stroke(width = w * 0.09f, cap = StrokeCap.Round),
             )
         }
     }

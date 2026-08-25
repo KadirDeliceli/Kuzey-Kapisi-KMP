@@ -1,14 +1,16 @@
 package com.kuzeykapisi.app.ui.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
 
 /**
- * Silme gibi geri alınamaz işlemler için onay/vazgeç dialogu — InfoDialog'un
- * tek butonlu (yalnızca "Kapat") halinden farklı olarak iki seçenek sunar.
+ * Silme gibi GERİ ALINAMAZ işlemler için onay/vazgeç dialogu.
+ *
+ * Kabuğun kenarlığı, üst ışık hattı ve onay butonu [SinopKirmizisi]'dir —
+ * bu rengin uygulamadaki iki dar rolünden biri (diğeri: tescilli ürün
+ * kartlarındaki coğrafi işaret mührü). Uygulamanın başka hiçbir yerinde
+ * bu renk bu şekilde görünmez, bu yüzden burada gördüğünde "dur ve düşün"
+ * anlamı taşır.
  */
 @Composable
 fun OnayDialog(
@@ -16,19 +18,17 @@ fun OnayDialog(
     metin: String,
     onOnay: () -> Unit,
     onVazgec: () -> Unit,
-    onayMetni: String = "Sil",
+    onayMetni: String = "Evet, Sil",
 ) {
-    AlertDialog(
-        onDismissRequest = onVazgec,
-        title = { Text(baslik) },
-        text = { Text(metin) },
-        confirmButton = {
-            TextButton(onClick = onOnay) {
-                Text(onayMetni, color = MaterialTheme.colorScheme.tertiary)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onVazgec) { Text("Vazgeç") }
-        },
-    )
+    KuzeyDialogKabugu(
+        onDismiss = onVazgec,
+        vurguRengi = SinopKirmizisi,
+    ) {
+        DialogBasligi(baslik)
+        DialogMetni(metin)
+        DialogEylemleri {
+            SessizButon(metin = "Vazgeç", onClick = onVazgec)
+            YikiciButon(metin = onayMetni, onClick = onOnay)
+        }
+    }
 }

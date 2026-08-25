@@ -1,6 +1,9 @@
 package com.kuzeykapisi.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,11 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,10 +31,19 @@ import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.AnlatimRozeti
+import com.kuzeykapisi.app.ui.components.BosDurumGorunumu
 import com.kuzeykapisi.app.ui.components.DuzenleIkonuButonu
-import com.kuzeykapisi.app.ui.components.GeriButonu
+import com.kuzeykapisi.app.ui.components.EkranBasligi
+import com.kuzeykapisi.app.ui.components.HataMetni
+import com.kuzeykapisi.app.ui.components.NabizGostergesi
 import com.kuzeykapisi.app.ui.components.OnayDialog
 import com.kuzeykapisi.app.ui.components.SilIkonuButonu
+import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
+import com.kuzeykapisi.app.ui.components.kartEtkilesimi
+import com.kuzeykapisi.app.ui.theme.DerinDeniz
+import com.kuzeykapisi.app.ui.theme.SatirSekli
+import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.vm.RotaYerListeViewModel
 
 @Composable
@@ -59,30 +69,22 @@ fun RotaYerYonetScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
-        GeriButonu(metin = "Geri", onClick = onGeri)
-        Text(
-            text = "Rota Yerlerini Yönet",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+        EkranBasligi(
+            baslik = "Rota Yerlerini Yönet",
+            etiket = "Yönetim",
+            geriMetni = "Geri",
+            onGeri = onGeri,
+            modifier = Modifier.padding(bottom = 24.dp),
         )
 
         when {
-            ui.yukleniyor -> Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            ui.hata != null -> Text(
-                text = ui.hata ?: "",
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
+            ui.yukleniyor -> YukleniyorGorunumu(
+                modifier = Modifier.fillMaxWidth().height(140.dp),
             )
-            ui.mekanlar.isEmpty() -> Text(
-                text = "Henüz mekan eklenmedi.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            ui.hata != null -> HataMetni(ui.hata ?: "")
+            ui.mekanlar.isEmpty() -> BosDurumGorunumu("Henüz mekan eklenmedi.")
             else -> {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     ui.mekanlar.forEach { mekan ->
                         RotaYerSatiri(
                             mekan = mekan,
@@ -99,21 +101,11 @@ fun RotaYerYonetScreen(
 
         val silmeHatasi = ui.silmeHatasi
         if (silmeHatasi != null) {
-            Text(
-                text = silmeHatasi,
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 12.dp),
-            )
+            HataMetni(silmeHatasi, modifier = Modifier.padding(top = 14.dp))
         }
         val duzenlemeHatasi = ui.duzenlemeHatasi
         if (duzenlemeHatasi != null) {
-            Text(
-                text = duzenlemeHatasi,
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 12.dp),
-            )
+            HataMetni(duzenlemeHatasi, modifier = Modifier.padding(top = 14.dp))
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -123,7 +115,7 @@ fun RotaYerYonetScreen(
     if (silinecekMekan != null) {
         OnayDialog(
             baslik = "Silinsin mi?",
-            metin = "'${silinecekMekan.ad}' silinsin mi? Anlatımı da silinir, geri alınamaz.",
+            metin = "'${silinecekMekan.ad}' silinecek. Anlatımı da gider, bu işlem geri alınamaz.",
             onOnay = { vm.silmeyiOnayla(token) },
             onVazgec = { vm.silmeyiVazgec() },
         )
@@ -137,12 +129,17 @@ private fun RotaYerSatiri(
     onDuzenle: () -> Unit,
     onSil: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .clip(SatirSekli)
+            .background(DerinDeniz)
+            .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, SatirSekli)
+            .hoverable(interactionSource = interactionSource)
+            .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
@@ -150,7 +147,7 @@ private fun RotaYerSatiri(
                 Text(
                     text = mekan.ad,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = TasBeyazi,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -162,15 +159,15 @@ private fun RotaYerSatiri(
             Text(
                 text = mekan.aciklama,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = SisGrisi,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier.padding(top = 3.dp),
             )
         }
         if (duzenlemeYukleniyor) {
-            Box(modifier = Modifier.padding(8.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.height(18.dp).width(18.dp), strokeWidth = 2.dp)
+            Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                NabizGostergesi(boyut = 22.dp)
             }
         } else {
             DuzenleIkonuButonu(onClick = onDuzenle)

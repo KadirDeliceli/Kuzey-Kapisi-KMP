@@ -10,22 +10,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
-import com.kuzeykapisi.app.ui.components.GeriButonu
+import com.kuzeykapisi.app.ui.components.AnlatimiKaldirSecimi
+import com.kuzeykapisi.app.ui.components.BasariMetni
+import com.kuzeykapisi.app.ui.components.BirincilButon
+import com.kuzeykapisi.app.ui.components.EkranBasligi
+import com.kuzeykapisi.app.ui.components.HataMetni
+import com.kuzeykapisi.app.ui.components.KuzeyMetinAlani
 import com.kuzeykapisi.app.ui.vm.RotaYerDuzenleViewModel
 
 @Composable
@@ -51,112 +50,91 @@ fun RotaYerDuzenleScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
-        GeriButonu(metin = "Geri", onClick = onGeri)
-        Text(
-            text = "Düzenle: ${mekan.ad}",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+        EkranBasligi(
+            baslik = "Düzenle: ${mekan.ad}",
+            etiket = "Yönetim",
+            geriMetni = "Geri",
+            onGeri = onGeri,
+            modifier = Modifier.padding(bottom = 24.dp),
         )
 
-        OutlinedTextField(
-            value = ui.ad,
-            onValueChange = { vm.adDegisti(it) },
-            label = { Text("Ad") },
-            singleLine = true,
+        KuzeyMetinAlani(
+            deger = ui.ad,
+            onDegisti = { vm.adDegisti(it) },
+            etiket = "Ad",
+            tekSatir = true,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedTextField(
-                value = ui.enlem,
-                onValueChange = { vm.enlemDegisti(it) },
-                label = { Text("Enlem") },
-                singleLine = true,
+            KuzeyMetinAlani(
+                deger = ui.enlem,
+                onDegisti = { vm.enlemDegisti(it) },
+                etiket = "Enlem",
+                tekSatir = true,
                 modifier = Modifier.weight(1f),
             )
-            OutlinedTextField(
-                value = ui.boylam,
-                onValueChange = { vm.boylamDegisti(it) },
-                label = { Text("Boylam") },
-                singleLine = true,
+            KuzeyMetinAlani(
+                deger = ui.boylam,
+                onDegisti = { vm.boylamDegisti(it) },
+                etiket = "Boylam",
+                tekSatir = true,
                 modifier = Modifier.weight(1f),
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = ui.sureDk,
-            onValueChange = { vm.sureDkDegisti(it) },
-            label = { Text("Ziyaret Süresi (dakika)") },
-            singleLine = true,
+        KuzeyMetinAlani(
+            deger = ui.sureDk,
+            onDegisti = { vm.sureDkDegisti(it) },
+            etiket = "Ziyaret Süresi (dakika)",
+            tekSatir = true,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = ui.aciklama,
-            onValueChange = { vm.aciklamaDegisti(it) },
-            label = { Text("Açıklama") },
-            minLines = 4,
+        KuzeyMetinAlani(
+            deger = ui.aciklama,
+            onDegisti = { vm.aciklamaDegisti(it) },
+            etiket = "Açıklama",
+            enAzSatir = 4,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = ui.anlatim,
-            onValueChange = { vm.anlatimDegisti(it) },
-            label = { Text("Anlatım Metni (opsiyonel)") },
-            enabled = !ui.anlatimiKaldir,
-            supportingText = {
-                Text(
-                    "Mevcut anlatımın üzerine yazmak için doldurun, dokunmadan bırakırsanız " +
-                        "mevcut anlatım (varsa) korunur.",
-                )
-            },
-            minLines = 4,
+        KuzeyMetinAlani(
+            deger = ui.anlatim,
+            onDegisti = { vm.anlatimDegisti(it) },
+            etiket = "Anlatım Metni (opsiyonel)",
+            etkin = !ui.anlatimiKaldir,
+            yardimMetni = "Mevcut anlatımın üzerine yazmak için doldurun, dokunmadan bırakırsanız " +
+                "mevcut anlatım (varsa) korunur.",
+            enAzSatir = 4,
             modifier = Modifier.fillMaxWidth(),
         )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 4.dp),
-        ) {
-            Checkbox(checked = ui.anlatimiKaldir, onCheckedChange = { vm.anlatimiKaldirDegisti(it) })
-            Text(
-                text = "Anlatımı kaldır",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Spacer(modifier = Modifier.height(20.dp))
+        AnlatimiKaldirSecimi(
+            isaretli = ui.anlatimiKaldir,
+            onDegisti = { vm.anlatimiKaldirDegisti(it) },
+        )
+        Spacer(modifier = Modifier.height(24.dp))
 
         val genelHata = ui.genelHata
         if (genelHata != null) {
-            Text(
-                text = genelHata,
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
+            HataMetni(genelHata, modifier = Modifier.padding(bottom = 12.dp))
         }
         val basariMesaji = ui.basariMesaji
         if (basariMesaji != null) {
-            Text(
-                text = basariMesaji,
-                color = MaterialTheme.colorScheme.secondary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
+            BasariMetni(basariMesaji, modifier = Modifier.padding(bottom = 12.dp))
         }
 
-        Button(
+        BirincilButon(
+            metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
             onClick = { vm.kaydet(token) },
-            enabled = !ui.kaydediliyor,
+            etkin = !ui.kaydediliyor,
+            hale = true,
             modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet")
-        }
+        )
         Spacer(modifier = Modifier.height(24.dp))
     }
 }

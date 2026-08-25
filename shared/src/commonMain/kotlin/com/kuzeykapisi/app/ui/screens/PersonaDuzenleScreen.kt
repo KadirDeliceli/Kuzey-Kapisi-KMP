@@ -10,10 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,7 +23,16 @@ import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.data.model.ADMIN_PERSONA_KATEGORILERI
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
-import com.kuzeykapisi.app.ui.components.GeriButonu
+import com.kuzeykapisi.app.ui.components.AlanBasligi
+import com.kuzeykapisi.app.ui.components.AnlatimiKaldirSecimi
+import com.kuzeykapisi.app.ui.components.BasariMetni
+import com.kuzeykapisi.app.ui.components.BirincilButon
+import com.kuzeykapisi.app.ui.components.EkranBasligi
+import com.kuzeykapisi.app.ui.components.HataMetni
+import com.kuzeykapisi.app.ui.components.IkincilButon
+import com.kuzeykapisi.app.ui.components.KuzeyMetinAlani
+import com.kuzeykapisi.app.ui.components.SaltOkunurAlan
+import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.vm.PersonaDuzenleViewModel
 
 @Composable
@@ -54,96 +60,80 @@ fun PersonaDuzenleScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
-        GeriButonu(metin = "Geri", onClick = onGeri)
-        Text(
-            text = "Düzenle: ${detay.ad}",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+        EkranBasligi(
+            baslik = "Düzenle: ${detay.ad}",
+            etiket = "Yönetim",
+            geriMetni = "Geri",
+            onGeri = onGeri,
+            modifier = Modifier.padding(bottom = 24.dp),
         )
 
         SaltOkunurAlan(etiket = "Kategori", deger = kategoriEtiketi)
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
         SaltOkunurAlan(etiket = "Kod (dosya adı)", deger = detay.kod)
+        Spacer(modifier = Modifier.height(22.dp))
+
+        KuzeyMetinAlani(
+            deger = ui.ad,
+            onDegisti = { vm.adDegisti(it) },
+            etiket = "Ad",
+            tekSatir = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        KuzeyMetinAlani(
+            deger = ui.karsilama,
+            onDegisti = { vm.karsilamaDegisti(it) },
+            etiket = "Açılış Mesajı (Karşılama)",
+            enAzSatir = 3,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        KuzeyMetinAlani(
+            deger = ui.icerik,
+            onDegisti = { vm.icerikDegisti(it) },
+            etiket = "Detaylı İçerik",
+            yardimMetni = "Bu botun bilgi kaynağı olacak. Kimlik/tarihçe, karakter/üslup, Sinop'a " +
+                "katkısı gibi bölümler halinde mümkün olduğunca detaylı yazın — bot " +
+                "yalnızca burada yazdıklarınızı bilecek.",
+            enAzSatir = 8,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        KuzeyMetinAlani(
+            deger = ui.anlatim,
+            onDegisti = { vm.anlatimDegisti(it) },
+            etiket = "Anlatım Metni (opsiyonel)",
+            etkin = !ui.anlatimiKaldir,
+            yardimMetni = "Dokunmadan bırakırsan mevcut anlatım (varsa) korunur.",
+            enAzSatir = 4,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        AnlatimiKaldirSecimi(
+            isaretli = ui.anlatimiKaldir,
+            onDegisti = { vm.anlatimiKaldirDegisti(it) },
+        )
         Spacer(modifier = Modifier.height(20.dp))
 
-        OutlinedTextField(
-            value = ui.ad,
-            onValueChange = { vm.adDegisti(it) },
-            label = { Text("Ad") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = ui.karsilama,
-            onValueChange = { vm.karsilamaDegisti(it) },
-            label = { Text("Açılış Mesajı (Karşılama)") },
-            minLines = 3,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = ui.icerik,
-            onValueChange = { vm.icerikDegisti(it) },
-            label = { Text("Detaylı İçerik") },
-            supportingText = {
-                Text(
-                    "Bu botun bilgi kaynağı olacak. Kimlik/tarihçe, karakter/üslup, Sinop'a " +
-                        "katkısı gibi bölümler halinde mümkün olduğunca detaylı yazın — bot " +
-                        "yalnızca burada yazdıklarınızı bilecek.",
-                )
-            },
-            minLines = 8,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = ui.anlatim,
-            onValueChange = { vm.anlatimDegisti(it) },
-            label = { Text("Anlatım Metni (opsiyonel)") },
-            enabled = !ui.anlatimiKaldir,
-            supportingText = {
-                Text("Dokunmadan bırakırsan mevcut anlatım (varsa) korunur.")
-            },
-            minLines = 4,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 4.dp),
-        ) {
-            Checkbox(checked = ui.anlatimiKaldir, onCheckedChange = { vm.anlatimiKaldirDegisti(it) })
-            Text(
-                text = "Anlatımı kaldır",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Görsel",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        AlanBasligi("Görsel")
+        Spacer(modifier = Modifier.height(10.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Button(onClick = { vm.gorselSec() }) {
-                Text(if (ui.gorsel == null) "Görsel Seç" else "Görseli Değiştir")
-            }
+            IkincilButon(
+                metin = if (ui.gorsel == null) "Görsel Seç" else "Görseli Değiştir",
+                onClick = { vm.gorselSec() },
+            )
             val secilenGorsel = ui.gorsel
             if (secilenGorsel != null) {
                 Text(
                     text = "Seçildi: ${secilenGorsel.dosyaAdi}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = SisGrisi,
                 )
             }
         }
@@ -152,55 +142,29 @@ fun PersonaDuzenleScreen(
                 text = "Mevcut bir görsel var. Değiştirmek için yeni bir dosya seçin, " +
                     "dokunmak istemiyorsanız boş bırakın.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 6.dp),
+                color = SisGrisi,
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         val genelHata = ui.genelHata
         if (genelHata != null) {
-            Text(
-                text = genelHata,
-                color = MaterialTheme.colorScheme.tertiary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
+            HataMetni(genelHata, modifier = Modifier.padding(bottom = 12.dp))
         }
         val basariMesaji = ui.basariMesaji
         if (basariMesaji != null) {
-            Text(
-                text = basariMesaji,
-                color = MaterialTheme.colorScheme.secondary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
+            BasariMetni(basariMesaji, modifier = Modifier.padding(bottom = 12.dp))
         }
 
-        Button(
+        BirincilButon(
+            metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
             onClick = { vm.kaydet(token) },
-            enabled = !ui.kaydediliyor,
+            etkin = !ui.kaydediliyor,
+            hale = true,
             modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet")
-        }
+        )
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
-@Composable
-private fun SaltOkunurAlan(etiket: String, deger: String) {
-    Column {
-        Text(
-            text = etiket,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = deger,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-    }
-}
