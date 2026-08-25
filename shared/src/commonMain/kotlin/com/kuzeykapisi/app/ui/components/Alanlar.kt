@@ -53,7 +53,7 @@ fun kuzeyAlanRenkleri(): TextFieldColors = OutlinedTextFieldDefaults.colors(
 )
 
 /**
- * Projedeki TEK metin alanı bileşeni — sağ-alt köşesi kesik [AlanSekli] formu
+ * Projedeki TEK metin alanı bileşeni — tam yuvarlak köşeli [AlanSekli] formu
  * ve ortak renkleriyle. Admin formları, sohbet girdisi ve giriş dialogu bunu
  * kullanır; böylece tek noktadan güncellenir.
  */

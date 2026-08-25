@@ -4,11 +4,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -31,10 +30,12 @@ import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.YosunAcik
 
 /**
- * Liste satırlarındaki "düzenle" (kalem) ikon butonu. Diğer ikonlar gibi
- * (SesIkonuButonu, AdminGirisIkonu, GeriButonu) elle çizilmiş Canvas path —
- * projede harici bir ikon paketi bağımlılığı yok, tutarlılık için aynı yol
- * izleniyor.
+ * Liste satırlarındaki "düzenle" (kalem) ikon butonu. Gerçek Material3
+ * [IconButton] kabuğu (dokunma hedefi, erişilebilirlik rolü, standart ripple)
+ * + elle çizilmiş bir Canvas glif — diğer ikonlar gibi (SesIkonuButonu,
+ * AdminGirisIkonu, GeriButonu) projede harici bir ikon paketi bağımlılığı
+ * yok, tutarlılık için aynı çizim yolu izleniyor. Marka rengine dönen ince
+ * hover zemini, ripple'ın üstüne binen ek bir katman.
  */
 @Composable
 fun DuzenleIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -46,15 +47,14 @@ fun DuzenleIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
         label = "duzenleRengi",
     )
 
-    Box(
+    IconButton(
+        onClick = onClick,
+        interactionSource = interactionSource,
         modifier = modifier
             .scale(etkilesim.olcek)
             .size(40.dp)
             .clip(ButonSekli)
-            .background(renk.copy(alpha = 0.08f))
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
-        contentAlignment = Alignment.Center,
+            .background(renk.copy(alpha = 0.08f)),
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
             rotate(45f) {
@@ -80,7 +80,8 @@ fun DuzenleIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /**
- * Liste satırlarındaki "sil" (çöp kutusu) ikon butonu.
+ * Liste satırlarındaki "sil" (çöp kutusu) ikon butonu — gerçek Material3
+ * [IconButton] kabuğuyla.
  *
  * YIKICI eylem olduğu için [SinopKirmizisi] kullanır — bu rengin uygulamadaki
  * iki dar rolünden biri. Durağan hâlde soluk, üzerine gelindiğinde tam
@@ -103,15 +104,14 @@ fun SilIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
         label = "silZemin",
     )
 
-    Box(
+    IconButton(
+        onClick = onClick,
+        interactionSource = interactionSource,
         modifier = modifier
             .scale(etkilesim.olcek)
             .size(40.dp)
             .clip(ButonSekli)
-            .background(zemin)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
-        contentAlignment = Alignment.Center,
+            .background(zemin),
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
             val w = size.width

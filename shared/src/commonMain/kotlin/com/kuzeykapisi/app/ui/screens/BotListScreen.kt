@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -83,8 +82,8 @@ fun BotListScreen(
                         LazyVerticalGrid(
                             columns = GridCells.Adaptive(hucreMin),
                             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp),
                             modifier = Modifier.fillMaxSize(),
                         ) {
                             items(ogeler) { oge ->
@@ -93,7 +92,8 @@ fun BotListScreen(
                                     kod = oge.kod,
                                     baslik = oge.ad,
                                     onClick = { onBotTiklandi(oge) },
-                                    modifier = Modifier.fillMaxWidth().aspectRatio(oran),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    gorselOran = oran,
                                     anlatimVar = oge.anlatimVar,
                                     onSesTiklandi = { onSesTiklandi(oge) },
                                     muhur = kategori == TESCIL_KATEGORISI,

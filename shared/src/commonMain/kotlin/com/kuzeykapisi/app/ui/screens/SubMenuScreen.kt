@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -68,9 +67,8 @@ fun SubMenuScreen(
                                 kod = sub.kapak,
                                 baslik = sub.ad,
                                 onClick = { onSubTiklandi(sub) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(16f / 9f),
+                                modifier = Modifier.weight(1f),
+                                gorselOran = 16f / 9f,
                             )
                         }
                     }
@@ -81,8 +79,8 @@ fun SubMenuScreen(
                 columns = GridCells.Adaptive(minSize = 220.dp),
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     EkranBasligi(
@@ -99,9 +97,8 @@ fun SubMenuScreen(
                         kod = sub.kapak,
                         baslik = sub.ad,
                         onClick = { onSubTiklandi(sub) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 9f),
+                        modifier = Modifier.fillMaxWidth(),
+                        gorselOran = 16f / 9f,
                     )
                 }
             }

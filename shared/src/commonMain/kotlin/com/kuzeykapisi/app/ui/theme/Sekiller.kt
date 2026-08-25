@@ -1,38 +1,29 @@
 package com.kuzeykapisi.app.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * İMZA DETAY — "elle kesilmiş taş" köşesi.
+ * ŞEKİL ÖLÇEĞİ — tam simetrik, yumuşak köşeler.
  *
- * Üç köşe normal yarıçapta, SAĞ-ALT köşe belirgin şekilde daha küçük. Tek bir
- * yardımcı üzerinden üretilir ve TÜM kart/panel/buton tiplerinde (ana kart,
+ * Tek bir kaynaktan üretilir ve TÜM kart/panel/buton tiplerinde (ana kart,
  * alt kart, bot kartı, rota durak kartı, admin liste satırı, form alanı,
- * dialog) aynı şekilde uygulanır.
+ * dialog, mesaj balonu) aynı şekilde uygulanır — böylece uygulamanın her
+ * yerinde iki tutarlı köşe yarıçapı görünür: küçük/orta bileşenlerde 16dp,
+ * büyük yüzeylerde 20dp.
  */
-fun kesikTasSekli(yaricap: Dp, kesik: Dp = KESIK_KOSE_YARICAPI) = RoundedCornerShape(
-    topStart = yaricap,
-    topEnd = yaricap,
-    bottomEnd = kesik,
-    bottomStart = yaricap,
-)
 
-/** Kesilmiş (sağ-alt) köşenin yarıçapı — tüm ölçeklerde sabit kalır. */
-val KESIK_KOSE_YARICAPI = 4.dp
-
-/** Ana/alt/bot kartları, rota tur kartları. */
-val KartSekli = kesikTasSekli(20.dp)
-
-/** Liste satırı, küçük kart, harita çerçevesi, mesaj balonu. */
-val SatirSekli = kesikTasSekli(14.dp)
-
-/** Buton ve chip. */
-val ButonSekli = kesikTasSekli(12.dp)
+/** Buton, chip, form alanı, liste satırı, mesaj balonu, harita çerçevesi. */
+val ButonSekli = RoundedCornerShape(16.dp)
 
 /** Metin alanı (OutlinedTextField). */
-val AlanSekli = kesikTasSekli(10.dp)
+val AlanSekli = RoundedCornerShape(16.dp)
+
+/** Liste satırı, küçük kart, harita çerçevesi, mesaj balonu. */
+val SatirSekli = RoundedCornerShape(16.dp)
+
+/** Ana/alt/bot kartları, rota tur kartları. */
+val KartSekli = RoundedCornerShape(20.dp)
 
 /** Dialog kabuğu. */
-val DialogSekli = kesikTasSekli(24.dp, 6.dp)
+val DialogSekli = RoundedCornerShape(20.dp)

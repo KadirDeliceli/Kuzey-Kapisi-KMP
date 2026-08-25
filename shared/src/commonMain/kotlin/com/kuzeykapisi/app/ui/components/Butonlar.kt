@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,6 +65,12 @@ fun BirincilButon(
         if (hale && etkin) FenerHalesi(gorunur = etkilesim.hoverlu, sekil = ButonSekli)
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = if (!etkin) 0.dp else if (etkilesim.hoverlu || etkilesim.basili) 8.dp else 4.dp,
+                    shape = ButonSekli,
+                    ambientColor = FenerAlevi,
+                    spotColor = FenerAlevi,
+                )
                 .clip(ButonSekli)
                 .background(zemin)
                 .hoverable(interactionSource = interactionSource, enabled = etkin)
@@ -74,7 +81,7 @@ fun BirincilButon(
                     onClick = onClick,
                 )
                 .heightIn(min = 48.dp)
-                .padding(horizontal = 22.dp, vertical = 13.dp),
+                .padding(horizontal = 24.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -117,7 +124,7 @@ fun IkincilButon(
                 onClick = onClick,
             )
             .heightIn(min = 48.dp)
-            .padding(horizontal = 20.dp, vertical = 13.dp),
+            .padding(horizontal = 22.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
@@ -159,6 +166,12 @@ fun YikiciButon(
     Box(
         modifier = modifier
             .scale(etkilesim.olcek)
+            .shadow(
+                elevation = if (!etkin) 0.dp else if (etkilesim.hoverlu || etkilesim.basili) 8.dp else 4.dp,
+                shape = ButonSekli,
+                ambientColor = SinopKirmizisi,
+                spotColor = SinopKirmizisi,
+            )
             .clip(ButonSekli)
             .background(zemin)
             .hoverable(interactionSource = interactionSource, enabled = etkin)
@@ -169,7 +182,7 @@ fun YikiciButon(
                 onClick = onClick,
             )
             .heightIn(min = 44.dp)
-            .padding(horizontal = 18.dp, vertical = 11.dp),
+            .padding(horizontal = 20.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

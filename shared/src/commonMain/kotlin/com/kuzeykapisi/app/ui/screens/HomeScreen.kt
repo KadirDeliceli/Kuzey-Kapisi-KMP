@@ -1,6 +1,14 @@
 package com.kuzeykapisi.app.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +17,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -16,22 +25,53 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.domain.MAIN_CARDS
 import com.kuzeykapisi.app.domain.MainCard
+import com.kuzeykapisi.app.ui.components.CografiIsaretMuhru
 import com.kuzeykapisi.app.ui.components.CoverCard
+import com.kuzeykapisi.app.ui.components.FenerHalesi
+import com.kuzeykapisi.app.ui.components.KartEtkilesimi
+import com.kuzeykapisi.app.ui.components.kartEtkilesimi
+import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.KartSekli
+import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import kuzeykapisiapp.shared.generated.resources.Res
+import kuzeykapisiapp.shared.generated.resources.default_kapak
+import org.jetbrains.compose.resources.painterResource
 
+/** Hero başlığının büyük/küçük tipografiye geçtiği eşik. */
 private val GENIS_EKRAN_ESIGI = 600.dp
+
+/**
+ * Zig-zag (fermuar) satır düzeninin devreye girdiği eşik. Bunun altında satır
+ * görsel+metni yan yana sıkıştırmak yerine, [CoverCard] ile alt alta dizilen
+ * sade bir tek sütuna düşer — dar ekranda iki yarıya bölünmüş bir satır
+ * okunaksız olurdu.
+ */
+private val ZIGZAG_ESIGI = 760.dp
+
+/** Web/masaüstünde içeriğin aşırı yayılmasını önleyen, ortalanmış üst sınır. */
+private val ICERIK_MAX_GENISLIK = 1000.dp
 
 /** Tescilli Ürünler kartı — coğrafi işaret mührünü taşıyan tek ana kart. */
 private const val TESCIL_KART_ID = "tescil"
@@ -40,115 +80,254 @@ private const val TESCIL_KART_ID = "tescil"
 fun HomeScreen(onKartTiklandi: (MainCard) -> Unit, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
         val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
+        val zigzag = maxWidth >= ZIGZAG_ESIGI
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         ) {
-            Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-                Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 34.dp)) {
-                    // Üst etiket: harf aralığı açılarak "eyebrow" hissi verilir;
-                    // sayfadaki tek fener alevi metni.
-                    Text(
-                        text = "SİNOP · KUZEY KAPISI",
-                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.4.sp),
-                        color = FenerAlevi,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    // Başlık: Fraunces, sıkı satır yüksekliği ve negatif harf
-                    // aralığıyla editöryel/dergi başlığı; vurgulu kısım italik ve
-                    // taş beyazından biraz daha sıcak.
-                    val anaRenk = TasBeyazi
-                    val vurguRenk = FenerAlevi
-                    val heroBaslik = remember(anaRenk, vurguRenk) {
-                        buildAnnotatedString {
-                            withStyle(SpanStyle(color = anaRenk)) {
-                                append("Karadeniz'in kuzey kapısında, ")
-                            }
-                            withStyle(
-                                SpanStyle(
-                                    color = vurguRenk,
-                                    fontStyle = FontStyle.Italic,
-                                )
-                            ) {
-                                append("her başlığın bir anlatıcısı var.")
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = ICERIK_MAX_GENISLIK)
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                ) {
+                    // --- HERO: uzun, ferah, dikeyde nefes alan bir karşılama --
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 56.dp, bottom = 8.dp),
+                    ) {
+                        Text(
+                            text = "SİNOP · KUZEY KAPISI",
+                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.4.sp),
+                            color = FenerAlevi,
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        val anaRenk = TasBeyazi
+                        val vurguRenk = FenerAlevi
+                        val heroBaslik = remember(anaRenk, vurguRenk) {
+                            buildAnnotatedString {
+                                withStyle(SpanStyle(color = anaRenk)) {
+                                    append("Karadeniz'in kuzey kapısında, ")
+                                }
+                                withStyle(
+                                    SpanStyle(
+                                        color = vurguRenk,
+                                        fontStyle = FontStyle.Italic,
+                                    )
+                                ) {
+                                    append("her başlığın bir anlatıcısı var.")
+                                }
                             }
                         }
+                        Text(
+                            text = heroBaslik,
+                            style = if (genisEkran) {
+                                MaterialTheme.typography.displayLarge
+                            } else {
+                                MaterialTheme.typography.headlineLarge.copy(
+                                    fontSize = 32.sp,
+                                    lineHeight = 38.sp,
+                                )
+                            },
+                            modifier = Modifier.widthIn(max = 820.dp),
+                        )
+                        Spacer(modifier = Modifier.height(26.dp))
+                        Text(
+                            text = "Bir başlık seçin; tarihî bir şahsiyet, bir usta aşçı ya da bir doğa " +
+                                "rehberi Sinop'u size kendi diliyle anlatsın.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = SisGrisi,
+                            modifier = Modifier.widthIn(max = 640.dp),
+                        )
                     }
-                    Text(
-                        text = heroBaslik,
-                        style = if (genisEkran) {
-                            MaterialTheme.typography.displayMedium
-                        } else {
-                            MaterialTheme.typography.headlineLarge.copy(
-                                fontSize = 32.sp,
-                                lineHeight = 38.sp,
-                            )
-                        },
-                        modifier = Modifier.widthIn(max = 780.dp),
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
-                    // Açıklama: satır arası ferahlatılır, satır uzunluğu
-                    // okunabilirlik için sınırlanır (ölçü/measure).
-                    Text(
-                        text = "Bir başlık seçin; tarihî bir şahsiyet, bir usta aşçı ya da bir doğa " +
-                            "rehberi Sinop'u size kendi diliyle anlatsın.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = SisGrisi,
-                        modifier = Modifier.widthIn(max = 620.dp),
-                    )
-                }
-                if (genisEkran) {
-                    // 4 ana kart 2x2 ızgara olarak gösterilir; kart oranı/boyutu
-                    // önceki 3'lü tek satırdaki ile aynı kalır (16:9, eşit genişlik).
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
-                    ) {
-                        for (satir in MAIN_CARDS.chunked(2)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                            ) {
-                                for (kart in satir) {
-                                    AnaKart(
-                                        kart = kart,
-                                        onKartTiklandi = onKartTiklandi,
+
+                    // Yazı bloğu ile kartlar arasındaki belirgin, kasıtlı boşluk.
+                    Spacer(modifier = Modifier.height(48.dp))
+
+                    // --- İÇERİK: zig-zag satırlar (geniş) / tek sütun (dar) --
+                    // Kartlar doğrudan, animasyonsuz ve koşulsuz render edilir —
+                    // görünürlük takibi/gecikmeli belirme YOKTUR; bu satırlar
+                    // her zaman, kararlı biçimde ekrandadır.
+                    if (zigzag) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            MAIN_CARDS.forEachIndexed { index, kart ->
+                                AnaSatir(
+                                    kart = kart,
+                                    ters = index % 2 == 1,
+                                    onClick = { onKartTiklandi(kart) },
+                                )
+                                if (index != MAIN_CARDS.lastIndex) {
+                                    Box(
                                         modifier = Modifier
-                                            .weight(1f)
-                                            .aspectRatio(16f / 9f),
+                                            .fillMaxWidth()
+                                            .padding(vertical = 28.dp)
+                                            .height(1.dp)
+                                            .background(SisGrisi.copy(alpha = 0.14f)),
                                     )
                                 }
-                                if (satir.size == 1) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(20.dp),
+                        ) {
+                            for (kart in MAIN_CARDS) {
+                                AnaKart(
+                                    kart = kart,
+                                    onKartTiklandi = onKartTiklandi,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
                             }
                         }
                     }
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
-                    ) {
-                        for (kart in MAIN_CARDS) {
-                            AnaKart(
-                                kart = kart,
-                                onKartTiklandi = onKartTiklandi,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(16f / 9f),
-                            )
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
-                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }
 }
 
 /**
- * Ana sayfa kartı — uygulamadaki fener halesini taşıyan iki yerden biri
+ * Zig-zag (fermuar) satırı — geniş ekranda ana kartların gösterildiği biçim.
+ * Görsel bir yanda, başlık+açıklama diğer yanda; [ters] true olduğunda taraflar
+ * değişir (çift index'te görsel solda, tek index'te görsel sağda). Satırın
+ * TAMAMI tek bir tıklanabilir hedef, tek bir [kartEtkilesimi] paylaşır —
+ * görselin üstüne gelmek de metnin üstüne gelmek de aynı hover/basma tepkisini
+ * (kenarlık, gölge, "Keşfet" okunun kayması) tetikler.
+ */
+@Composable
+private fun AnaSatir(
+    kart: MainCard,
+    ters: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .hoverable(interactionSource = interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+        horizontalArrangement = Arrangement.spacedBy(36.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val gorselBlok: @Composable () -> Unit = {
+            AnaSatirGorseli(
+                kart = kart,
+                etkilesim = etkilesim,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        val metinBlok: @Composable () -> Unit = {
+            AnaSatirMetni(
+                kart = kart,
+                etkilesim = etkilesim,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        if (ters) {
+            metinBlok()
+            gorselBlok()
+        } else {
+            gorselBlok()
+            metinBlok()
+        }
+    }
+}
+
+@Composable
+private fun AnaSatirGorseli(
+    kart: MainCard,
+    etkilesim: KartEtkilesimi,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.scale(etkilesim.olcek)) {
+        FenerHalesi(gorunur = etkilesim.hoverlu, sekil = KartSekli)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .shadow(
+                    elevation = if (etkilesim.hoverlu || etkilesim.basili) 14.dp else 8.dp,
+                    shape = KartSekli,
+                    ambientColor = KaranlikLacivert,
+                    spotColor = KaranlikLacivert,
+                )
+                .clip(KartSekli)
+                .background(DerinDeniz)
+                .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, KartSekli),
+        ) {
+            AsyncImage(
+                model = Config.gorselUrl("kart", kart.kapak),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                error = painterResource(Res.drawable.default_kapak),
+                placeholder = painterResource(Res.drawable.default_kapak),
+                modifier = Modifier.matchParentSize(),
+            )
+            if (kart.id == TESCIL_KART_ID) {
+                CografiIsaretMuhru(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(14.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnaSatirMetni(
+    kart: MainCard,
+    etkilesim: KartEtkilesimi,
+    modifier: Modifier = Modifier,
+) {
+    val vurgulu = etkilesim.hoverlu || etkilesim.basili
+    val okKaymasi by animateDpAsState(
+        targetValue = if (vurgulu) 5.dp else 0.dp,
+        animationSpec = tween(MIKRO_SURE),
+        label = "kesfetOku",
+    )
+
+    Column(modifier = modifier) {
+        Text(
+            text = kart.altBaslik.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.8.sp),
+            color = FenerAlevi,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = kart.ad,
+            style = MaterialTheme.typography.titleLarge,
+            color = TasBeyazi,
+        )
+        if (kart.aciklama.isNotBlank()) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = kart.aciklama,
+                style = MaterialTheme.typography.bodyMedium,
+                color = SisGrisi,
+                modifier = Modifier.widthIn(max = 380.dp),
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Keşfet →",
+            style = MaterialTheme.typography.labelLarge,
+            color = if (vurgulu) FenerAlevi else TasBeyazi,
+            modifier = Modifier.offset(x = okKaymasi),
+        )
+    }
+}
+
+/**
+ * Dar ekranda gösterilen tek sütunlu, düşey kart — zig-zag satırın yerini
+ * alan basit yedek. Uygulamadaki fener halesini taşıyan iki yerden biri
  * (diğeri birincil CTA butonları). Tescilli Ürünler kartı ayrıca köşesinde
  * coğrafi işaret mührünü taşır.
  */
@@ -165,6 +344,7 @@ private fun AnaKart(
         etiket = kart.altBaslik,
         onClick = { onKartTiklandi(kart) },
         modifier = modifier,
+        gorselOran = 16f / 9f,
         hale = true,
         muhur = kart.id == TESCIL_KART_ID,
     )

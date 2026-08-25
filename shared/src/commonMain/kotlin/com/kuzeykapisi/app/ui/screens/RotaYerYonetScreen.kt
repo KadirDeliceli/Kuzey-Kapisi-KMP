@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -26,8 +27,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.AnlatimRozeti
@@ -41,10 +44,14 @@ import com.kuzeykapisi.app.ui.components.SilIkonuButonu
 import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
+import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.SatirSekli
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.vm.RotaYerListeViewModel
+
+/** Web/masaüstünde yönetim listesinin aşırı yayılmasını önleyen üst sınır. */
+private val ICERIK_MAX_GENISLIK = 900.dp
 
 @Composable
 fun RotaYerYonetScreen(
@@ -66,7 +73,13 @@ fun RotaYerYonetScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+    Column(
+        modifier = Modifier
+            .widthIn(max = ICERIK_MAX_GENISLIK)
+            .fillMaxWidth()
             .padding(24.dp),
     ) {
         EkranBasligi(
@@ -74,7 +87,7 @@ fun RotaYerYonetScreen(
             etiket = "Yönetim",
             geriMetni = "Geri",
             onGeri = onGeri,
-            modifier = Modifier.padding(bottom = 24.dp),
+            modifier = Modifier.padding(bottom = 28.dp),
         )
 
         when {
@@ -84,7 +97,13 @@ fun RotaYerYonetScreen(
             ui.hata != null -> HataMetni(ui.hata ?: "")
             ui.mekanlar.isEmpty() -> BosDurumGorunumu("Henüz mekan eklenmedi.")
             else -> {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "${ui.mekanlar.size} mekan",
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
+                    color = SisGrisi,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     ui.mekanlar.forEach { mekan ->
                         RotaYerSatiri(
                             mekan = mekan,
@@ -109,6 +128,7 @@ fun RotaYerYonetScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
     }
 
     val silinecekMekan = ui.silinecekMekan
@@ -135,11 +155,17 @@ private fun RotaYerSatiri(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(
+                elevation = if (etkilesim.hoverlu) 6.dp else 3.dp,
+                shape = SatirSekli,
+                ambientColor = KaranlikLacivert,
+                spotColor = KaranlikLacivert,
+            )
             .clip(SatirSekli)
             .background(DerinDeniz)
             .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, SatirSekli)
             .hoverable(interactionSource = interactionSource)
-            .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+            .padding(start = 18.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {

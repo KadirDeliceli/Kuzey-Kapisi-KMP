@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.ui.theme.AlcakYuzey
@@ -74,12 +75,18 @@ fun KuzeyChip(
     Box(
         modifier = modifier
             .scale(etkilesim.olcek)
+            .shadow(
+                elevation = if (secili) 3.dp else 0.dp,
+                shape = ButonSekli,
+                ambientColor = FenerAlevi,
+                spotColor = FenerAlevi,
+            )
             .clip(ButonSekli)
             .background(zemin)
             .border(etkilesim.kenarKalinligi, kenar, ButonSekli)
             .hoverable(interactionSource = interactionSource)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 9.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

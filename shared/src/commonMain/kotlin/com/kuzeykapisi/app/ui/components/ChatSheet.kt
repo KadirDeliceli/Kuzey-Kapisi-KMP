@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -52,7 +52,6 @@ import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
-import com.kuzeykapisi.app.ui.theme.KESIK_KOSE_YARICAPI
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SatirSekli
@@ -260,9 +259,10 @@ private fun GonderButonu(etkin: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * Mesaj balonları da kartlarla aynı "kesik taş" dilini konuşur; yalnızca
- * kesilen köşe konuşmacıya göre yer değiştirir — benim mesajım sağ-altta,
- * botunki sol-altta kesilir, böylece yön okunabilir kalır.
+ * Mesaj balonları tam yuvarlak, tek bir [SatirSekli] köşe yarıçapı konuşur;
+ * konuşmacı yönü köşe kesmekle değil hizalama + renkle okunur — benim
+ * mesajım sağa yaslı ve fener alevi kenarlıklı, botunki sola yaslı ve
+ * yükseltilmiş yüzey rengiyle, hafif bir gölgeyle bir tık öne çıkar.
  *
  * Benim mesajım fener aleviyle işaretlidir ama DOLU DEĞİLDİR: çok düşük
  * opaklıkta bir zemin + belirgin bir kenarlık. Böylece uzun sohbetlerde bile
@@ -270,13 +270,7 @@ private fun GonderButonu(etkin: Boolean, onClick: () -> Unit) {
  */
 @Composable
 private fun MesajBalonu(mesaj: Mesaj) {
-    val benimSekil = SatirSekli
-    val botSekil = RoundedCornerShape(
-        topStart = 14.dp,
-        topEnd = 14.dp,
-        bottomEnd = 14.dp,
-        bottomStart = KESIK_KOSE_YARICAPI,
-    )
+    val balonSekli = SatirSekli
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -301,10 +295,10 @@ private fun MesajBalonu(mesaj: Mesaj) {
             mesaj.benden -> Box(
                 modifier = Modifier
                     .widthIn(max = 300.dp)
-                    .clip(benimSekil)
+                    .clip(balonSekli)
                     .background(FenerAlevi.copy(alpha = 0.14f))
-                    .border(1.dp, FenerAlevi.copy(alpha = 0.55f), benimSekil)
-                    .padding(horizontal = 14.dp, vertical = 11.dp),
+                    .border(1.dp, FenerAlevi.copy(alpha = 0.55f), balonSekli)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Text(
                     text = mesaj.metin,
@@ -315,9 +309,10 @@ private fun MesajBalonu(mesaj: Mesaj) {
             else -> Box(
                 modifier = Modifier
                     .widthIn(max = 300.dp)
-                    .clip(botSekil)
+                    .shadow(3.dp, balonSekli, ambientColor = KaranlikLacivert, spotColor = KaranlikLacivert)
+                    .clip(balonSekli)
                     .background(YuksekYuzey)
-                    .padding(horizontal = 14.dp, vertical = 11.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Text(
                     text = mesaj.metin,

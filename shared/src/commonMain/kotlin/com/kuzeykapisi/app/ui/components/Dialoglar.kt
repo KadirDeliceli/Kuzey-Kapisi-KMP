@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -31,8 +32,9 @@ import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.YuksekYuzey
 
 /**
- * Projedeki TÜM dialogların ortak kabuğu: yükseltilmiş koyu yüzey, sağ-alt
- * köşesi kesik [DialogSekli] formu ve üst kenarında ince bir ışık hattı.
+ * Projedeki TÜM dialogların ortak kabuğu: yükseltilmiş koyu yüzey, tam
+ * simetrik yumuşak [DialogSekli] formu, zeminden görünür şekilde ayrışan bir
+ * tonal gölge ve üst kenarında ince bir ışık hattı.
  *
  * [vurguRengi] varsayılan olarak [FenerAlevi]'dir; yıkıcı (silme) dialoglarında
  * çağıran taraf SinopKirmizisi geçer — kabuk kenarlığı ve üst hattı o renge
@@ -53,6 +55,7 @@ fun KuzeyDialogKabugu(
         Column(
             modifier = modifier
                 .widthIn(max = 460.dp)
+                .shadow(elevation = 20.dp, shape = DialogSekli)
                 .clip(DialogSekli)
                 .background(YuksekYuzey)
                 .border(1.dp, vurguRengi.copy(alpha = 0.45f), DialogSekli),
@@ -67,7 +70,7 @@ fun KuzeyDialogKabugu(
                         ),
                     ),
             )
-            Column(modifier = Modifier.padding(24.dp)) { icerik() }
+            Column(modifier = Modifier.padding(28.dp)) { icerik() }
         }
     }
 }
