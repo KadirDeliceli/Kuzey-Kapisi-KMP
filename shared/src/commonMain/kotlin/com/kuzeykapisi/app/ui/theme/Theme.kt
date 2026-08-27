@@ -10,87 +10,90 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 
 /**
- * KOYU ŞEMA — uygulamanın varsayılan görünümü.
+ * KOYU ŞEMA — uygulamanın varsayılan görünümü. "Gece denizi".
  *
- * Rol dağılımı:
- *  - primary   → [Turkuaz]: birincil buton dolgusu, odaklanmış alan kenarı,
- *    seçili chip, ilerleme göstergesi. Geniş zemin olarak KULLANILMAZ.
- *  - secondary → [Kum]: sıcak, tamamlayıcı ikincil vurgu (rozet, ikincil buton).
- *  - tertiary  → [KumAcik]: koyu zeminde okunan, sakin bilgi işareti tonu.
- *  - surface   → [NotrGeceYuzey]: kart/panel zemini; renk yükü vurgulardadır.
- *  - error     → [Kehribar]: hata/uyarı. Kırmızı DEĞİL; [SinopKirmizisi]
- *    yalnızca yıkıcı admin eylemlerine ayrılmıştır.
+ * Rol dağılımı (brief'e bire bir):
+ *  - primary   → [FenerAlevi]: BİRİCİL vurgu. Hover/aktif durum, birincil
+ *    buton dolgusu, odak halkası, glow. Geniş zeminde KULLANILMAZ.
+ *  - onPrimary → [KaranlikLacivert]: ambar dolgusu her zaman KOYU metin alır,
+ *    asla açık-üstü-açık olmaz (7.87:1).
+ *  - secondary → [Yosun]: dar rol, "doğa" kategorisi rozet/nokta vurgusu.
+ *  - error     → [Kehribar]: form/doğrulama hatası. SinopKirmizisi DEĞİLDİR —
+ *    o, admin silme + tescil mührüyle dar role kilitlidir (token-by-intent).
+ *  - surface   → [DerinDeniz]: kart/panel zemini.
  */
 private val KoyuSema = darkColorScheme(
-    primary = Turkuaz,
-    onPrimary = NotrGece,
-    primaryContainer = TurkuazGece,
-    onPrimaryContainer = Turkuaz,
-    inversePrimary = TurkuazDerin,
+    primary = FenerAlevi,
+    onPrimary = KaranlikLacivert,
+    primaryContainer = FenerGece,
+    onPrimaryContainer = FenerAlevi,
+    inversePrimary = FenerAleviDerin,
 
-    secondary = Kum,
-    onSecondary = NotrGeceMetin,
-    secondaryContainer = KumGece,
-    onSecondaryContainer = KumAcik,
+    secondary = Yosun,
+    onSecondary = TasBeyazi,
+    secondaryContainer = NotrGeceAlcak,
+    onSecondaryContainer = YosunAcik,
 
-    tertiary = KumAcik,
-    onTertiary = NotrGece,
-    tertiaryContainer = KumGece,
-    onTertiaryContainer = KumAcik,
+    tertiary = YosunAcik,
+    onTertiary = KaranlikLacivert,
+    tertiaryContainer = NotrGeceAlcak,
+    onTertiaryContainer = YosunAcik,
 
-    background = NotrGece,
-    onBackground = NotrGeceMetin,
-    surface = NotrGeceYuzey,
-    onSurface = NotrGeceMetin,
+    background = KaranlikLacivert,
+    onBackground = TasBeyazi,
+    surface = DerinDeniz,
+    onSurface = TasBeyazi,
     surfaceVariant = NotrGeceAlcak,
-    onSurfaceVariant = NotrGeceMetinIkincil,
-    surfaceTint = Turkuaz,
+    onSurfaceVariant = SisGrisi,
+    surfaceTint = FenerAlevi,
 
-    surfaceContainerLowest = NotrGece,
+    surfaceContainerLowest = KaranlikLacivert,
     surfaceContainerLow = NotrGeceAlcak,
-    surfaceContainer = NotrGeceYuzey,
+    surfaceContainer = DerinDeniz,
     surfaceContainerHigh = NotrGeceYuksek,
     surfaceContainerHighest = NotrGeceEnYuksek,
 
-    outline = NotrGeceCizgi,
-    outlineVariant = NotrGeceCizgi.copy(alpha = 0.45f),
+    outline = NotrGeceCizgiGuclu,
+    outlineVariant = NotrGeceCizgi,
 
     error = Kehribar,
-    onError = NotrGece,
+    onError = KaranlikLacivert,
     errorContainer = NotrGeceAlcak,
     onErrorContainer = Kehribar,
 
-    scrim = NotrGece,
-    inverseSurface = NotrGeceMetin,
-    inverseOnSurface = NotrGece,
+    scrim = KaranlikLacivert,
+    inverseSurface = TasBeyazi,
+    inverseOnSurface = KaranlikLacivert,
 )
 
 /**
- * AÇIK ŞEMA — aynı marka, gündüz karşılığı. Turkuaz koyulaşır ([TurkuazDerin]),
- * kum derinleşir, nötrler kâğıt tarafına geçer.
+ * AÇIK ŞEMA — aynı marka, gündüz karşılığı. FenerAlevi metin/ikon olarak
+ * kullanıldığında derinleşir ([FenerAleviDerin]), zeminler kâğıt/taş tarafına
+ * geçer.
  *
- * NOT: Ekranların bir kısmı renkleri hâlâ doğrudan koyu tema sabitleriyle
- * (`TasBeyazi`, `DerinDeniz` gibi) çağırıyor. Bu şema hazırdır ve
- * [KuzeyKapisiTheme]'e `karanlik = false` verilerek açılır; ekranlar bu
- * sabitlerden `MaterialTheme.colorScheme` rollerine taşındığında açık tema
- * tam olarak devreye girer. Varsayılan bu yüzden koyudur.
+ * NOT: Ekranların bir kısmı renkleri hâlâ doğrudan [KaranlikLacivert] /
+ * [TasBeyazi] gibi koyu-tema sabitleriyle çağırıyor (bkz. Color.kt "eski
+ * adlar" köprüsü). Bu şema hazır ve [KuzeyKapisiTheme]'e `karanlik = false`
+ * verilerek açılır; ekranlar bu sabitlerden `MaterialTheme.colorScheme`
+ * rollerine taşındığında açık tema tam devreye girer. Varsayılan bu yüzden
+ * koyudur.
  */
 private val AcikSema = lightColorScheme(
-    primary = TurkuazDerin,
-    onPrimary = NotrGunYuzey,
-    primaryContainer = TurkuazSis,
-    onPrimaryContainer = TurkuazGece,
-    inversePrimary = Turkuaz,
+    primary = FenerAleviDerin,
+    onPrimary = TasBeyazi,
+    primaryContainer = NotrGunYuksek,
+    onPrimaryContainer = FenerAleviDerin,
+    inversePrimary = FenerAlevi,
 
-    secondary = Kum,
-    onSecondary = NotrGunYuzey,
-    secondaryContainer = KumSis,
-    onSecondaryContainer = KumGece,
+    secondary = Yosun,
+    onSecondary = TasBeyazi,
+    secondaryContainer = NotrGunYuksek,
+    onSecondaryContainer = Yosun,
 
-    tertiary = Kum,
-    onTertiary = NotrGunYuzey,
-    tertiaryContainer = KumSis,
-    onTertiaryContainer = KumGece,
+    tertiary = Yosun,
+    onTertiary = TasBeyazi,
+    tertiaryContainer = NotrGunYuksek,
+    onTertiaryContainer = Yosun,
 
     background = NotrGun,
     onBackground = NotrGunMetin,
@@ -98,7 +101,7 @@ private val AcikSema = lightColorScheme(
     onSurface = NotrGunMetin,
     surfaceVariant = NotrGunAlcak,
     onSurfaceVariant = NotrGunMetinIkincil,
-    surfaceTint = TurkuazDerin,
+    surfaceTint = FenerAleviDerin,
 
     surfaceContainerLowest = NotrGunYuzey,
     surfaceContainerLow = NotrGunAlcak,
@@ -106,12 +109,12 @@ private val AcikSema = lightColorScheme(
     surfaceContainerHigh = NotrGunEnYuksek,
     surfaceContainerHighest = NotrGunEnYuksek,
 
-    outline = NotrGunCizgi,
-    outlineVariant = NotrGunCizgi.copy(alpha = 0.55f),
+    outline = NotrGunCizgiGuclu,
+    outlineVariant = NotrGunCizgi,
 
     error = KehribarDerin,
-    onError = NotrGunYuzey,
-    errorContainer = KumSis,
+    onError = TasBeyazi,
+    errorContainer = NotrGunYuksek,
     onErrorContainer = KehribarDerin,
 
     scrim = NotrGunMetin,
@@ -120,10 +123,9 @@ private val AcikSema = lightColorScheme(
 )
 
 /**
- * Material3 şekil ölçeği — tam simetrik, yumuşak köşeler (bkz. Sekiller.kt).
- * Elle çağrılan bileşenlerin (kart, buton, dialog) yanı sıra tema üzerinden
- * gelen varsayılan bileşenlerde de (Card, Button, TextField, Menu) aynı
- * yumuşak köşe dili geçerli olur.
+ * Material3 şekil ölçeği. Küçük/orta bileşenlerde simetrik yumuşak köşe
+ * (16dp); kartlarda (large) ve dialoglarda (extraLarge) imza asimetrik "elle
+ * kesilmiş taş" geometrisi — bkz. Sekiller.kt → [KartSekli], [DialogSekli].
  */
 private val KuzeySekilleri = Shapes(
     extraSmall = RoundedCornerShape(12.dp),

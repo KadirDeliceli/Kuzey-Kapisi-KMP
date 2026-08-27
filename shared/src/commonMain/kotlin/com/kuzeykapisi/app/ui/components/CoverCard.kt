@@ -56,8 +56,8 @@ import org.jetbrains.compose.resources.painterResource
  * kullanmalıdır.
  *
  * Görsel dil:
- *  - Tam simetrik, yumuşak köşeli [KartSekli] (20dp) formu + zeminden ayrışan
- *    tonal gölge (hover/basılıyken gölge biraz büyür).
+ *  - İmza "elle kesilmiş taş" [KartSekli] formu — üç köşe 20dp, sağ-alt 4dp —
+ *    + zeminden ayrışan tonal gölge (hover/basılıyken gölge biraz büyür).
  *  - Durağan hâlde neredeyse görünmez kenarlık; hover/basılıyken fener alevi.
  *  - İçerik bölgesi [DerinDeniz] yüzey rengiyle görselden net biçimde ayrışır
  *    — böylece hiçbir metin artık doğrudan fotoğrafın üzerine yazılmaz.

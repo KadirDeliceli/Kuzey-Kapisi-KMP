@@ -5,141 +5,125 @@ import androidx.compose.ui.graphics.Color
 // ---------------------------------------------------------------------------
 // KUZEY KAPISI PALETİ
 //
-// Üç eksenli bir sistem:
-//   1) MARKA — derin turkuaz / deniz mavisi. Tek birincil vurgu ailesi.
-//   2) SICAK KUM — ikincil, tamamlayıcı sıcaklık. Rozet, ikincil buton,
-//      "bilgi verir ama eylem değildir" nitelikli işaretler.
-//   3) NÖTR — zemin ve yüzeyler. Doygun lacivert yerine, içinde çok az deniz
-//      tonu taşıyan zarif nötrler; renk yükünü vurgulara bırakır.
+// Marka temeli: Sinop / antik Sinope, taş kale surları, balıkçı limanı,
+// Diyojen'in "dürüst insan arayan" feneri, sahildeki deniz fenerleri.
+// İmza motif: FENER IŞIĞI.
 //
-// Her rol hem KOYU hem AÇIK tema için ayrı ayrı tanımlıdır (bkz. Theme.kt).
-// Dosyanın sonundaki "eski adlar" bölümü, ekranlardaki mevcut çağrı yerlerini
-// bozmadan yeni palete köprü kurar.
+// Kaynak: tokens/colors.json (DTCG) — bu dosya o spesifikasyonun Compose
+// karşılığıdır. Her ikili scripts/contrast.py ile ÖLÇÜLMÜŞTÜR; yorumlardaki
+// oranlar gerçek çıktıdır, tahmini değil.
+//
+// Uygulama KOYU zeminde çalışır (bkz. Theme.kt, karanlik = true varsayılan).
+// Açık şema tanımlıdır ama henüz uygulamanın gönderdiği varsayılan değildir.
 // ---------------------------------------------------------------------------
 
-// --- 1. MARKA: turkuaz / deniz -------------------------------------------
+// --- 1. Zemin: "gece denizi" ------------------------------------------------
 
-/** Koyu tema birincil vurgusu — sığ suyun ışığı. Aktif/seçili durum, odak
- *  kenarı, birincil buton dolgusu. Geniş zeminde kullanılmaz. */
-val Turkuaz = Color(0xFF3EC5BD)
+/** Ana koyu zemin. Brief'teki tam değer. */
+val KaranlikLacivert = Color(0xFF0B1E2D)
 
-/** Açık tema birincil vurgusu — aynı aile, açık zeminde okunabilir derinlikte. */
-val TurkuazDerin = Color(0xFF0B6E71)
+/** Çökük yüzey — form alanı, liste satırı. KaranlikLacivert'ten bir tık koyu. */
+val NotrGeceAlcak = Color(0xFF081620)
 
-/** Marka ailesinin en koyu tonu: koyu temada birincil kapsayıcı (container),
- *  seçili satır zemini, ince marka çerçevesi. */
-val TurkuazGece = Color(0xFF0A3A3E)
+/** İkincil koyu ton / kart-panel yüzeyi. Brief'teki tam değer. */
+val DerinDeniz = Color(0xFF123B4F)
 
-/** Açık temada birincil kapsayıcı — marka renginin çok açık, sakin hâli. */
-val TurkuazSis = Color(0xFFCDE9E7)
+/** Yükseltilmiş yüzey — dialog kabuğu, sabitlenmiş başlık. */
+val NotrGeceYuksek = Color(0xFF1B4A61)
 
-// --- 2. SICAK KUM: ikincil ------------------------------------------------
+/** En yükseltilmiş yüzey — açık menü, seçili kart. */
+val NotrGeceEnYuksek = Color(0xFF235875)
 
-/** İkincil marka tonu — dolgu olarak kullanıldığında üstüne açık metin gelir. */
-val Kum = Color(0xFF9A7443)
+/** Dekoratif ayraç/kart kenarı — düşük kontrast, kasıtlı (3:1 hedeflemez). */
+val NotrGeceCizgi = Color(0xFF2A4A5C)
 
-/** [Kum]'un koyu zeminde okunabilir hâli: rozet, küçük ikon, sakin bilgi işareti. */
-val KumAcik = Color(0xFFE2C08C)
+/** Zorunlu kontrol kenarlığı — 3.18:1 DerinDeniz üzerinde, 4.90:1 çökük yüzeyde. */
+val NotrGeceCizgiGuclu = Color(0xFF5F89A6)
 
-/** Kum ailesinin en açık tonu — açık temada ikincil kapsayıcı zemini. */
-val KumSis = Color(0xFFF2E3CC)
-
-/** Kum ailesinin en koyu tonu — koyu temada ikincil kapsayıcı zemini. */
-val KumGece = Color(0xFF3E2F1B)
-
-// --- 3. NÖTRLER -----------------------------------------------------------
-
-// Koyu tema: içinde bir tutam deniz tonu taşıyan, mürekkep gibi nötrler.
-/** Koyu tema zemini. */
-val NotrGece = Color(0xFF181F24)
-/** Koyu tema temel yüzeyi (kart, panel). */
-val NotrGeceYuzey = Color(0xFF101A1F)
-/** Zemine yakın, hafifçe ayrışan yüzey: form alanı, liste satırı. */
-val NotrGeceAlcak = Color(0xFF0D1418)
-/** Yükseltilmiş yüzey: dialog, sabitlenmiş panel başlığı. */
-val NotrGeceYuksek = Color(0xFF17242B)
-/** En yükseltilmiş yüzey: menü, seçili kart. */
-val NotrGeceEnYuksek = Color(0xFF1F2F37)
-/** Koyu tema ayraç/kenarlık. */
-val NotrGeceCizgi = Color(0xFF33454E)
-/** Koyu tema ana metni. */
-val NotrGeceMetin = Color(0xFFE8EFF1)
-/** Koyu tema ikincil metni. */
-val NotrGeceMetinIkincil = Color(0xFF97A9B2)
-
-// Açık tema: kâğıt sıcaklığında, gri değil "taş" hissi veren nötrler.
-/** Açık tema zemini. */
-val NotrGun = Color(0xFFF6F7F5)
-/** Açık tema temel yüzeyi. */
-val NotrGunYuzey = Color(0xFFFFFFFF)
-/** Zemine yakın ayrışan yüzey. */
-val NotrGunAlcak = Color(0xFFF0F2F1)
-/** Yükseltilmiş yüzey. */
-val NotrGunYuksek = Color(0xFFE9EDEC)
-/** En yükseltilmiş yüzey. */
-val NotrGunEnYuksek = Color(0xFFE1E7E6)
-/** Açık tema ayraç/kenarlık. */
-val NotrGunCizgi = Color(0xFFC6D1D2)
-/** Açık tema ana metni. */
-val NotrGunMetin = Color(0xFF0C1417)
-/** Açık tema ikincil metni. */
-val NotrGunMetinIkincil = Color(0xFF53656C)
-
-// --- 4. Sinyal renkleri ---------------------------------------------------
+// --- 2. FenerAlevi: BİRİCİL vurgu --------------------------------------------
 
 /**
- * DAR ROLLÜ vurgu. YALNIZCA iki bağlamda kullanılır:
- *  a) Admin panelindeki yıkıcı/geri alınamaz eylemler (sil ikonu, silme onay
- *     dialogunun birincil butonu ve vurgusu, "anlatımı kaldır" işaretliyken),
- *  b) Tescilli ürünler kategorisindeki kartların köşesindeki ince "mühür"
- *     detayı (resmi coğrafi işaret hissi).
- * Bunların DIŞINDA hiçbir yerde kullanılmaz — genel vurgu/hover rolleri
- * marka turkuazına aittir.
+ * FenerAlevi — fener alevi ambar tonu. Brief'teki tam değer. BİRİCİL vurgu:
+ * hover/aktif durum, birincil buton dolgusu, odak halkası, glow efekti.
+ * Geniş zeminde ASLA kullanılmaz. 7.87:1 KaranlikLacivert üzerinde.
  */
-val SinopKirmizisi = Color(0xFFD2492A)
+val FenerAlevi = Color(0xFFE8A33D)
 
-/** [SinopKirmizisi]'nın açık temada okunabilir, biraz daha derin hâli. */
-val SinopKirmizisiDerin = Color(0xFFA8371C)
+/** FenerAlevi'nin açık temada metin/ikon olarak okunabilir koyu hâli — 4.93:1 TasBeyazi üzerinde. */
+val FenerAleviDerin = Color(0xFF8F5C10)
+
+/** Birincil kapsayıcı (container) zemini — ambar tonunun çok koyu, sakin hâli. */
+val FenerGece = Color(0xFF2E2410)
+
+// --- 3. TasBeyazi / SisGrisi: metin --------------------------------------
+
+/** Açık zemin / koyu üstü ana metin. Brief'teki tam değer. 14.76:1 KaranlikLacivert üzerinde. */
+val TasBeyazi = Color(0xFFF2EFE7)
 
 /**
- * Hata/uyarı rengi. [SinopKirmizisi] DEĞİLDİR: kırmızı yalnızca yıkıcı admin
- * eylemlerine ayrılmıştır. Hatalar sakin ama fark edilir bir kehribar tonuyla
- * verilir — marka turkuazından net biçimde ayrışır.
+ * İkincil metin. Brief #7C8B93 veriyordu; DerinDeniz yüzeyinde 3.38:1'e
+ * düşüp AA'yı (4.5:1) kaçırdığı ÖLÇÜLDÜ — tek bir ikincil-metin tokenının
+ * HER yüzey katmanında geçmesi için #93A3AA'ya açıldı (6.51:1 zemin,
+ * 4.57:1 kart, 7.03:1 çökük yüzey). Erişilebilirlik brief hex'inden önce
+ * gelir (CLAUDE.md karar çerçevesi).
  */
-val Kehribar = Color(0xFFE9A93C)
+val SisGrisi = Color(0xFF93A3AA)
 
-/** [Kehribar]'ın açık zeminde okunabilir hâli. */
-val KehribarDerin = Color(0xFF8F5E10)
+/** İkincil metin — açık temada. 5.93:1 TasBeyazi üzerinde. */
+val SisGrisiKoyu = Color(0xFF4F5D64)
+
+// --- 4. Yosun: doğa kategorisi nokta atışı vurgu -----------------------------
+
+/** Yosun — brief'teki tam değer. Dolgu / açık temada metin olarak kullanılır. */
+val Yosun = Color(0xFF3F6B5C)
+
+/** Yosun'un koyu zeminde okunabilir hâli — rozet metni/ikonu. 7.25:1 zemin, 5.09:1 kart üzerinde. */
+val YosunAcik = Color(0xFF82B49F)
+
+// --- 5. SinopKirmizisi: DAR ROL ----------------------------------------------
+
+/**
+ * DAR ROLLÜ vurgu. Brief'teki tam değer. YALNIZCA:
+ *  a) Admin panelindeki yıkıcı/geri alınamaz eylemler,
+ *  b) Tescilli Ürünler kategorisindeki kart köşesindeki mühür detayı.
+ * Başka HİÇBİR yerde kullanılmaz.
+ */
+val SinopKirmizisi = Color(0xFFCB410B)
+
+/** SinopKirmizisi'nin açık temada / koyu dolgu üstünde okunabilir hâli. 7.18:1 TasBeyazi üzerinde. */
+val SinopKirmizisiDerin = Color(0xFF8F2D08)
+
+// --- 6. Kehribar: hata/uyarı — SinopKirmizisi VE FenerAlevi'nden ayrı -------
+
+/**
+ * Hata/uyarı rengi. Ne SinopKirmizisi'dir (o iki dar role kilitli) ne de
+ * FenerAlevi (o birincil vurguya kilitli) — token-by-intent gereği üçüncü,
+ * ayrı bir ton. 6.50:1 zemin, 4.56:1 kart üzerinde.
+ */
+val Kehribar = Color(0xFFE28A63)
+
+/** Kehribar'ın açık temada okunabilir hâli. 5.42:1 TasBeyazi üzerinde. */
+val KehribarDerin = Color(0xFF9A4A1E)
+
+// --- 7. Açık tema yüzeyleri ("gün" — KaranlikLacivert/DerinDeniz'in gündüz karşılığı) ---
+
+val NotrGun = TasBeyazi
+val NotrGunYuzey = Color(0xFFFBFAF6)
+val NotrGunAlcak = Color(0xFFEDE9DD)
+val NotrGunYuksek = Color(0xFFE6E0D0)
+val NotrGunEnYuksek = Color(0xFFDED5BF)
+val NotrGunCizgi = Color(0xFFDCD5C4)
+val NotrGunCizgiGuclu = Color(0xFF7A8A90)
+val NotrGunMetin = KaranlikLacivert
+val NotrGunMetinIkincil = SisGrisiKoyu
 
 // ---------------------------------------------------------------------------
 // ESKİ ADLAR — köprü katmanı
 //
-// Ekranlar renkleri hâlâ bu adlarla çağırıyor. Adlar korunur, DEĞERLERİ yeni
-// palete bağlanır; böylece tek satır ekran kodu değişmeden bütün uygulama yeni
-// paleti alır. Yeni kod doğrudan yukarıdaki adları kullanmalıdır.
+// Bir önceki (turkuaz) iterasyonda ekranlar zaten bu adları çağırıyordu.
+// Böylece bu dosya dışında TEK satır ekran kodu değişmeden bütün uygulama
+// brief'in paletini alır (single source of truth, CLAUDE.md non-negotiable #2).
 // ---------------------------------------------------------------------------
-
-/** @see NotrGece */
-val KaranlikLacivert = NotrGece
-
-/** @see NotrGeceYuzey */
-val DerinDeniz = NotrGeceYuzey
-
-/** Birincil vurgu — artık fener alevi (kehribar) değil, marka turkuazı.
- *  @see Turkuaz */
-val FenerAlevi = Turkuaz
-
-/** @see NotrGeceMetin */
-val TasBeyazi = NotrGeceMetin
-
-/** @see NotrGeceMetinIkincil */
-val SisGrisi = NotrGeceMetinIkincil
-
-/** İkincil marka tonu — artık yosun yeşili değil, sıcak kum. @see Kum */
-val Yosun = Kum
-
-/** @see KumAcik */
-val YosunAcik = KumAcik
 
 /** @see NotrGeceYuksek */
 val YuksekYuzey = NotrGeceYuksek

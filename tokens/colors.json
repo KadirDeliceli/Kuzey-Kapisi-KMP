@@ -1,0 +1,165 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "Kuzey Kapısı (The North Gate) — 3-tier color token architecture: Primitive → Semantic → Component. Brand brief: Sinop / antique Sinope, the stone fortress, the fisherman's harbor, Diogenes' lantern searching for an honest man, the lighthouses along the coast. Signature motif: FENER IŞIĞI (lantern light). Per this toolkit's convention (.claude/rules/tokens-and-color.md → 'Dark Mode Strategy'), top-level 'semantic' holds the LIGHT/day values and 'dark' holds the night override — even though the shipped app defaults to dark (see ui/theme/Theme.kt, karanlik=true). All pairings measured with scripts/contrast.py — ratios recorded per-token, not assumed.",
+
+  "primitive": {
+    "$description": "Raw brand palette — never referenced directly in components",
+
+    "lacivert": {
+      "$description": "Night-sea navy — the base of the dark palette.",
+      "500": { "$type": "color", "$value": "#0B1E2D", "$description": "KaranlikLacivert — app background, 'gece denizi'" },
+      "600": { "$type": "color", "$value": "#081620", "$description": "Recessed surface — form fields, list rows" }
+    },
+    "deniz": {
+      "$description": "Deep-sea blue — secondary dark surface family.",
+      "400": { "$type": "color", "$value": "#235875", "$description": "Most-elevated surface — open menu, selected card" },
+      "500": { "$type": "color", "$value": "#123B4F", "$description": "DerinDeniz — card/panel surface" },
+      "600": { "$type": "color", "$value": "#1B4A61", "$description": "Elevated surface — dialog shell, sticky header" }
+    },
+    "fener": {
+      "$description": "FenerAlevi — lantern-flame amber. The single primary accent. Restricted: hover/active state, primary button fill, focus ring, glow. Never a wide fill.",
+      "400": { "$type": "color", "$value": "#E8A33D", "$description": "FenerAlevi — primary accent" },
+      "700": { "$type": "color", "$value": "#8F5C10", "$description": "Deepened for light-mode text/icon use on paper backgrounds" },
+      "900": { "$type": "color", "$value": "#2E2410", "$description": "Amber-tinted container — primary container bg on dark" }
+    },
+    "tas": {
+      "$description": "TasBeyazi — quarried-stone white. Light background / text-on-dark.",
+      "50": { "$type": "color", "$value": "#F2EFE7", "$description": "TasBeyazi" }
+    },
+    "sis": {
+      "$description": "SisGrisi — harbor-fog gray, secondary text. Brief specified #7C8B93; brightened to #93A3AA so ONE token clears AA 4.5:1 on every dark surface tier (bg/card/recessed) — see contrast log below. POUR outranks the literal brief hex per CLAUDE.md decision framework.",
+      "400": { "$type": "color", "$value": "#93A3AA", "$description": "SisGrisi — secondary text on dark" },
+      "700": { "$type": "color", "$value": "#4F5D64", "$description": "Secondary text on light (TasBeyazi)" }
+    },
+    "yosun": {
+      "$description": "Yosun — moss green. Narrow accent: 'doğa' (nature) category badge/point only.",
+      "500": { "$type": "color", "$value": "#3F6B5C", "$description": "Yosun — fill / light-mode text" },
+      "300": { "$type": "color", "$value": "#82B49F", "$description": "YosunAcik — readable badge text/icon on dark surfaces" }
+    },
+    "sinop": {
+      "$description": "SinopKirmizisi — Sinop red. DAR ROL: only admin destructive/irreversible actions, and the Tescilli Ürünler category seal detail. Nowhere else.",
+      "500": { "$type": "color", "$value": "#CB410B", "$description": "SinopKirmizisi" },
+      "700": { "$type": "color", "$value": "#8F2D08", "$description": "SinopKirmizisiDerin — light-mode text, and dark-fill onDestructive contrast anchor" }
+    },
+    "kehribar": {
+      "$description": "Kehribar — a dusty brick-amber reserved ONLY for the error/warning semantic. Deliberately a different hue path from both fener (accent) and sinop (destructive) so no two intents share a value (Token-by-intent, non-negotiable #1).",
+      "400": { "$type": "color", "$value": "#E28A63", "$description": "Kehribar — error text/icon/border on dark" },
+      "700": { "$type": "color", "$value": "#9A4A1E", "$description": "KehribarDerin — error text on light" }
+    },
+    "cizgi": {
+      "$description": "Border/divider family, split into decorative (sub-3:1, by design) and essential control boundary (≥3:1 UI).",
+      "dark-decorative": { "$type": "color", "$value": "#2A4A5C" },
+      "dark-strong":     { "$type": "color", "$value": "#5F89A6", "$description": "3.18:1 on deniz.500, 4.90:1 on lacivert.600 — essential control borders" },
+      "light-decorative":{ "$type": "color", "$value": "#DCD5C4" },
+      "light-strong":    { "$type": "color", "$value": "#7A8A90", "$description": "3.12:1 on tas.50 — essential control borders" }
+    },
+    "gun": {
+      "$description": "Light-mode surface tiers (day counterpart of lacivert/deniz).",
+      "surface":        { "$type": "color", "$value": "#FBFAF6" },
+      "recessed":       { "$type": "color", "$value": "#EDE9DD" },
+      "elevated":       { "$type": "color", "$value": "#E6E0D0" },
+      "most-elevated":  { "$type": "color", "$value": "#DED5BF" }
+    },
+    "white": { "$type": "color", "$value": "#FFFFFF" }
+  },
+
+  "semantic": {
+    "$description": "LIGHT / day palette (toolkit convention: semantic = light default). Day counterpart of the brand — paper-warm surfaces, deepened accent for text use. Not yet the app's shipped default; see 'dark' below for the palette that actually ships.",
+
+    "action": {
+      "primary":           { "$type": "color", "$value": "{primitive.fener.700}", "$description": "4.93:1 on tas.50 as text/icon; fener.400 stays the fill with lacivert.500 text on top" },
+      "destructive":       { "$type": "color", "$value": "{primitive.sinop.700}", "$description": "7.18:1 on tas.50 — DAR ROL, admin delete only" }
+    },
+
+    "feedback": {
+      "error-text":   { "$type": "color", "$value": "{primitive.kehribar.700}", "$description": "5.42:1 on tas.50" },
+      "nature-badge": { "$type": "color", "$value": "{primitive.yosun.500}", "$description": "5.27:1 on tas.50" }
+    },
+
+    "text": {
+      "primary":   { "$type": "color", "$value": "{primitive.lacivert.500}", "$description": "14.76:1 on tas.50" },
+      "secondary": { "$type": "color", "$value": "{primitive.sis.700}", "$description": "5.93:1 on tas.50" },
+      "tertiary":  { "$type": "color", "$value": "{primitive.sis.700}", "$description": "Same tier as secondary — this app has no de-emphasized third text tier" },
+      "link":      { "$type": "color", "$value": "{primitive.fener.700}", "$description": "External-action text (e.g. 'Rotayı Google Maps'te Aç') — reuses the deepened accent" },
+      "on-action": { "$type": "color", "$value": "{primitive.tas.50}", "$description": "8.25:1 on action.destructive (sinop.700); action.primary fill uses lacivert.500 on top instead — see component.button.primary-text" }
+    },
+
+    "surface": {
+      "page":   { "$type": "color", "$value": "{primitive.tas.50}" },
+      "card":   { "$type": "color", "$value": "{primitive.gun.surface}" },
+      "raised": { "$type": "color", "$value": "{primitive.gun.elevated}" }
+    },
+
+    "border": {
+      "default": { "$type": "color", "$value": "{primitive.cizgi.light-decorative}", "$description": "Decorative dividers/card edges (sub-3:1 by design)" },
+      "strong":  { "$type": "color", "$value": "{primitive.cizgi.light-strong}", "$description": "3.12:1 on tas.50 — essential control boundary" }
+    }
+  },
+
+  "component": {
+    "$description": "Component-scoped tokens — use in component implementations",
+
+    "button": {
+      "primary-bg":           { "$type": "color", "$value": "{primitive.fener.400}" },
+      "primary-text":         { "$type": "color", "$value": "{primitive.lacivert.500}", "$description": "7.87:1 on fener.400 — accent fill always takes dark text, never light-on-light" },
+      "secondary-bg":         { "$type": "color", "$value": "transparent" },
+      "secondary-border":     { "$type": "color", "$value": "{semantic.border.strong}" },
+      "secondary-text":       { "$type": "color", "$value": "{semantic.text.primary}" },
+      "destructive-bg":       { "$type": "color", "$value": "{semantic.action.destructive}" },
+      "destructive-text":     { "$type": "color", "$value": "{primitive.white}", "$description": "4.88:1 on sinop.500 (dark), 8.25:1 on sinop.700 (light) — its own token since the destructive fill is dark and needs light text, unlike the amber primary fill" },
+      "disabled-text":        { "$type": "color", "$value": "{semantic.text.secondary}" }
+    },
+
+    "input": {
+      "bg":           { "$type": "color", "$value": "{semantic.surface.raised}" },
+      "border":       { "$type": "color", "$value": "{semantic.border.strong}" },
+      "border-error": { "$type": "color", "$value": "{semantic.feedback.error-text}" },
+      "text":         { "$type": "color", "$value": "{semantic.text.primary}" },
+      "placeholder":  { "$type": "color", "$value": "{semantic.text.secondary}" }
+    },
+
+    "card": {
+      "bg":               { "$type": "color", "$value": "{semantic.surface.card}" },
+      "border":           { "$type": "color", "$value": "{semantic.border.default}" },
+      "tescil-seal-mark": { "$type": "color", "$value": "{semantic.action.destructive}", "$description": "Tescilli Ürünler seal detail — the OTHER narrow use of sinop, alongside admin-destructive" }
+    },
+
+    "badge": {
+      "nature-bg":   { "$type": "color", "$value": "{primitive.gun.elevated}" },
+      "nature-text": { "$type": "color", "$value": "{semantic.feedback.nature-badge}" }
+    }
+  },
+
+  "dark": {
+    "$description": "NIGHT palette — this is the app's shipped default (Theme.kt karanlik=true). 'Gece denizi': deep navy background, lantern-flame amber restricted to accent/hover/glow, Sinop red held to its two narrow roles.",
+
+    "action": {
+      "primary":     { "$type": "color", "$value": "{primitive.fener.400}", "$description": "7.87:1 on background — hover/active/primary-button fill only, never a wide area" },
+      "destructive": { "$type": "color", "$value": "{primitive.sinop.500}", "$description": "DAR ROL — admin delete/irreversible actions only" }
+    },
+
+    "feedback": {
+      "error-text":   { "$type": "color", "$value": "{primitive.kehribar.400}", "$description": "6.50:1 on background, 4.56:1 on card surface" },
+      "nature-badge": { "$type": "color", "$value": "{primitive.yosun.300}", "$description": "Doğa kategorisi — 7.25:1 on background, 5.09:1 on card surface" }
+    },
+
+    "text": {
+      "primary":   { "$type": "color", "$value": "{primitive.tas.50}", "$description": "14.76:1 on background" },
+      "secondary": { "$type": "color", "$value": "{primitive.sis.400}", "$description": "6.51:1 on bg, 4.57:1 on card, 7.03:1 on recessed" },
+      "tertiary":  { "$type": "color", "$value": "{primitive.sis.400}" },
+      "link":      { "$type": "color", "$value": "{primitive.fener.400}" },
+      "on-action": { "$type": "color", "$value": "{primitive.lacivert.500}", "$description": "7.87:1 on action.primary (fener.400) — the amber fill is light, so it takes DARK text, never white-on-amber. Destructive fill is dark red and takes its own white text: component.button.destructive-text." }
+    },
+
+    "surface": {
+      "page":   { "$type": "color", "$value": "{primitive.lacivert.500}" },
+      "card":   { "$type": "color", "$value": "{primitive.deniz.500}" },
+      "raised": { "$type": "color", "$value": "{primitive.deniz.600}", "$description": "Dialog shell, sticky header" }
+    },
+
+    "border": {
+      "default": { "$type": "color", "$value": "{primitive.cizgi.dark-decorative}" },
+      "strong":  { "$type": "color", "$value": "{primitive.cizgi.dark-strong}", "$description": "3.18:1 on card surface, 4.90:1 on recessed — essential control boundary" }
+    }
+  }
+}

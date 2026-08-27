@@ -40,8 +40,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.FenerAleviDerin
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
-import com.kuzeykapisi.app.ui.theme.Kum
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.YuksekYuzey
@@ -118,7 +118,7 @@ fun AdminGirisDialog(
                             colors = listOf(
                                 FenerAlevi.copy(alpha = 0.55f),
                                 SisGrisi.copy(alpha = 0.10f),
-                                Kum.copy(alpha = 0.30f),
+                                FenerAleviDerin.copy(alpha = 0.30f),
                             ),
                         ),
                         shape = GIRIS_KART_SEKLI,
