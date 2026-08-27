@@ -24,7 +24,7 @@ import com.kuzeykapisi.app.ui.theme.SisGrisi
 private val GENIS_EKRAN_ESIGI = 600.dp
 
 private const val ILETISIM_METNI =
-    "Sinop, Gerze · Telefon: +90 530 000 00 00 · E-posta: mail@gmail.com"
+    "0 (366) 212 58 52 · bilgi@kuzka.gov.tr"
 
 @Composable
 fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
@@ -46,7 +46,7 @@ fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
         )
         BoxWithConstraints {
             val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
-            val telifMetni = "© $yil KUZKA Sinop YDO"
+            val telifMetni = "© $yil KUZKA"
             if (genisEkran) {
                 // Geniş ekran: solda iletişim, sağda telif — uçlara yaslı.
                 Row(

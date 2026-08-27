@@ -5,8 +5,6 @@ object Config {
     // PC'nin LAN IP'si — `ipconfig` (Windows) ile bul, değişebilir.
     const val BASE_URL = "https://kuzey-kapisi-sinop.onrender.com/"
 
-
-
     // Android EMÜLATÖRÜ:      "http://10.0.2.2:8000/"
     // iOS SIMULATOR:          "http://127.0.0.1:8000/"  (simulator host ağını
     //                          doğrudan paylaşır, NAT çevirisi GEREKMEZ — Android
@@ -17,5 +15,3 @@ object Config {
 
     fun gorselUrl(kategori: String, kod: String) = "${BASE_URL}gorseller/$kategori/$kod"
 }
-
-
