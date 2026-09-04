@@ -2,6 +2,7 @@ package com.kuzeykapisi.app.ui.screens
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,18 +23,23 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -55,8 +62,10 @@ import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import kotlinx.coroutines.launch
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.default_kapak
+import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan
 import org.jetbrains.compose.resources.painterResource
 
 /** Hero başlığının büyük/küçük tipografiye geçtiği eşik. */
@@ -76,17 +85,39 @@ private val ICERIK_MAX_GENISLIK = 1000.dp
 /** Tescilli Ürünler kartı — coğrafi işaret mührünü taşıyan tek ana kart. */
 private const val TESCIL_KART_ID = "tescil"
 
+/**
+ * Hero'nun kapladığı viewport yüksekliği oranı — Apple.com tarzı tam-ekran
+ * fotoğraf hissi için ~%88, ama Footer/TopBar'ın altında/üstünde kalan payı
+ * tamamen yutmayacak kadar bırakır.
+ */
+private const val HERO_YUKSEKLIK_ORANI = 0.88f
+
 @Composable
 fun HomeScreen(onKartTiklandi: (MainCard) -> Unit, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
         val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
         val zigzag = maxWidth >= ZIGZAG_ESIGI
+        val heroYuksekligi = maxHeight * HERO_YUKSEKLIK_ORANI
+        val yogunluk = LocalDensity.current
+        val kaydirmaDurumu = rememberScrollState()
+        val kaydirmaKapsami = rememberCoroutineScope()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(kaydirmaDurumu),
         ) {
+            // --- HERO: tam-ekran, kesintisiz fotoğraf; yazı doğrudan üzerinde --
+            HeroBolumu(
+                genisEkran = genisEkran,
+                onKesfetTiklandi = {
+                    kaydirmaKapsami.launch {
+                        kaydirmaDurumu.animateScrollTo(with(yogunluk) { heroYuksekligi.roundToPx() })
+                    }
+                },
+                modifier = Modifier.height(heroYuksekligi),
+            )
+
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 Column(
                     modifier = Modifier
@@ -94,58 +125,7 @@ fun HomeScreen(onKartTiklandi: (MainCard) -> Unit, modifier: Modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
                 ) {
-                    // --- HERO: uzun, ferah, dikeyde nefes alan bir karşılama --
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 56.dp, bottom = 8.dp),
-                    ) {
-                        Text(
-                            text = "SİNOP · KUZEY KAPISI",
-                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.4.sp),
-                            color = FenerAlevi,
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        val anaRenk = TasBeyazi
-                        val vurguRenk = FenerAlevi
-                        val heroBaslik = remember(anaRenk, vurguRenk) {
-                            buildAnnotatedString {
-                                withStyle(SpanStyle(color = anaRenk)) {
-                                    append("Karadeniz'in kuzey kapısında, ")
-                                }
-                                withStyle(
-                                    SpanStyle(
-                                        color = vurguRenk,
-                                        fontStyle = FontStyle.Italic,
-                                    )
-                                ) {
-                                    append("her başlığın bir anlatıcısı var.")
-                                }
-                            }
-                        }
-                        Text(
-                            text = heroBaslik,
-                            style = if (genisEkran) {
-                                MaterialTheme.typography.displayLarge
-                            } else {
-                                MaterialTheme.typography.headlineLarge.copy(
-                                    fontSize = 32.sp,
-                                    lineHeight = 38.sp,
-                                )
-                            },
-                            modifier = Modifier.widthIn(max = 820.dp),
-                        )
-                        Spacer(modifier = Modifier.height(26.dp))
-                        Text(
-                            text = "Bir başlık seçin; tarihî bir şahsiyet, bir usta aşçı ya da bir doğa " +
-                                "rehberi Sinop'u size kendi diliyle anlatsın.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = SisGrisi,
-                            modifier = Modifier.widthIn(max = 640.dp),
-                        )
-                    }
-
-                    // Yazı bloğu ile kartlar arasındaki belirgin, kasıtlı boşluk.
+                    // Hero ile kartlar arasındaki belirgin, kasıtlı boşluk.
                     Spacer(modifier = Modifier.height(48.dp))
 
                     // --- İÇERİK: zig-zag satırlar (geniş) / tek sütun (dar) --
@@ -189,6 +169,144 @@ fun HomeScreen(onKartTiklandi: (MainCard) -> Unit, modifier: Modifier = Modifier
                 }
             }
         }
+    }
+}
+
+/**
+ * HERO — Apple.com ürün sayfaları tarzı tam-genişlik/tam-yükseklik fotoğraf.
+ * Metin doğrudan fotoğrafın üzerinde durur; arkasında kart/kutu/düz zemin
+ * YOKTUR. Okunabilirlik yalnızca metnin oturduğu alt bölgede, alttan yukarı
+ * kararan yerel bir gradientle sağlanır — fotoğrafın tamamı asla bulanıklaşmaz.
+ *
+ * NOT — GÖRSEL: `sinop_arkaplan.jpg` projede zaten mevcut (uygulamanın genel
+ * arka planında da kullanılıyor, bkz. App.kt). Daha net/farklı bir Sinop
+ * fotoğrafı eklemek isterseniz aynı dosyayı
+ * `shared/src/commonMain/composeResources/drawable/sinop_arkaplan.jpg`
+ * yolunda değiştirmeniz yeterli — kod tarafında başka hiçbir değişiklik
+ * gerekmez.
+ */
+@Composable
+private fun HeroBolumu(
+    genisEkran: Boolean,
+    onKesfetTiklandi: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Image(
+            painter = painterResource(Res.drawable.sinop_arkaplan),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.matchParentSize(),
+        )
+
+        // Metnin hemen arkasında, YALNIZCA o dar bölgede kararan yerel perde.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .fillMaxHeight(0.55f)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, KaranlikLacivert.copy(alpha = 0.82f)),
+                    ),
+                ),
+        )
+
+        Box(modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = ICERIK_MAX_GENISLIK)
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 24.dp,
+                        vertical = if (genisEkran) 64.dp else 36.dp,
+                    ),
+            ) {
+                Text(
+                    text = "SİNOP · KUZEY KAPISI",
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.4.sp),
+                    color = FenerAlevi,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                val anaRenk = TasBeyazi
+                val vurguRenk = FenerAlevi
+                val heroBaslik = remember(anaRenk, vurguRenk) {
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(color = anaRenk)) {
+                            append("Karadeniz'in kuzey kapısında, ")
+                        }
+                        withStyle(
+                            SpanStyle(
+                                color = vurguRenk,
+                                fontStyle = FontStyle.Italic,
+                            )
+                        ) {
+                            append("her başlığın bir anlatıcısı var.")
+                        }
+                    }
+                }
+                Text(
+                    text = heroBaslik,
+                    style = if (genisEkran) {
+                        MaterialTheme.typography.displayLarge
+                    } else {
+                        MaterialTheme.typography.headlineLarge.copy(
+                            fontSize = 32.sp,
+                            lineHeight = 38.sp,
+                        )
+                    },
+                    modifier = Modifier.widthIn(max = 820.dp),
+                )
+                Spacer(modifier = Modifier.height(26.dp))
+                Text(
+                    text = "Bir başlık seçin; tarihî bir şahsiyet, bir usta aşçı ya da bir doğa " +
+                        "rehberi Sinop'u size kendi diliyle anlatsın.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = SisGrisi,
+                    modifier = Modifier.widthIn(max = 640.dp),
+                )
+                Spacer(modifier = Modifier.height(28.dp))
+                KesfetButonu(onClick = onKesfetTiklandi)
+            }
+        }
+    }
+}
+
+/**
+ * "Keşfet" — hap biçimli, sade bir CTA. Tıklanınca sayfa hemen altındaki
+ * kartlara doğru yumuşak kayar. Ok, hover/basmada hafifçe aşağı kayar —
+ * projedeki diğer "Keşfet →" ok mikro-etkileşimiyle aynı dil ([AnaSatirMetni]).
+ */
+@Composable
+private fun KesfetButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+    val okKaymasi by animateDpAsState(
+        targetValue = if (etkilesim.hoverlu || etkilesim.basili) 4.dp else 0.dp,
+        animationSpec = tween(MIKRO_SURE),
+        label = "kesfetButonuOku",
+    )
+    val hapSekli = RoundedCornerShape(percent = 50)
+
+    Row(
+        modifier = modifier
+            .scale(etkilesim.olcek)
+            .clip(hapSekli)
+            .background(KaranlikLacivert.copy(alpha = 0.38f), hapSekli)
+            .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, hapSekli)
+            .hoverable(interactionSource = interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .padding(horizontal = 22.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(text = "Keşfet", style = MaterialTheme.typography.labelLarge, color = TasBeyazi)
+        Text(
+            text = "↓",
+            style = MaterialTheme.typography.labelLarge,
+            color = TasBeyazi,
+            modifier = Modifier.offset(y = okKaymasi),
+        )
     }
 }
 
