@@ -127,6 +127,7 @@ fun RotaScreen(
                 rota = gosterilenRota,
                 onGeri = { vm.detaydanCik() },
                 onDurakSesTiklandi = { durak -> acikDurakAnlatimi = durak },
+                haritaGizli = acikDurakAnlatimi != null,
                 modifier = Modifier.fillMaxSize(),
             )
             val acikDurak = acikDurakAnlatimi
@@ -381,6 +382,7 @@ private fun RotaDetayGorunumu(
     rota: RotaYaniti,
     onGeri: () -> Unit,
     onDurakSesTiklandi: (RotaDurak) -> Unit,
+    haritaGizli: Boolean,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -435,14 +437,14 @@ private fun RotaDetayGorunumu(
             }
 
             item {
-                RotaHaritasiBolumu(duraklar = rota.rota)
+                RotaHaritasiBolumu(duraklar = rota.rota, gizli = haritaGizli)
             }
         }
     }
 }
 
 @Composable
-private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>) {
+private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>, gizli: Boolean) {
     val uriHandler = LocalUriHandler.current
     val html = remember(duraklar) { rotaHaritasiHtmlOlustur(duraklar) }
 
@@ -456,7 +458,17 @@ private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>) {
                 .background(DerinDeniz)
                 .border(1.dp, SisGrisi.copy(alpha = 0.18f), SatirSekli),
         ) {
-            RotaHaritasiWebView(html = html, modifier = Modifier.fillMaxSize())
+            // Anlatım overlay'i (AnlatimEkrani) bu ekranın ÜSTÜNE bindirildiğinde
+            // altındaki LazyColumn kompozisyondan çıkmıyor (scroll pozisyonu bilerek
+            // korunuyor). Ama haritanın native görünümü (Android WebView, wasmJs
+            // <iframe>) Compose'un çizim Z-sırasına uymuyor ve üstteki overlay'in
+            // içinden/üstünden sızabiliyor. Bu yüzden overlay açıkken SADECE bu
+            // native görünüm kompozisyondan çıkarılır — listenin geri kalanı ve
+            // scroll durumu etkilenmez, overlay kapanınca harita normal şekilde
+            // geri gelir.
+            if (!gizli) {
+                RotaHaritasiWebView(html = html, modifier = Modifier.fillMaxSize())
+            }
         }
         BirincilButon(
             metin = "Rotayı Google Maps'te Aç",
