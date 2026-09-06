@@ -12,9 +12,17 @@ import com.kuzeykapisi.app.data.model.RotaYerEkleYaniti
 import com.kuzeykapisi.app.data.model.RotaYeriDetay
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.remote.ApiService
+import com.kuzeykapisi.app.data.ses.KaydedilenSes
 import io.ktor.client.plugins.ClientRequestException
 
 data class SohbetSonuc(val cevap: String, val sessionId: String, val yenilendi: Boolean)
+
+data class SesliSohbetSonuc(
+    val kullaniciMetni: String,
+    val cevap: String,
+    val sessionId: String,
+    val yenilendi: Boolean,
+)
 
 class KuzeyRepository(private val api: ApiService) {
     suspend fun katalog(): Katalog = api.katalog()
@@ -116,6 +124,31 @@ class KuzeyRepository(private val api: ApiService) {
                 println("[KuzeyKapisi] guvenliSohbet: yeni sessionId=${yeni.sessionId}")
                 val y = api.sohbet(yeni.sessionId, mesaj)
                 SohbetSonuc(y.cevap, yeni.sessionId, yenilendi = true)
+            } else throw e
+        }
+    }
+
+    /**
+     * guvenliSohbet ile AYNI desen: 404'te (sohbet süresi dolmuşsa) sessizce
+     * yeni oturum açıp AYNI ses baytlarıyla bir kez daha dener. 400/502
+     * olduğu gibi yukarı fırlatılır — ChatViewModel duruma göre mesaj gösterir.
+     */
+    suspend fun guvenliSesliSohbet(
+        kategori: String,
+        oge: String,
+        sessionId: String,
+        ses: KaydedilenSes,
+    ): SesliSohbetSonuc {
+        return try {
+            val y = api.sesliSohbet(sessionId, ses)
+            SesliSohbetSonuc(y.kullaniciMetni, y.cevap, sessionId, yenilendi = false)
+        } catch (e: ClientRequestException) {
+            if (e.response.status.value == 404) {
+                println("[KuzeyKapisi] guvenliSesliSohbet: sessionId=$sessionId için 404 alındı, oturum yeniden başlatılıyor (kategori=$kategori, oge=$oge)")
+                val yeni = api.oturumBaslat(kategori, oge)
+                println("[KuzeyKapisi] guvenliSesliSohbet: yeni sessionId=${yeni.sessionId}")
+                val y = api.sesliSohbet(yeni.sessionId, ses)
+                SesliSohbetSonuc(y.kullaniciMetni, y.cevap, yeni.sessionId, yenilendi = true)
             } else throw e
         }
     }

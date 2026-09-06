@@ -1,6 +1,10 @@
 package com.kuzeykapisi.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -23,7 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -41,15 +45,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.data.ses.KayitDurumu
 import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
@@ -70,6 +79,9 @@ fun ChatSheet(
 ) {
     val vm = remember(kategori, oge) { ChatViewModel(repo, kategori, oge) }
     val ui by vm.state.collectAsState()
+    val kayitDurumu by vm.kayitDurumu.collectAsState()
+    val kayitHatasi by vm.kayitHatasi.collectAsState()
+    val oynatilanMesajId by vm.oynatilanMesajId.collectAsState()
     DisposableEffect(vm) {
         vm.basla()
         onDispose { vm.temizle() }
@@ -80,6 +92,15 @@ fun ChatSheet(
     LaunchedEffect(ui.mesajlar.size) {
         if (ui.mesajlar.isNotEmpty()) listState.animateScrollToItem(ui.mesajlar.size - 1)
     }
+
+    // Mikrofon izni (yalnızca Android'de gerçek bir şey yapar — bkz.
+    // MikrofonIzniEfekti). istekNo her artışta izni kontrol eder/ister;
+    // yalnızca BOSTA'dan kayda başlarken tetiklenir, kaydı durdururken değil.
+    // Sonuç ne olursa olsun mikrofonaBasildi() çağrılır: SesKaydedici izni
+    // KENDİSİ de kontrol eder ve reddedilmişse hata'yı doldurur — burada
+    // ikinci bir dal açmaya gerek yok (bkz. SesKaydedici.android.kt).
+    var mikrofonIstekNo by remember { mutableStateOf(0) }
+    MikrofonIzniEfekti(istekNo = mikrofonIstekNo) { vm.mikrofonaBasildi() }
 
     Column(
         modifier = modifier
@@ -134,7 +155,18 @@ fun ChatSheet(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(ui.mesajlar) { mesaj -> MesajBalonu(mesaj) }
+                    itemsIndexed(ui.mesajlar) { index, mesaj ->
+                        MesajBalonu(
+                            mesaj = mesaj,
+                            sesDurumu = when {
+                                mesaj.benden || mesaj.sistemNotu -> null
+                                oynatilanMesajId == index -> SesButonuDurumu.CALIYOR
+                                oynatilanMesajId != null -> SesButonuDurumu.PASIF
+                                else -> SesButonuDurumu.OYNAT
+                            },
+                            onSesTikla = { vm.mesajSesiCal(index) },
+                        )
+                    }
                     if (ui.hata != null) {
                         item { HataMetni(ui.hata ?: "") }
                     }
@@ -158,31 +190,54 @@ fun ChatSheet(
         // (imePadding), böylece başlık çubuğu yerinde kalır ve yazma kutusu
         // klavyenin hemen üstünde görünür. Klavye kapalıyken gezinme çubuğu
         // inset'i devreye girer; klavye açıkken ime inset'i onu kapsar.
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(AlcakYuzey)
                 .imePadding()
                 .navigationBarsPadding()
                 .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            KuzeyMetinAlani(
-                deger = girdi,
-                onDegisti = { girdi = it },
-                ipucu = "Mesajınızı yazın…",
-                modifier = Modifier.weight(1f),
-            )
-            GonderButonu(
-                etkin = girdi.isNotBlank(),
-                onClick = {
-                    if (girdi.isNotBlank()) {
-                        vm.gonder(girdi)
-                        girdi = ""
-                    }
-                },
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                KuzeyMetinAlani(
+                    deger = girdi,
+                    onDegisti = { girdi = it },
+                    ipucu = "Mesajınızı yazın…",
+                    etkin = kayitDurumu != KayitDurumu.ISLENIYOR,
+                    modifier = Modifier.weight(1f),
+                )
+                MikrofonButonu(
+                    durum = kayitDurumu,
+                    onClick = {
+                        when (kayitDurumu) {
+                            KayitDurumu.BOSTA -> mikrofonIstekNo++
+                            KayitDurumu.KAYIT_YAPILIYOR -> vm.mikrofonaBasildi()
+                            KayitDurumu.ISLENIYOR -> Unit
+                        }
+                    },
+                )
+                GonderButonu(
+                    etkin = girdi.isNotBlank() && kayitDurumu == KayitDurumu.BOSTA,
+                    onClick = {
+                        if (girdi.isNotBlank()) {
+                            vm.gonder(girdi)
+                            girdi = ""
+                        }
+                    },
+                )
+            }
+            if (kayitHatasi != null) {
+                Text(
+                    text = kayitHatasi ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 6.dp, start = 4.dp),
+                )
+            }
         }
     }
 }
@@ -269,7 +324,11 @@ private fun GonderButonu(etkin: Boolean, onClick: () -> Unit) {
  * turuncu geniş bir alan kaplamaz.
  */
 @Composable
-private fun MesajBalonu(mesaj: Mesaj) {
+private fun MesajBalonu(
+    mesaj: Mesaj,
+    sesDurumu: SesButonuDurumu?,
+    onSesTikla: () -> Unit,
+) {
     val balonSekli = SatirSekli
 
     Column(
@@ -318,6 +377,170 @@ private fun MesajBalonu(mesaj: Mesaj) {
                     text = mesaj.metin,
                     color = TasBeyazi,
                     style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+        if (sesDurumu != null) {
+            SesButonu(
+                durum = sesDurumu,
+                onClick = onSesTikla,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+/** Bot mesajının altındaki ses butonunun görsel durumu. */
+enum class SesButonuDurumu { OYNAT, CALIYOR, PASIF }
+
+/**
+ * İKON-TABANLI (metinsiz) oynat/durdur butonu — her bot mesajının altında.
+ * CALIYOR: DUR ikonu, tıklanabilir. OYNAT: play ikonu, tıklanabilir.
+ * PASİF: başka bir mesaj çalarken bu buton soluk ve tıklanamaz — kullanıcı
+ * aynı anda iki mesajı BAŞLATAMASIN diye bir savunma kontrolüdür.
+ */
+@Composable
+private fun SesButonu(durum: SesButonuDurumu, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val etkin = durum != SesButonuDurumu.PASIF
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+    val renk by animateColorAsState(
+        targetValue = when {
+            !etkin -> SisGrisi.copy(alpha = 0.35f)
+            etkilesim.hoverlu || etkilesim.basili -> FenerAlevi
+            else -> SisGrisi
+        },
+        animationSpec = tween(MIKRO_SURE),
+        label = "sesButonuRengi",
+    )
+    Box(
+        modifier = modifier
+            .scale(etkilesim.olcek)
+            .size(30.dp)
+            .clip(CircleShape)
+            .hoverable(interactionSource = interactionSource, enabled = etkin)
+            .clickable(interactionSource = interactionSource, indication = null, enabled = etkin, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.size(14.dp)) {
+            if (durum == SesButonuDurumu.CALIYOR) {
+                // İki dikey çubuk — dur ikonu.
+                val cubukGenisligi = size.width * 0.3f
+                drawRect(color = renk, topLeft = Offset(0f, 0f), size = Size(cubukGenisligi, size.height))
+                drawRect(
+                    color = renk,
+                    topLeft = Offset(size.width - cubukGenisligi, 0f),
+                    size = Size(cubukGenisligi, size.height),
+                )
+            } else {
+                // Sağa bakan üçgen — oynat ikonu.
+                val w = size.width
+                val h = size.height
+                val yol = Path().apply {
+                    moveTo(0f, 0f)
+                    lineTo(w, h / 2f)
+                    lineTo(0f, h)
+                    close()
+                }
+                drawPath(yol, color = renk)
+            }
+        }
+    }
+}
+
+/**
+ * Mikrofon butonu — BOSTA: düz mikrofon ikonu. KAYIT_YAPILIYOR: vurgulu
+ * (FenerAlevi) ikon + hafif nabız (NabizGostergesi'yle aynı dil, burada
+ * halka yerine ölçek nabzı). ISLENIYOR: küçük dönen gösterge, tıklanamaz.
+ */
+@Composable
+private fun MikrofonButonu(durum: KayitDurumu, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val etkilesim = kartEtkilesimi(interactionSource)
+    val kayitta = durum == KayitDurumu.KAYIT_YAPILIYOR
+    val islemde = durum == KayitDurumu.ISLENIYOR
+
+    val renk by animateColorAsState(
+        targetValue = when {
+            kayitta -> FenerAlevi
+            etkilesim.hoverlu || etkilesim.basili -> FenerAlevi
+            else -> SisGrisi
+        },
+        animationSpec = tween(MIKRO_SURE),
+        label = "mikrofonRengi",
+    )
+
+    val nabizGecisi = rememberInfiniteTransition(label = "mikrofonNabzi")
+    val nabizOlcek by nabizGecisi.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.18f,
+        animationSpec = infiniteRepeatable(animation = tween(700, easing = LinearEasing)),
+        label = "mikrofonNabzOlcegi",
+    )
+    val donusGecisi = nabizGecisi.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(animation = tween(900, easing = LinearEasing)),
+        label = "mikrofonSpinner",
+    )
+
+    Box(
+        modifier = Modifier
+            .scale(if (kayitta) nabizOlcek else etkilesim.olcek)
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(if (kayitta) FenerAlevi.copy(alpha = 0.16f) else Color.Transparent)
+            .hoverable(interactionSource = interactionSource, enabled = !islemde)
+            .clickable(interactionSource = interactionSource, indication = null, enabled = !islemde, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (islemde) {
+            val donusDerecesi by donusGecisi
+            Canvas(modifier = Modifier.size(18.dp)) {
+                rotate(donusDerecesi) {
+                    drawArc(
+                        color = SisGrisi,
+                        startAngle = 0f,
+                        sweepAngle = 270f,
+                        useCenter = false,
+                        style = Stroke(width = size.width * 0.16f, cap = StrokeCap.Round),
+                    )
+                }
+            }
+        } else {
+            Canvas(modifier = Modifier.size(18.dp)) {
+                val w = size.width
+                val h = size.height
+                val govdeGenislik = w * 0.34f
+                drawRoundRect(
+                    color = renk,
+                    topLeft = Offset((w - govdeGenislik) / 2f, 0f),
+                    size = Size(govdeGenislik, h * 0.5f),
+                    cornerRadius = CornerRadius(govdeGenislik / 2f, govdeGenislik / 2f),
+                )
+                val standKalinlik = w * 0.09f
+                drawArc(
+                    color = renk,
+                    startAngle = 0f,
+                    sweepAngle = 180f,
+                    useCenter = false,
+                    style = Stroke(width = standKalinlik, cap = StrokeCap.Round),
+                    topLeft = Offset(w * 0.12f, h * 0.28f),
+                    size = Size(w * 0.76f, h * 0.5f),
+                )
+                drawLine(
+                    color = renk,
+                    start = Offset(w / 2f, h * 0.78f),
+                    end = Offset(w / 2f, h * 0.96f),
+                    strokeWidth = standKalinlik,
+                    cap = StrokeCap.Round,
+                )
+                drawLine(
+                    color = renk,
+                    start = Offset(w * 0.30f, h * 0.96f),
+                    end = Offset(w * 0.70f, h * 0.96f),
+                    strokeWidth = standKalinlik,
+                    cap = StrokeCap.Round,
                 )
             }
         }

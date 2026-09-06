@@ -3,6 +3,12 @@ package com.kuzeykapisi.app.ui.vm
 import com.kuzeykapisi.app.data.model.ChatUiState
 import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.data.ses.KayitDurumu
+import com.kuzeykapisi.app.data.ses.KaydedilenSes
+import com.kuzeykapisi.app.data.ses.SesKaydedici
+import com.kuzeykapisi.app.data.tts.AnlatimDurumu
+import com.kuzeykapisi.app.data.tts.AnlatimOynatici
+import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -10,6 +16,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
+
+/** Yanlışlıkla dokunmayı yanlış anlamamak için bu süreden kısa kayıtlar gönderilmez, sessizce atılır. */
+private val MIN_KAYIT_SURESI = 500.milliseconds
 
 class ChatViewModel(
     private val repo: KuzeyRepository,
@@ -19,6 +30,30 @@ class ChatViewModel(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
+
+    private val sesKaydedici = SesKaydedici()
+    val kayitDurumu: StateFlow<KayitDurumu> = sesKaydedici.durum
+    val kayitHatasi: StateFlow<String?> = sesKaydedici.hata
+
+    // Sesli mesaj gönderimi + "tekrar dinle" TEK bir paylaşılan TTS motorunu
+    // ve TEK bir "hangi mesaj çalıyor" kaynağını kullanır (bkz. mesajSesiCal).
+    private val oynatici = AnlatimOynatici()
+    private val _oynatilanMesajId = MutableStateFlow<Int?>(null)
+    val oynatilanMesajId: StateFlow<Int?> = _oynatilanMesajId.asStateFlow()
+
+    private var kayitBaslangic: TimeSource.Monotonic.ValueTimeMark? = null
+
+    init {
+        scope.launch {
+            oynatici.durum.collect { d ->
+                // Ses kendiliğinden bitince (kullanıcı durdurmadan) buton
+                // otomatik eski hâline dönsün.
+                if (d == AnlatimDurumu.DURDU && _oynatilanMesajId.value != null) {
+                    _oynatilanMesajId.value = null
+                }
+            }
+        }
+    }
 
     fun basla() {
         scope.launch {
@@ -77,7 +112,95 @@ class ChatViewModel(
         }
     }
 
+    /** Mikrofon butonuna basılınca çağrılır — durum BOSTA ise kayda başlar, KAYIT_YAPILIYOR ise durdurup gönderir. */
+    fun mikrofonaBasildi() {
+        when (sesKaydedici.durum.value) {
+            KayitDurumu.BOSTA -> {
+                kayitBaslangic = TimeSource.Monotonic.markNow()
+                sesKaydedici.kayidaBasla()
+            }
+            KayitDurumu.KAYIT_YAPILIYOR -> {
+                val baslangic = kayitBaslangic
+                scope.launch {
+                    val ses = sesKaydedici.kayidiDurdurVeAl()
+                    val yeterinceUzun = baslangic == null || baslangic.elapsedNow() >= MIN_KAYIT_SURESI
+                    if (ses != null && yeterinceUzun) {
+                        gonderSesliMesaj(ses)
+                    }
+                }
+            }
+            KayitDurumu.ISLENIYOR -> Unit
+        }
+    }
+
+    private suspend fun gonderSesliMesaj(ses: KaydedilenSes) {
+        val sessionId = _state.value.sessionId ?: return
+        println("[KuzeyKapisi] gonderSesliMesaj(): guvenliSesliSohbet çağrısı başlatılıyor (sessionId=$sessionId)")
+        _state.value = _state.value.copy(yaziyor = true)
+        try {
+            val sonuc = repo.guvenliSesliSohbet(kategori, oge, sessionId, ses)
+            println("[KuzeyKapisi] gonderSesliMesaj(): sonuç döndü — sessionId=${sonuc.sessionId}, yenilendi=${sonuc.yenilendi}, kullaniciMetni=\"${sonuc.kullaniciMetni}\", cevap=\"${sonuc.cevap}\"")
+            var mesajlar = _state.value.mesajlar + Mesaj(metin = sonuc.kullaniciMetni, benden = true)
+            if (sonuc.yenilendi) {
+                mesajlar = mesajlar + Mesaj(
+                    metin = "Bağlantı yenilendi — sohbet geçmişi sıfırlandı.",
+                    benden = false,
+                    sistemNotu = true,
+                )
+            }
+            val botMesajId = mesajlar.size
+            mesajlar = mesajlar + Mesaj(metin = sonuc.cevap, benden = false)
+            _state.value = _state.value.copy(
+                sessionId = sonuc.sessionId,
+                mesajlar = mesajlar,
+                yaziyor = false,
+            )
+            mesajSesiCal(botMesajId)
+        } catch (e: Exception) {
+            println("[KuzeyKapisi] /voice-chat hatası: ${e::class.simpleName}: ${e.message}")
+            val hataMetni = if (e is ClientRequestException && e.response.status.value == 400) {
+                "Sizi anlayamadım, lütfen tekrar deneyin."
+            } else {
+                "Yanıt alınamadı, lütfen tekrar deneyin."
+            }
+            _state.value = _state.value.copy(
+                yaziyor = false,
+                mesajlar = _state.value.mesajlar + Mesaj(metin = hataMetni, benden = false, sistemNotu = true),
+            )
+        }
+    }
+
+    /**
+     * TEK paylaşılan oynatma mekanizması — hem sesli mesajın otomatik
+     * okunması (gonderSesliMesaj) hem de manuel "tekrar dinle" butonu
+     * (ChatSheet) bunu çağırır.
+     */
+    fun mesajSesiCal(mesajId: Int) {
+        val simdikiId = _oynatilanMesajId.value
+        when {
+            simdikiId == mesajId -> {
+                oynatici.durdur()
+                _oynatilanMesajId.value = null
+            }
+            // Başka bir mesaj çalıyor — bu bir savunma kontrolüdür, UI zaten
+            // bu durumda ilgili butonu devre dışı bırakır.
+            simdikiId != null -> Unit
+            else -> {
+                val metin = _state.value.mesajlar.getOrNull(mesajId)?.metin ?: return
+                oynatici.oynat(metin)
+                _oynatilanMesajId.value = mesajId
+            }
+        }
+    }
+
     fun temizle() {
         scope.launch { repo.oturumKapat(_state.value.sessionId ?: return@launch) }
+        oynatici.durdur()
+        oynatici.serbestBirak()
+        _oynatilanMesajId.value = null
+        if (sesKaydedici.durum.value != KayitDurumu.BOSTA) {
+            // Devam eden kayıt varsa iptal edilip temizlenir — sonuç GÖNDERİLMEZ.
+            scope.launch { sesKaydedici.kayidiDurdurVeAl() }
+        }
     }
 }

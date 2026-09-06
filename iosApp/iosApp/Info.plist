@@ -9,5 +9,7 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sesli mesaj göndermek için mikrofon erişimi gereklidir.</string>
 </dict>
 </plist>

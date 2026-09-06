@@ -21,3 +21,10 @@ data class SohbetYaniti(@SerialName("session_id") val sessionId: String, val cev
 
 @Serializable
 data class OturumKapatIstek(@SerialName("session_id") val sessionId: String)
+
+@Serializable
+data class VoiceChatYaniti(
+    @SerialName("session_id") val sessionId: String,
+    @SerialName("kullanici_metni") val kullaniciMetni: String,
+    val cevap: String,
+)

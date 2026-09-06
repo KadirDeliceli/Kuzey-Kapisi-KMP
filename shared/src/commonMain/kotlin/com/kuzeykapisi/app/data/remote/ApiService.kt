@@ -22,6 +22,8 @@ import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.model.SohbetIstek
 import com.kuzeykapisi.app.data.model.SohbetYaniti
 import com.kuzeykapisi.app.data.model.VarsayilanRotalarYaniti
+import com.kuzeykapisi.app.data.model.VoiceChatYaniti
+import com.kuzeykapisi.app.data.ses.KaydedilenSes
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ResponseException
@@ -76,6 +78,32 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
             }
         }
         println("[KuzeyKapisi] POST /sohbet ham cevap: $hamCevap")
+        return apiJson.decodeFromString(hamCevap)
+    }
+
+    /**
+     * multipart/form-data POST /voice-chat. 400/404/502'de ResponseException
+     * fırlatır (expectSuccess=true) — repo katmanı 404'ü yakalayıp yeniden
+     * dener, 400/502 ise ChatViewModel'e kadar yükselir.
+     */
+    suspend fun sesliSohbet(sessionId: String, ses: KaydedilenSes): VoiceChatYaniti {
+        println("[KuzeyKapisi] POST /voice-chat isteği gönderiliyor (sessionId=$sessionId, dosyaAdi=${ses.dosyaAdi})")
+        val yanit = client.submitFormWithBinaryData(
+            url = "${Config.BASE_URL}voice-chat",
+            formData = formData {
+                append("session_id", sessionId)
+                append(
+                    "ses",
+                    ses.bytes,
+                    Headers.build {
+                        append(HttpHeaders.ContentType, ses.mimeTipi)
+                        append(HttpHeaders.ContentDisposition, "filename=\"${ses.dosyaAdi}\"")
+                    },
+                )
+            },
+        )
+        val hamCevap = yanit.bodyAsText()
+        println("[KuzeyKapisi] POST /voice-chat ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
