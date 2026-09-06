@@ -10,9 +10,18 @@ import kotlin.coroutines.resume
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+private const val MESAJ_IZIN_YOK = "Mikrofon izni verilmedi."
+private const val MESAJ_KALICI_RET =
+    "Mikrofon erişimi engellenmiş. Tarayıcının adres çubuğundaki kilit/site bilgisi " +
+        "simgesine tıklayıp mikrofon iznini 'İzin Ver' yapın, sonra sayfayı yenileyin."
+private const val MESAJ_KAYDEDILEMEDI = "Ses kaydedilemedi."
+
+/** getUserMedia'nın reddettiğinde verdiği hata adı — standart ve eski (legacy) isimlerin ikisi de kontrol edilir. */
+private fun izinReddiMi(hataAdi: String): Boolean = hataAdi == "NotAllowedError" || hataAdi == "PermissionDeniedError"
+
 /** JS tarafında oluşturulan, kaydı durdurup base64 sonucunu üreten opak tutamaç. */
 private external interface JsSesKayitTutamaci : JsAny {
-    fun durdurVeAl(basarili: (JsSesKayitSonucu) -> Unit, hataOldu: (JsAny) -> Unit)
+    fun durdurVeAl(basarili: (JsSesKayitSonucu) -> Unit, hataOldu: (String) -> Unit)
     fun iptalEt()
 }
 
@@ -30,7 +39,7 @@ private external interface JsSesKayitSonucu : JsAny {
  */
 private fun jsSesKaydiBaslat(
     basladi: (JsSesKayitTutamaci) -> Unit,
-    hataOldu: (JsAny) -> Unit,
+    hataOldu: (String) -> Unit,
 ) {
     js(
         """
@@ -104,6 +113,27 @@ private fun jsSesKaydiBaslat(
     )
 }
 
+/**
+ * navigator.permissions.query({name:'microphone'}) DESTEKLENİYORSA mevcut
+ * izin durumunu proaktif olarak bildirir (kullanıcı mikrofon butonuna hiç
+ * basmadan) ve durum değiştikçe (onchange) tekrar bildirir. Safari/Firefox
+ * gibi bu sorguyu desteklemeyen tarayıcılarda [desteklenmiyor] çağrılır —
+ * o durumda izin durumu yalnızca gerçek bir getUserMedia denemesiyle anlaşılır.
+ */
+private fun jsIzinDurumunuIzle(sonuc: (String) -> Unit, desteklenmiyor: () -> Unit) {
+    js(
+        """
+        (function() {
+            if (!navigator.permissions || !navigator.permissions.query) { desteklenmiyor(); return; }
+            navigator.permissions.query({ name: 'microphone' }).then(function(durum) {
+                sonuc(durum.state);
+                durum.onchange = function() { sonuc(durum.state); };
+            }).catch(function() { desteklenmiyor(); });
+        })();
+        """,
+    )
+}
+
 @OptIn(ExperimentalEncodingApi::class)
 actual class SesKaydedici actual constructor() {
     private val _durum = MutableStateFlow(KayitDurumu.BOSTA)
@@ -112,12 +142,41 @@ actual class SesKaydedici actual constructor() {
     private val _hata = MutableStateFlow<String?>(null)
     actual val hata: StateFlow<String?> = _hata.asStateFlow()
 
+    private val _izinDurumu = MutableStateFlow(MikrofonIzniDurumu.SORULMADI)
+    actual val izinDurumu: StateFlow<MikrofonIzniDurumu> = _izinDurumu.asStateFlow()
+
+    actual val ayarlarDestekleniyor: Boolean = false
+
     private var tutamac: JsSesKayitTutamaci? = null
 
     // kayidaBasla() senkron değil (getUserMedia asenkron) — bu bayrak,
     // izin/kayıt sonuçlanmadan ÖNCE kayidiDurdurVeAl() çağrılırsa sonucu
     // sessizce iptal etmek için kullanılır.
     private var durdurmaBeklemede = false
+
+    init {
+        // Kullanıcı daha mikrofon butonuna hiç basmadan tarayıcının mevcut
+        // izin durumunu bilsin — desteklenmiyorsa (Safari/Firefox) sessizce
+        // no-op, gerçek durum ilk kayıt denemesinde getUserMedia'dan öğrenilir.
+        runCatching {
+            jsIzinDurumunuIzle(
+                sonuc = { durum ->
+                    when (durum) {
+                        "denied" -> {
+                            _izinDurumu.value = MikrofonIzniDurumu.KALICI_REDDEDILDI
+                            _hata.value = MESAJ_KALICI_RET
+                        }
+                        "granted" -> {
+                            _izinDurumu.value = MikrofonIzniDurumu.SORULMADI
+                            if (_hata.value == MESAJ_KALICI_RET) _hata.value = null
+                        }
+                        else -> Unit // "prompt" — henüz sorulmadı.
+                    }
+                },
+                desteklenmiyor = {},
+            )
+        }
+    }
 
     actual fun kayidaBasla() {
         if (_durum.value != KayitDurumu.BOSTA) return
@@ -135,11 +194,16 @@ actual class SesKaydedici actual constructor() {
                     tutamac = t
                 }
             },
-            hataOldu = { _ ->
+            hataOldu = { hataAdi ->
                 tutamac = null
                 durdurmaBeklemede = false
                 _durum.value = KayitDurumu.BOSTA
-                _hata.value = "Mikrofon izni verilmedi."
+                if (izinReddiMi(hataAdi)) {
+                    _izinDurumu.value = MikrofonIzniDurumu.KALICI_REDDEDILDI
+                    _hata.value = MESAJ_KALICI_RET
+                } else {
+                    _hata.value = MESAJ_IZIN_YOK
+                }
             },
         )
     }
@@ -171,14 +235,19 @@ actual class SesKaydedici actual constructor() {
         _durum.value = KayitDurumu.BOSTA
 
         if (sonuc == null) {
-            _hata.value = "Ses kaydedilemedi."
+            _hata.value = MESAJ_KAYDEDILEMEDI
             return null
         }
         val bytes = runCatching { Base64.decode(sonuc.base64Veri) }.getOrNull()
         if (bytes == null || bytes.isEmpty()) {
-            _hata.value = "Ses kaydedilemedi."
+            _hata.value = MESAJ_KAYDEDILEMEDI
             return null
         }
         return KaydedilenSes(bytes, "ses_kaydi.webm", sonuc.mimeTipi.ifBlank { "audio/webm" })
+    }
+
+    actual fun ayarlariAc() {
+        // no-op — tarayıcıdan ayarlara güvenlik nedeniyle deep-link yapılamaz;
+        // kullanıcı MESAJ_KALICI_RET'teki talimatı elle izlemeli.
     }
 }

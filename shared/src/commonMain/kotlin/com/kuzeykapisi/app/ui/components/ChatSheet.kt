@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.ses.KayitDurumu
+import com.kuzeykapisi.app.data.ses.MikrofonIzniDurumu
 import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
@@ -81,6 +82,7 @@ fun ChatSheet(
     val ui by vm.state.collectAsState()
     val kayitDurumu by vm.kayitDurumu.collectAsState()
     val kayitHatasi by vm.kayitHatasi.collectAsState()
+    val mikrofonIzniDurumu by vm.mikrofonIzniDurumu.collectAsState()
     val oynatilanMesajId by vm.oynatilanMesajId.collectAsState()
     DisposableEffect(vm) {
         vm.basla()
@@ -214,6 +216,11 @@ fun ChatSheet(
                     durum = kayitDurumu,
                     onClick = {
                         when (kayitDurumu) {
+                            // Önceden hatırlanan izin durumu (KALICI_REDDEDILDI
+                            // dahil) ASLA bu çağrıyı atlamak için kullanılmaz —
+                            // izin gerçekten verilene kadar HER basışta gerçek
+                            // platform izin isteme API'si yeniden tetiklenir
+                            // (bkz. MikrofonIzniEfekti / SesKaydedici.kayidaBasla).
                             KayitDurumu.BOSTA -> mikrofonIstekNo++
                             KayitDurumu.KAYIT_YAPILIYOR -> vm.mikrofonaBasildi()
                             KayitDurumu.ISLENIYOR -> Unit
@@ -230,6 +237,10 @@ fun ChatSheet(
                     },
                 )
             }
+            // Kalıcı olmayan bir toast/snackbar DEĞİL — kaybolmayan, sabit bir
+            // uyarı satırı. Kalıcı reddedilmişse (ve platform destekliyorsa)
+            // altına doğrudan sistem ayarlarını açan bir buton eklenir; web'de
+            // buton yerine yalnızca talimat metni gösterilir (bkz. SesKaydedici.wasmJs.kt).
             if (kayitHatasi != null) {
                 Text(
                     text = kayitHatasi ?: "",
@@ -237,6 +248,13 @@ fun ChatSheet(
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 6.dp, start = 4.dp),
                 )
+                if (mikrofonIzniDurumu == MikrofonIzniDurumu.KALICI_REDDEDILDI && vm.ayarlarDestekleniyor) {
+                    IkincilButon(
+                        metin = "Ayarları Aç",
+                        onClick = { vm.ayarlariAc() },
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
             }
         }
     }

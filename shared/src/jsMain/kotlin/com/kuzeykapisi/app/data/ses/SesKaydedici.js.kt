@@ -13,9 +13,20 @@ actual class SesKaydedici actual constructor() {
     private val _hata = MutableStateFlow<String?>("Bu platformda ses kaydı desteklenmiyor.")
     actual val hata: StateFlow<String?> = _hata.asStateFlow()
 
+    // Bu bir izin sorunu değil, platform desteği eksikliğidir — izinDurumu
+    // burada hiçbir zaman değişmez, yalnızca sözleşmeyi karşılamak için var.
+    private val _izinDurumu = MutableStateFlow(MikrofonIzniDurumu.SORULMADI)
+    actual val izinDurumu: StateFlow<MikrofonIzniDurumu> = _izinDurumu.asStateFlow()
+
+    actual val ayarlarDestekleniyor: Boolean = false
+
     actual fun kayidaBasla() {
         _hata.value = "Bu platformda ses kaydı desteklenmiyor."
     }
 
     actual suspend fun kayidiDurdurVeAl(): KaydedilenSes? = null
+
+    actual fun ayarlariAc() {
+        // no-op — bu hedefte ses kaydı zaten desteklenmiyor.
+    }
 }

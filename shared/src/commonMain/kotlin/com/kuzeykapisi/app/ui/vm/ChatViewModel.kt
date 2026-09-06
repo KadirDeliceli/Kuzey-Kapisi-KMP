@@ -5,6 +5,7 @@ import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.ses.KayitDurumu
 import com.kuzeykapisi.app.data.ses.KaydedilenSes
+import com.kuzeykapisi.app.data.ses.MikrofonIzniDurumu
 import com.kuzeykapisi.app.data.ses.SesKaydedici
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
 import com.kuzeykapisi.app.data.tts.AnlatimOynatici
@@ -34,6 +35,11 @@ class ChatViewModel(
     private val sesKaydedici = SesKaydedici()
     val kayitDurumu: StateFlow<KayitDurumu> = sesKaydedici.durum
     val kayitHatasi: StateFlow<String?> = sesKaydedici.hata
+    val mikrofonIzniDurumu: StateFlow<MikrofonIzniDurumu> = sesKaydedici.izinDurumu
+    val ayarlarDestekleniyor: Boolean = sesKaydedici.ayarlarDestekleniyor
+
+    /** Mikrofon izni kalıcı reddedilmişse platformun ayarlar sayfasını açar (bkz. [ayarlarDestekleniyor]). */
+    fun ayarlariAc() = sesKaydedici.ayarlariAc()
 
     // Sesli mesaj gönderimi + "tekrar dinle" TEK bir paylaşılan TTS motorunu
     // ve TEK bir "hangi mesaj çalıyor" kaynağını kullanır (bkz. mesajSesiCal).
