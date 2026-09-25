@@ -194,8 +194,8 @@ fun App() {
                         // ortadan açılarak gelir, geri dönerken kapı kapanır gibi
                         // ortaya doğru kapanır. Hangi ekranın çizileceği kararı
                         // aşağıdaki `when` ile, önceki hâliyle birebir aynıdır.
-                        // Genişlik sınırı ekran başına uygulanır: ana sayfa tam genişlikte
-                        // (kenardan kenara hero ve kartlar), diğer ekranlar 1100dp'de kalır.
+                        // Genişlik sınırı ekran başına uygulanır: ana sayfa ve kart listesi
+                        // tam genişlikte (kenardan kenara hero/ızgara), diğer ekranlar 1100dp'de kalır.
                         // Sınır her ekran örneğinin kendi kutusunda olduğu için geçiş
                         // sırasında genişlik sıçramaz.
                         KapiGecisi(
@@ -205,7 +205,7 @@ fun App() {
                         ) { s ->
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                                 Box(
-                                    modifier = if (s is Screen.Home) {
+                                    modifier = if (s is Screen.Home || s is Screen.BotList) {
                                         Modifier.fillMaxSize()
                                     } else {
                                         Modifier.fillMaxHeight().widthIn(max = 1100.dp)
