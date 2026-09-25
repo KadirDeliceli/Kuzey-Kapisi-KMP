@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 
 /**
  * Alt ekranların ortak üst bloğu: geri bağlantısı + (varsa) küçük etiket +
@@ -28,7 +29,7 @@ fun EkranBasligi(
         GeriButonu(metin = geriMetni, onClick = onGeri, modifier = Modifier.padding(start = 0.dp))
         if (etiket != null) {
             Text(
-                text = etiket.uppercase(),
+                text = etiket.turkceBuyukHarf(),
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.2.sp),
                 color = FenerAlevi,
                 modifier = Modifier.padding(top = 10.dp, start = 6.dp),

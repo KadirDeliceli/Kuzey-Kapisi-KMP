@@ -288,6 +288,8 @@ fun App() {
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminAnaSayfa -> AdminAnaSayfaScreen(
+                                            repo = repo,
+                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
                                             onPersonaEkleTiklandi = { git(Screen.AdminPersonaEkle) },
                                             onRotaYeriEkleTiklandi = { git(Screen.AdminRotaYerEkle) },
