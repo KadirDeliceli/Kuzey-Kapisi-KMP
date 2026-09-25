@@ -183,132 +183,144 @@ fun App() {
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         contentAlignment = Alignment.TopCenter,
                     ) {
-                        Box(modifier = Modifier.fillMaxHeight().widthIn(max = 1100.dp)) {
-                            // İMZA GEÇİŞ: ekran hiyerarşisinde derine inerken içerik
-                            // ortadan açılarak gelir, geri dönerken kapı kapanır gibi
-                            // ortaya doğru kapanır. Hangi ekranın çizileceği kararı
-                            // aşağıdaki `when` ile, önceki hâliyle birebir aynıdır.
-                            KapiGecisi(
-                                hedef = screen,
-                                ileri = gecisIleri,
-                                modifier = Modifier.fillMaxSize(),
-                            ) { s ->
-                                when (s) {
-                                    is Screen.Home -> HomeScreen(
-                                        onKartTiklandi = { kart ->
-                                            git(
-                                                when (kart.type) {
-                                                    MainCardType.SUBMENU -> Screen.SubMenu(kart)
-                                                    MainCardType.WIP -> Screen.Wip
-                                                    MainCardType.ROTA_PLANLAYICI -> Screen.Rota
-                                                    MainCardType.DIRECT -> Screen.BotList(
-                                                        kategori = "tescil",
-                                                        baslik = kart.ad,
-                                                    )
-                                                }
-                                            )
-                                        },
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.SubMenu -> SubMenuScreen(
-                                        mainCard = s.mainCard,
-                                        onGeri = geriGit,
-                                        onSubTiklandi = { sub: SubCard ->
-                                            git(Screen.BotList(kategori = sub.kategori, baslik = sub.ad))
-                                        },
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.BotList -> BotListScreen(
-                                        repo = repo,
-                                        kategori = s.kategori,
-                                        baslik = s.baslik,
-                                        onGeri = geriGit,
-                                        onBotTiklandi = { oge: KatalogOge ->
-                                            aktifBot = BotRef(kategori = s.kategori, kod = oge.kod)
-                                        },
-                                        onSesTiklandi = { oge: KatalogOge ->
-                                            git(
-                                                Screen.Anlatim(
-                                                    kaynak = AnlatimKaynagi.Persona(kategori = s.kategori, kod = oge.kod),
-                                                    baslik = oge.ad,
-                                                ),
-                                            )
-                                        },
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.Anlatim -> AnlatimEkrani(
-                                        repo = repo,
-                                        kaynak = s.kaynak,
-                                        baslik = s.baslik,
-                                        onGeri = geriGit,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.Wip -> WipScreen(
-                                        onGeri = geriGit,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.Rota -> RotaScreen(
-                                        repo = repo,
-                                        onGeri = geriGit,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.AdminAnaSayfa -> AdminAnaSayfaScreen(
-                                        onGeri = geriGit,
-                                        onPersonaEkleTiklandi = { git(Screen.AdminPersonaEkle) },
-                                        onRotaYeriEkleTiklandi = { git(Screen.AdminRotaYerEkle) },
-                                        onPersonalariYonetTiklandi = { git(Screen.AdminPersonaYonet) },
-                                        onRotaYerleriniYonetTiklandi = { git(Screen.AdminRotaYerYonet) },
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.AdminPersonaEkle -> PersonaEkleScreen(
-                                        repo = repo,
-                                        token = adminUi.token.orEmpty(),
-                                        onGeri = geriGit,
-                                        onYetkisiz = onAdminYetkisiz,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.AdminRotaYerEkle -> RotaYerEkleScreen(
-                                        repo = repo,
-                                        token = adminUi.token.orEmpty(),
-                                        onGeri = geriGit,
-                                        onYetkisiz = onAdminYetkisiz,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.AdminPersonaYonet -> PersonaYonetScreen(
-                                        repo = repo,
-                                        token = adminUi.token.orEmpty(),
-                                        onGeri = geriGit,
-                                        onDuzenleTiklandi = { detay -> git(Screen.AdminPersonaDuzenle(detay = detay)) },
-                                        onYetkisiz = onAdminYetkisiz,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.AdminPersonaDuzenle -> PersonaDuzenleScreen(
-                                        repo = repo,
-                                        detay = s.detay,
-                                        token = adminUi.token.orEmpty(),
-                                        onGeri = geriGit,
-                                        onYetkisiz = onAdminYetkisiz,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.AdminRotaYerYonet -> RotaYerYonetScreen(
-                                        repo = repo,
-                                        token = adminUi.token.orEmpty(),
-                                        onGeri = geriGit,
-                                        onDuzenleTiklandi = { mekan, mevcutAnlatim ->
-                                            git(Screen.AdminRotaYerDuzenle(mekan = mekan, mevcutAnlatim = mevcutAnlatim))
-                                        },
-                                        onYetkisiz = onAdminYetkisiz,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                    is Screen.AdminRotaYerDuzenle -> RotaYerDuzenleScreen(
-                                        repo = repo,
-                                        mekan = s.mekan,
-                                        mevcutAnlatim = s.mevcutAnlatim,
-                                        token = adminUi.token.orEmpty(),
-                                        onGeri = geriGit,
-                                        onYetkisiz = onAdminYetkisiz,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
+                        // İMZA GEÇİŞ: ekran hiyerarşisinde derine inerken içerik
+                        // ortadan açılarak gelir, geri dönerken kapı kapanır gibi
+                        // ortaya doğru kapanır. Hangi ekranın çizileceği kararı
+                        // aşağıdaki `when` ile, önceki hâliyle birebir aynıdır.
+                        // Genişlik sınırı ekran başına uygulanır: ana sayfa tam genişlikte
+                        // (kenardan kenara hero ve kartlar), diğer ekranlar 1100dp'de kalır.
+                        // Sınır her ekran örneğinin kendi kutusunda olduğu için geçiş
+                        // sırasında genişlik sıçramaz.
+                        KapiGecisi(
+                            hedef = screen,
+                            ileri = gecisIleri,
+                            modifier = Modifier.fillMaxSize(),
+                        ) { s ->
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                                Box(
+                                    modifier = if (s is Screen.Home) {
+                                        Modifier.fillMaxSize()
+                                    } else {
+                                        Modifier.fillMaxHeight().widthIn(max = 1100.dp)
+                                    },
+                                ) {
+                                    when (s) {
+                                        is Screen.Home -> HomeScreen(
+                                            onKartTiklandi = { kart ->
+                                                git(
+                                                    when (kart.type) {
+                                                        MainCardType.SUBMENU -> Screen.SubMenu(kart)
+                                                        MainCardType.WIP -> Screen.Wip
+                                                        MainCardType.ROTA_PLANLAYICI -> Screen.Rota
+                                                        MainCardType.DIRECT -> Screen.BotList(
+                                                            kategori = "tescil",
+                                                            baslik = kart.ad,
+                                                        )
+                                                    }
+                                                )
+                                            },
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.SubMenu -> SubMenuScreen(
+                                            mainCard = s.mainCard,
+                                            onGeri = geriGit,
+                                            onSubTiklandi = { sub: SubCard ->
+                                                git(Screen.BotList(kategori = sub.kategori, baslik = sub.ad))
+                                            },
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.BotList -> BotListScreen(
+                                            repo = repo,
+                                            kategori = s.kategori,
+                                            baslik = s.baslik,
+                                            onGeri = geriGit,
+                                            onBotTiklandi = { oge: KatalogOge ->
+                                                aktifBot = BotRef(kategori = s.kategori, kod = oge.kod)
+                                            },
+                                            onSesTiklandi = { oge: KatalogOge ->
+                                                git(
+                                                    Screen.Anlatim(
+                                                        kaynak = AnlatimKaynagi.Persona(kategori = s.kategori, kod = oge.kod),
+                                                        baslik = oge.ad,
+                                                    ),
+                                                )
+                                            },
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.Anlatim -> AnlatimEkrani(
+                                            repo = repo,
+                                            kaynak = s.kaynak,
+                                            baslik = s.baslik,
+                                            onGeri = geriGit,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.Wip -> WipScreen(
+                                            onGeri = geriGit,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.Rota -> RotaScreen(
+                                            repo = repo,
+                                            onGeri = geriGit,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.AdminAnaSayfa -> AdminAnaSayfaScreen(
+                                            onGeri = geriGit,
+                                            onPersonaEkleTiklandi = { git(Screen.AdminPersonaEkle) },
+                                            onRotaYeriEkleTiklandi = { git(Screen.AdminRotaYerEkle) },
+                                            onPersonalariYonetTiklandi = { git(Screen.AdminPersonaYonet) },
+                                            onRotaYerleriniYonetTiklandi = { git(Screen.AdminRotaYerYonet) },
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.AdminPersonaEkle -> PersonaEkleScreen(
+                                            repo = repo,
+                                            token = adminUi.token.orEmpty(),
+                                            onGeri = geriGit,
+                                            onYetkisiz = onAdminYetkisiz,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.AdminRotaYerEkle -> RotaYerEkleScreen(
+                                            repo = repo,
+                                            token = adminUi.token.orEmpty(),
+                                            onGeri = geriGit,
+                                            onYetkisiz = onAdminYetkisiz,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.AdminPersonaYonet -> PersonaYonetScreen(
+                                            repo = repo,
+                                            token = adminUi.token.orEmpty(),
+                                            onGeri = geriGit,
+                                            onDuzenleTiklandi = { detay -> git(Screen.AdminPersonaDuzenle(detay = detay)) },
+                                            onYetkisiz = onAdminYetkisiz,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.AdminPersonaDuzenle -> PersonaDuzenleScreen(
+                                            repo = repo,
+                                            detay = s.detay,
+                                            token = adminUi.token.orEmpty(),
+                                            onGeri = geriGit,
+                                            onYetkisiz = onAdminYetkisiz,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.AdminRotaYerYonet -> RotaYerYonetScreen(
+                                            repo = repo,
+                                            token = adminUi.token.orEmpty(),
+                                            onGeri = geriGit,
+                                            onDuzenleTiklandi = { mekan, mevcutAnlatim ->
+                                                git(Screen.AdminRotaYerDuzenle(mekan = mekan, mevcutAnlatim = mevcutAnlatim))
+                                            },
+                                            onYetkisiz = onAdminYetkisiz,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.AdminRotaYerDuzenle -> RotaYerDuzenleScreen(
+                                            repo = repo,
+                                            mekan = s.mekan,
+                                            mevcutAnlatim = s.mevcutAnlatim,
+                                            token = adminUi.token.orEmpty(),
+                                            onGeri = geriGit,
+                                            onYetkisiz = onAdminYetkisiz,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                    }
                                 }
                             }
                         }
