@@ -119,13 +119,24 @@ actual class SesKaydedici actual constructor() {
         aktifKaydedici = null
         aktifDosya = null
 
-        val veri = runCatching {
-            kaydedici?.apply {
-                stop()
-                release()
+        // stop(), çok kısa bir kayıtta (MediaRecorder kısıtı) RuntimeException
+        // fırlatır. release() bu yüzden finally'de: stop() patlasa bile native
+        // kaydedici HER ZAMAN serbest bırakılır, yoksa mikrofon kilitli kalır ve
+        // sonraki kayıtlar başlatılamaz. stop() başarısızsa dosya geçersizdir,
+        // veri okunmaz (önceki davranışla aynı: "Ses kaydedilemedi.").
+        var durdurmaBasarili = kaydedici == null
+        if (kaydedici != null) {
+            try {
+                kaydedici.stop()
+                durdurmaBasarili = true
+            } catch (e: RuntimeException) {
+                // Yutulur — kısa kayıt ya da geçersiz durum; aşağıda veri null kalır.
+            } finally {
+                runCatching { kaydedici.release() }
             }
-            dosya?.readBytes()
-        }.getOrNull()
+        }
+
+        val veri = if (durdurmaBasarili) runCatching { dosya?.readBytes() }.getOrNull() else null
 
         dosya?.delete()
         _durum.value = KayitDurumu.BOSTA
