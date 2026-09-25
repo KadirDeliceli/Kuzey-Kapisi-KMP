@@ -59,6 +59,7 @@ import com.kuzeykapisi.app.ui.screens.BotListScreen
 import com.kuzeykapisi.app.ui.screens.HomeScreen
 import com.kuzeykapisi.app.ui.screens.PersonaDuzenleScreen
 import com.kuzeykapisi.app.ui.screens.PersonaEkleScreen
+import com.kuzeykapisi.app.ui.screens.PersonaOnizlemeEkrani
 import com.kuzeykapisi.app.ui.screens.PersonaYonetScreen
 import com.kuzeykapisi.app.ui.screens.RotaScreen
 import com.kuzeykapisi.app.ui.screens.RotaYerDuzenleScreen
@@ -80,6 +81,12 @@ sealed interface Screen {
     data class SubMenu(val mainCard: MainCard) : Screen
     data class BotList(val kategori: String, val baslik: String) : Screen
     data class Anlatim(val kaynak: AnlatimKaynagi, val baslik: String) : Screen
+    data class PersonaOnizleme(
+        val kategori: String,
+        val kod: String,
+        val ad: String,
+        val anlatimVar: Boolean,
+    ) : Screen
     data object Wip : Screen
     data object Rota : Screen
     data object AdminAnaSayfa : Screen
@@ -235,7 +242,14 @@ fun App() {
                                             baslik = s.baslik,
                                             onGeri = geriGit,
                                             onBotTiklandi = { oge: KatalogOge ->
-                                                aktifBot = BotRef(kategori = s.kategori, kod = oge.kod)
+                                                git(
+                                                    Screen.PersonaOnizleme(
+                                                        kategori = s.kategori,
+                                                        kod = oge.kod,
+                                                        ad = oge.ad,
+                                                        anlatimVar = oge.anlatimVar,
+                                                    ),
+                                                )
                                             },
                                             onSesTiklandi = { oge: KatalogOge ->
                                                 git(
@@ -252,6 +266,16 @@ fun App() {
                                             kaynak = s.kaynak,
                                             baslik = s.baslik,
                                             onGeri = geriGit,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        is Screen.PersonaOnizleme -> PersonaOnizlemeEkrani(
+                                            repo = repo,
+                                            kategori = s.kategori,
+                                            kod = s.kod,
+                                            ad = s.ad,
+                                            anlatimVar = s.anlatimVar,
+                                            onGeri = geriGit,
+                                            onSohbetAc = { aktifBot = BotRef(kategori = s.kategori, kod = s.kod) },
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.Wip -> WipScreen(

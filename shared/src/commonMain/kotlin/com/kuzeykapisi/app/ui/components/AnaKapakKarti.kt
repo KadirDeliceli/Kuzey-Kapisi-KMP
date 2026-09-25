@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -20,13 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,9 +50,8 @@ import kuzeykapisiapp.shared.generated.resources.default_kapak
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * ANA GEZİNME KARTI — ana sayfadaki dört başlık kartı ve alt menüdeki iki
- * kategori kartı BU tek bileşenden gelir; iki ekran böylece birebir aynı
- * görsel dili konuşur.
+ * ANA GEZİNME KARTI — alt menüdeki kategori kartları bu bileşenden gelir;
+ * ana sayfa kartlarıyla aynı geometriyi ve etkileşim dilini konuşur.
  *
  * [CoverCard]'dan farkı bilinçlidir: burada metin görselin ALTINDA ayrı bir
  * yüzeyde değil, görselin ÜSTÜNDE, alttan yukarı koyulaşan bir degrade
@@ -54,13 +59,14 @@ import org.jetbrains.compose.resources.painterResource
  * ekranlarının (bot/persona listesi) kartı olarak DEĞİŞMEDEN kalır.
  *
  * Geometri: imza "elle kesilmiş taş" [KartSekli] — üç köşe 20dp, sağ-alt 4dp.
+ * Görsel kartın tamamını doldurur (matchParentSize + Crop, [KartSekli] ile kırpılır).
  *
  * Durumlar:
  *  - durağan  → neredeyse görünmez kenarlık (SisGrisi %10), ölçek 1.0
- *  - hover    → kenarlık [FenerAlevi] 1.5dp, ölçek 1.02, arkasında fener
- *               halesi (yalnız web — [fenerHalesiDestekli])
+ *  - hover    → kenarlık [FenerAlevi] 1.5dp; yalnız fareli web'de
+ *               ([fenerHalesiDestekli]) ölçek 1.02 ve arkasında fener halesi
  *  - basılı   → ölçek 0.97 (mobilde tek geri bildirim budur)
- *  - odak     → hover ile aynı kenarlık; `clickable` odaklanabilirdir
+ *  - odak     → kartın 3dp dışında 2dp TasBeyazi halka (klavye)
  * Geçişlerin tamamı [MIKRO_SURE] (200ms).
  */
 @Composable
@@ -77,15 +83,15 @@ fun AnaKapakKarti(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
 
     // Ölçek burada yerel olarak hesaplanır: paylaşılan [kartEtkilesimi]
-    // yalnızca basma küçülmesini bilir, bu kartta ayrıca hover'da hafif bir
-    // büyüme (%2) vardır. Mobilde hover durumu hiç oluşmaz, dolayısıyla orada
-    // yalnızca basma küçülmesi görünür.
+    // yalnızca basma küçülmesini bilir. Hover büyümesi ana sayfa kartlarıyla
+    // aynı kurala bağlıdır: yalnız fareli web'de.
     val olcek by animateFloatAsState(
         targetValue = when {
             etkilesim.basili -> 0.97f
-            etkilesim.hoverlu -> 1.02f
+            etkilesim.hoverlu && fenerHalesiDestekli -> 1.02f
             else -> 1f
         },
         animationSpec = tween(MIKRO_SURE),
@@ -99,6 +105,7 @@ fun AnaKapakKarti(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(gorselOran)
+                .odakHalkasi(odakli, KartSekli)
                 .shadow(
                     elevation = if (etkilesim.hoverlu || etkilesim.basili) 14.dp else 6.dp,
                     shape = KartSekli,
@@ -112,9 +119,9 @@ fun AnaKapakKarti(
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
+                    role = Role.Button,
                     onClick = onClick,
-                )
-                .semantics { contentDescription = baslik },
+                ),
         ) {
             AsyncImage(
                 model = Config.gorselUrl(kategori, kod),
@@ -126,8 +133,7 @@ fun AnaKapakKarti(
             )
 
             // Alttan yukarı koyulaşan perde: başlığın fotoğraf ne olursa olsun
-            // okunmasını sağlar (metnin oturduğu bölgede zemin neredeyse tam
-            // KaranlikLacivert'tir → TasBeyazi ile ~14.7:1).
+            // (en kötü durum: bembeyaz görsel) okunmasını sağlar.
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -157,7 +163,7 @@ fun AnaKapakKarti(
             ) {
                 if (etiket != null) {
                     Text(
-                        text = etiket.uppercase(),
+                        text = etiket.turkceBuyukHarf(),
                         style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
                         color = FenerAlevi,
                         maxLines = 1,
@@ -174,5 +180,41 @@ fun AnaKapakKarti(
                 )
             }
         }
+    }
+}
+
+/**
+ * Klavye odağı göstergesi: şeklin 3dp dışında 2dp TasBeyazi halka. Yalnızca
+ * çizimdir, yerleşimi değiştirmez; `clip`'ten ÖNCE uygulanmalıdır.
+ */
+private fun Modifier.odakHalkasi(odakli: Boolean, sekil: Shape): Modifier = drawWithContent {
+    drawContent()
+    if (odakli) {
+        val kalinlik = 2.dp.toPx()
+        val pay = 3.dp.toPx() + kalinlik / 2f
+        val halka = sekil.createOutline(
+            Size(size.width + pay * 2f, size.height + pay * 2f),
+            layoutDirection,
+            this,
+        )
+        translate(left = -pay, top = -pay) {
+            drawOutline(outline = halka, color = TasBeyazi, style = Stroke(width = kalinlik))
+        }
+    }
+}
+
+/**
+ * Türkçe büyük harf: `uppercase()` yerel ayardan bağımsızdır ve "i"yi "I"ya
+ * çevirir. i/ı burada elle eşlenir.
+ */
+private fun String.turkceBuyukHarf(): String = buildString(length) {
+    for (harf in this@turkceBuyukHarf) {
+        append(
+            when (harf) {
+                'i' -> 'İ'
+                'ı' -> 'I'
+                else -> harf.uppercaseChar()
+            },
+        )
     }
 }
