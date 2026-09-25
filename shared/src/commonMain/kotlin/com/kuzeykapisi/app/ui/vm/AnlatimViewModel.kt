@@ -1,18 +1,23 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.tts.AnlatimOynatici
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 /** Anlatım ekranının metni nereden çekeceğini belirten kaynak — persona (kategori+kod) ya da rota durağı (mekan id). */
+@Serializable
 sealed interface AnlatimKaynagi {
+    @Serializable
     data class Persona(val kategori: String, val kod: String) : AnlatimKaynagi
+
+    @Serializable
     data class RotaDuragi(val mekanId: Int) : AnlatimKaynagi
 }
 
@@ -25,15 +30,18 @@ data class AnlatimUiState(
 class AnlatimViewModel(
     private val repo: KuzeyRepository,
     private val kaynak: AnlatimKaynagi,
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+) : ViewModel() {
     private val _state = MutableStateFlow(AnlatimUiState())
     val state: StateFlow<AnlatimUiState> = _state.asStateFlow()
 
     val oynatici = AnlatimOynatici()
 
+    init {
+        yukle()
+    }
+
     fun yukle() {
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
             try {
                 val metin = when (kaynak) {
@@ -42,12 +50,16 @@ class AnlatimViewModel(
                 }
                 _state.value = _state.value.copy(metin = metin, yukleniyor = false)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _state.value = _state.value.copy(yukleniyor = false, hata = "Anlatım yüklenemedi.")
             }
         }
     }
 
-    fun temizle() {
+    // Ekrandan çıkılınca (kapsam temizlenince) ses MUTLAKA durdurulur ve motor
+    // kaynakları serbest bırakılır. Yapılandırma değişikliğinde çağrılmaz:
+    // anlatım döndürmeden sonra kaldığı yerden sürer.
+    override fun onCleared() {
         oynatici.durdur()
         oynatici.serbestBirak()
     }

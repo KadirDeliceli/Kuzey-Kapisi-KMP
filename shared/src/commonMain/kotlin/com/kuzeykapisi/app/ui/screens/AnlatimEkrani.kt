@@ -24,8 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -43,6 +41,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
 import com.kuzeykapisi.app.ui.components.EkranBasligi
@@ -70,18 +69,13 @@ fun AnlatimEkrani(
     onGeri: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo, kaynak) { AnlatimViewModel(repo, kaynak) }
+    // Metin ViewModel oluşurken bir kez yüklenir. Ekrandan çıkılınca (kapsam
+    // temizlenince) AnlatimViewModel.onCleared sesi durdurup motoru bırakır;
+    // döndürmede ViewModel korunur, anlatım kaldığı yerden sürer.
+    val vm = viewModel { AnlatimViewModel(repo, kaynak) }
     val ui by vm.state.collectAsState()
     val durum by vm.oynatici.durum.collectAsState()
     val sesHatasi by vm.oynatici.hata.collectAsState()
-
-    LaunchedEffect(vm) { vm.yukle() }
-    // Ekrandan her çıkışta (geri tuşu/buton, ekran değişimi) ses MUTLAKA
-    // durdurulur ve motor kaynakları serbest bırakılır — arka planda çalmaya
-    // devam etmemeli.
-    DisposableEffect(vm) {
-        onDispose { vm.temizle() }
-    }
 
     BackHandler(enabled = true) { onGeri() }
 

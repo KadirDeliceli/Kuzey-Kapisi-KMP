@@ -1,13 +1,14 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.model.resimSec
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,8 +39,7 @@ class PersonaDuzenleViewModel(
     val kategori: String,
     val kod: String,
     private val initial: PersonaDetay,
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+) : ViewModel() {
     private val anlatimOrijinal = initial.anlatim ?: ""
     private val _state = MutableStateFlow(
         PersonaDuzenleUiState(
@@ -59,7 +59,8 @@ class PersonaDuzenleViewModel(
     fun anlatimiKaldirDegisti(v: Boolean) { _state.value = _state.value.copy(anlatimiKaldir = v) }
 
     fun gorselSec() {
-        scope.launch {
+        // Görsel baytları okunurken UI thread'i bloklanmasın diye (önceki davranış gibi) arka planda.
+        viewModelScope.launch(Dispatchers.Default) {
             val secilen = runCatching { resimSec() }.getOrNull()
             if (secilen != null) _state.value = _state.value.copy(gorsel = secilen)
         }
@@ -86,7 +87,7 @@ class PersonaDuzenleViewModel(
             )
             return
         }
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, basariMesaji = null)
             try {
                 val anlatimGonderim = anlatimGonderilecek(s)
@@ -115,6 +116,7 @@ class PersonaDuzenleViewModel(
                     _state.value.copy(kaydediliyor = false, genelHata = e.detay)
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] persona-guncelle ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     kaydediliyor = false,

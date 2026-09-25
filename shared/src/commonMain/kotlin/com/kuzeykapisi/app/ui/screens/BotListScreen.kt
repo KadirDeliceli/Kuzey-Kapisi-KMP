@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -31,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.domain.MAIN_CARDS
@@ -85,9 +85,8 @@ fun BotListScreen(
     onSesTiklandi: (KatalogOge) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo) { CatalogViewModel(repo) }
+    val vm = viewModel { CatalogViewModel(repo) }
     val ui by vm.state.collectAsState()
-    LaunchedEffect(vm) { vm.yukle() }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val darEkran = maxWidth < TELEFON_ESIGI

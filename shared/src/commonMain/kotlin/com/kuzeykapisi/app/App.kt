@@ -20,12 +20,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -35,12 +37,11 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
-import com.kuzeykapisi.app.data.remote.ApiService
-import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.domain.MainCard
 import com.kuzeykapisi.app.domain.MainCardType
 import com.kuzeykapisi.app.domain.SubCard
@@ -53,6 +54,10 @@ import com.kuzeykapisi.app.ui.components.InfoDialog
 import com.kuzeykapisi.app.ui.components.PROJE_HAKKINDA_METNI
 import com.kuzeykapisi.app.ui.components.TopBar
 import com.kuzeykapisi.app.ui.kurulumYapImageLoader
+import com.kuzeykapisi.app.ui.nav.LocalVmDeposu
+import com.kuzeykapisi.app.ui.nav.VmDeposu
+import com.kuzeykapisi.app.ui.nav.VmKapsami
+import com.kuzeykapisi.app.ui.nav.rememberEkranYigini
 import com.kuzeykapisi.app.ui.screens.AdminAnaSayfaScreen
 import com.kuzeykapisi.app.ui.screens.AnlatimEkrani
 import com.kuzeykapisi.app.ui.screens.BotListScreen
@@ -74,31 +79,50 @@ import com.kuzeykapisi.app.ui.vm.AdminViewModel
 import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan
+import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 
+// @Serializable: ekran yığını yapılandırma değişikliğinde (döndürme, karanlık
+// mod) JSON olarak saklanıp aynı derinlikte geri kurulur (bkz. ui/nav/EkranYigini).
+@Serializable
 sealed interface Screen {
-    data object Home : Screen
-    data class SubMenu(val mainCard: MainCard) : Screen
-    data class BotList(val kategori: String, val baslik: String) : Screen
-    data class Anlatim(val kaynak: AnlatimKaynagi, val baslik: String) : Screen
-    data class PersonaOnizleme(
+    @Serializable data object Home : Screen
+    @Serializable data class SubMenu(val mainCard: MainCard) : Screen
+    @Serializable data class BotList(val kategori: String, val baslik: String) : Screen
+    @Serializable data class Anlatim(val kaynak: AnlatimKaynagi, val baslik: String) : Screen
+    @Serializable data class PersonaOnizleme(
         val kategori: String,
         val kod: String,
         val ad: String,
         val anlatimVar: Boolean,
     ) : Screen
-    data object Wip : Screen
-    data object Rota : Screen
-    data object AdminAnaSayfa : Screen
-    data object AdminPersonaEkle : Screen
-    data object AdminRotaYerEkle : Screen
-    data object AdminPersonaYonet : Screen
-    data class AdminPersonaDuzenle(val detay: PersonaDetay) : Screen
-    data object AdminRotaYerYonet : Screen
-    data class AdminRotaYerDuzenle(val mekan: RotaMekaniAdmin, val mevcutAnlatim: String?) : Screen
+    @Serializable data object Wip : Screen
+    @Serializable data object Rota : Screen
+    @Serializable data object AdminAnaSayfa : Screen
+    @Serializable data object AdminPersonaEkle : Screen
+    @Serializable data object AdminRotaYerEkle : Screen
+    @Serializable data object AdminPersonaYonet : Screen
+    @Serializable data class AdminPersonaDuzenle(val detay: PersonaDetay) : Screen
+    @Serializable data object AdminRotaYerYonet : Screen
+    @Serializable data class AdminRotaYerDuzenle(val mekan: RotaMekaniAdmin, val mevcutAnlatim: String?) : Screen
 }
 
+/** Admin token'ı gerektiren ekranlar — token yokken yığında tutulmaz. */
+private val Screen.adminEkrani: Boolean
+    get() = when (this) {
+        Screen.AdminAnaSayfa, Screen.AdminPersonaEkle, Screen.AdminRotaYerEkle,
+        Screen.AdminPersonaYonet, Screen.AdminRotaYerYonet,
+        is Screen.AdminPersonaDuzenle, is Screen.AdminRotaYerDuzenle -> true
+        else -> false
+    }
+
 data class BotRef(val kategori: String, val kod: String)
+
+/** Açık sohbetin hangi bot için olduğu, döndürmede korunmak üzere "kategori\nkod" olarak saklanır. */
+private val BotRefSaver = Saver<BotRef?, String>(
+    save = { it?.let { b -> "${b.kategori}\n${b.kod}" } },
+    restore = { kayit -> kayit.split('\n').takeIf { it.size == 2 }?.let { BotRef(it[0], it[1]) } },
+)
 
 private enum class DialogTuru { YOK, BIZ_KIMIZ, PROJE_HAKKINDA }
 
@@ -121,33 +145,46 @@ fun App() {
         println("[KuzeyKapisi] Config.BASE_URL = ${Config.BASE_URL}")
         Unit
     }
-    val repo = remember { KuzeyRepository(ApiService()) }
+    // Uygulama düzeyi ViewModel'ler (Activity'nin store'unda, döndürmeden sağ
+    // çıkar): repository + ekran kapsamlarının store'ları, ve admin oturumu.
+    val vmDeposu = viewModel { VmDeposu() }
+    val repo = vmDeposu.repo
+    // Admin: token yalnızca bellekte tutulur (kalıcı depolama yok), ama
+    // ViewModel olduğu için döndürmede kaybolmaz.
+    val adminVm = viewModel { AdminViewModel(repo) }
+    val adminUi by adminVm.state.collectAsState()
+
     // Ekran geçmişi bir yığın olarak tutulur: yeni ekrana geçişte push, geri
     // gidişte pop. Böylece geri adımı her zaman SADECE bir üst seviyeye çıkar.
-    val ekranYigini = remember { mutableStateListOf<Screen>(Screen.Home) }
-    val screen = ekranYigini.last()
-    var aktifBot by remember { mutableStateOf<BotRef?>(null) }
+    // rememberSaveable: döndürmede aynı derinlikte geri kurulur.
+    val ekranYigini = rememberEkranYigini()
+    // Yığın geri kurulduğunda token yoksa (Android'de süreç öldürülüp yeniden
+    // açıldıysa; token kasıtlı olarak kalıcı değil) admin ekranları atılır.
+    // Döndürmede token korunduğu için burası hiçbir şey yapmaz.
+    remember {
+        if (adminUi.token == null) ekranYigini.kaldir { it.adminEkrani }
+        Unit
+    }
+    var aktifBot by rememberSaveable(stateSaver = BotRefSaver) { mutableStateOf<BotRef?>(null) }
     var dialogTuru by remember { mutableStateOf(DialogTuru.YOK) }
     // Açılış bilgilendirme dialog'u: yalnızca uygulama bu oturumda ilk kez
-    // render edildiğinde gösterilir, kart/ekran geçişlerinde tekrar açılmaz.
-    var acilisBilgilendirmeAcik by remember { mutableStateOf(true) }
+    // render edildiğinde gösterilir; kart/ekran geçişlerinde ve döndürmede
+    // tekrar açılmaz.
+    var acilisBilgilendirmeAcik by rememberSaveable { mutableStateOf(true) }
     // Yalnızca GÖRSEL geçişin yönü: "kapı açılma" animasyonunun hangi tarafa
     // işleyeceğini söyler. Navigasyon kararlarına HİÇBİR etkisi yoktur.
     var gecisIleri by remember { mutableStateOf(true) }
 
-    // Admin: token yalnızca bellekte tutulur, sade AdminViewModel + StateFlow.
-    val adminVm = remember(repo) { AdminViewModel(repo) }
-    val adminUi by adminVm.state.collectAsState()
     var adminGirisDialoguAcik by remember { mutableStateOf(false) }
 
     val git: (Screen) -> Unit = { hedef ->
         gecisIleri = true
-        ekranYigini.add(hedef)
+        ekranYigini.ekle(hedef)
     }
     val geriGit: () -> Unit = {
-        if (ekranYigini.size > 1) {
+        if (ekranYigini.boyut > 1) {
             gecisIleri = false
-            ekranYigini.removeAt(ekranYigini.lastIndex)
+            ekranYigini.cikar()
         }
     }
     // Tüm admin ekranlarında 401 alındığında ortak davranış: token sıfırlanır,
@@ -159,6 +196,7 @@ fun App() {
     }
 
     KuzeyKapisiTheme {
+        CompositionLocalProvider(LocalVmDeposu provides vmDeposu) {
         Surface(modifier = Modifier.fillMaxSize(), color = KaranlikLacivert) {
             Box(modifier = Modifier.fillMaxSize()) {
                 // En alt katman: sabit arka plan fotoğrafı. Üstündeki yüksek
@@ -198,11 +236,28 @@ fun App() {
                         // tam genişlikte (kenardan kenara hero/ızgara), diğer ekranlar 1100dp'de kalır.
                         // Sınır her ekran örneğinin kendi kutusunda olduğu için geçiş
                         // sırasında genişlik sıçramaz.
+                        //
+                        // Her yığın girdisi kendi ViewModel kapsamında çizilir:
+                        // girdi yığından çıkıp çıkış animasyonu bitince kapsam
+                        // temizlenir (ViewModel'ler onCleared, istekler iptal);
+                        // döndürmede girdi yığında kaldığı için korunur.
                         KapiGecisi(
-                            hedef = screen,
+                            hedef = ekranYigini.ust,
                             ileri = gecisIleri,
                             modifier = Modifier.fillMaxSize(),
-                        ) { s ->
+                        ) { girdi ->
+                            VmKapsami(
+                                anahtar = "ekran-${girdi.id}",
+                                halaGerekli = { ekranYigini.iceriyor(girdi.id) },
+                            ) {
+                            val s = girdi.ekran
+                            // İleri navigasyon yalnızca EN ÜSTTEKİ ekrandan kabul
+                            // edilir. Geri basıldıktan sonra ekran çıkış
+                            // animasyonu boyunca (~380ms) hâlâ çizilir ve
+                            // ViewModel'i o süre boyunca yaşar; o pencerede biten
+                            // bir istek (ör. "Düzenle") artık görünmeyen ekrandan
+                            // yeni ekran açmasın.
+                            val git: (Screen) -> Unit = { hedef -> if (ekranYigini.ustMu(girdi.id)) git(hedef) }
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                                 Box(
                                     modifier = if (s is Screen.Home || s is Screen.BotList) {
@@ -349,6 +404,7 @@ fun App() {
                                     }
                                 }
                             }
+                            }
                         }
                     }
                     Footer(modifier = Modifier.fillMaxWidth())
@@ -363,7 +419,8 @@ fun App() {
                 // aktifBot null olduğunda çıkış animasyonu boyunca paneli
                 // çizmeye devam edebilmek için son geçerli bot hatırlanır —
                 // yalnızca animasyon amaçlı; oturum/state mantığı değişmez.
-                var sonBot by remember { mutableStateOf<BotRef?>(null) }
+                // Başlangıç değeri aktifBot: döndürmeden sonra panel ilk karede çizilsin.
+                var sonBot by remember { mutableStateOf(aktifBot) }
                 LaunchedEffect(aktifBot) { aktifBot?.let { sonBot = it } }
                 val chatAcik = aktifBot != null
 
@@ -371,7 +428,7 @@ fun App() {
                 // ekran yığınında bir üst seviyeye çıkar. Home'da ve sohbet
                 // kapalıyken devre dışı kalır ki normal uygulamadan çıkış
                 // davranışı sisteme bırakılsın.
-                BackHandler(enabled = chatAcik || ekranYigini.size > 1) {
+                BackHandler(enabled = chatAcik || ekranYigini.boyut > 1) {
                     if (chatAcik) aktifBot = null else geriGit()
                 }
 
@@ -406,20 +463,29 @@ fun App() {
                         modifier = Modifier.align(Alignment.CenterEnd),
                     ) {
                         sonBot?.let { b ->
-                            ChatSheet(
-                                repo = repo,
-                                kategori = b.kategori,
-                                oge = b.kod,
-                                onKapat = { aktifBot = null },
-                                modifier = if (genisEkran) {
-                                    Modifier
-                                        .width(CHAT_PANEL_GENISLIGI)
-                                        .fillMaxHeight()
-                                        .shadow(16.dp)
-                                } else {
-                                    Modifier.fillMaxSize()
-                                },
-                            )
+                            // Sohbetin kendi ViewModel kapsamı: panel kapanıp
+                            // çıkış animasyonu bitince ChatViewModel temizlenir
+                            // (oturum kapanır); döndürmede aktifBot korunduğu
+                            // için aynı bot ve aynı ViewModel ile geri açılır.
+                            VmKapsami(
+                                anahtar = "sohbet-${b.kategori}-${b.kod}",
+                                halaGerekli = { aktifBot == b },
+                            ) {
+                                ChatSheet(
+                                    repo = repo,
+                                    kategori = b.kategori,
+                                    oge = b.kod,
+                                    onKapat = { aktifBot = null },
+                                    modifier = if (genisEkran) {
+                                        Modifier
+                                            .width(CHAT_PANEL_GENISLIGI)
+                                            .fillMaxHeight()
+                                            .shadow(16.dp)
+                                    } else {
+                                        Modifier.fillMaxSize()
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -459,6 +525,7 @@ fun App() {
                     )
                 }
             }
+        }
         }
     }
 }

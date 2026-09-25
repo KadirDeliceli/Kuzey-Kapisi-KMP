@@ -33,7 +33,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.ses.KayitDurumu
@@ -78,16 +78,15 @@ fun ChatSheet(
     onKapat: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(kategori, oge) { ChatViewModel(repo, kategori, oge) }
+    // Oturum ViewModel oluşurken açılır; panel kapanıp kapsamı temizlenince
+    // ChatViewModel.onCleared oturumu kapatır ve ses kaynaklarını bırakır
+    // (kapsam: App.kt'deki "sohbet-..." VmKapsami).
+    val vm = viewModel { ChatViewModel(repo, kategori, oge) }
     val ui by vm.state.collectAsState()
     val kayitDurumu by vm.kayitDurumu.collectAsState()
     val kayitHatasi by vm.kayitHatasi.collectAsState()
     val mikrofonIzniDurumu by vm.mikrofonIzniDurumu.collectAsState()
     val oynatilanMesajId by vm.oynatilanMesajId.collectAsState()
-    DisposableEffect(vm) {
-        vm.basla()
-        onDispose { vm.temizle() }
-    }
 
     var girdi by remember { mutableStateOf("") }
     val listState = rememberLazyListState()

@@ -1,14 +1,14 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.Konum
 import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.model.VARSAYILAN_KONUM
 import com.kuzeykapisi.app.data.model.guncelKonumAl
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,17 +33,21 @@ data class RotaUiState(
     val gosterilenRota: RotaYaniti? = null,
 )
 
-class RotaViewModel(private val repo: KuzeyRepository) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+class RotaViewModel(private val repo: KuzeyRepository) : ViewModel() {
     private val _state = MutableStateFlow(RotaUiState())
     val state: StateFlow<RotaUiState> = _state.asStateFlow()
 
-    fun basla() {
-        scope.launch {
+    init {
+        basla()
+    }
+
+    private fun basla() {
+        viewModelScope.launch {
             try {
                 val kategoriler = repo.rotaKategorileriGetir()
                 _state.value = _state.value.copy(kategoriler = kategoriler)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] /rota/kategoriler hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(hata = "Kategoriler yüklenemedi, lütfen tekrar deneyin.")
             }
@@ -53,7 +57,7 @@ class RotaViewModel(private val repo: KuzeyRepository) {
 
     /** Konum alma + varsayılan rotaları çekme: tek bir tam ekran yükleniyor/hata katmanının kaynağı. */
     private fun ilkYuklemeBaslat() {
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(ilkYuklemeTamamlandi = false, ilkYuklemeHatasi = null)
             val konum = runCatching { guncelKonumAl() }.getOrDefault(VARSAYILAN_KONUM)
             try {
@@ -64,6 +68,7 @@ class RotaViewModel(private val repo: KuzeyRepository) {
                     ilkYuklemeTamamlandi = true,
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] /rota/varsayilanlar hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     konum = konum,
@@ -98,7 +103,7 @@ class RotaViewModel(private val repo: KuzeyRepository) {
 
     fun ara() {
         val sureSaat = _state.value.secilenSureSaat ?: return
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyorOzel = true, hata = null)
             val konum = _state.value.konum ?: runCatching { guncelKonumAl() }.getOrDefault(VARSAYILAN_KONUM)
             println("[KuzeyKapisi] POST /rota/olustur isteği başlatılıyor (sureSaat=$sureSaat, turler=${_state.value.seciliTurler})...")
@@ -107,6 +112,7 @@ class RotaViewModel(private val repo: KuzeyRepository) {
                 println("[KuzeyKapisi] /rota/olustur başarılı, durak sayısı=${yanit.rota.size}")
                 _state.value = _state.value.copy(konum = konum, ozelSonuc = yanit, yukleniyorOzel = false)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] /rota/olustur hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     konum = konum,

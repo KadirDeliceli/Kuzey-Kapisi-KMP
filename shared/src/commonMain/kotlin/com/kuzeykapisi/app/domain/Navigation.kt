@@ -1,9 +1,16 @@
 package com.kuzeykapisi.app.domain
 
+import kotlinx.serialization.Serializable
+
+// @Serializable: Screen.SubMenu bu kartı taşıyor ve ekran yığını
+// yapılandırma değişikliğinde JSON olarak saklanıyor (bkz. ui/nav/EkranYigini).
+@Serializable
 data class SubCard(val id: String, val ad: String, val kategori: String, val kapak: String)
 
+@Serializable
 enum class MainCardType { SUBMENU, WIP, DIRECT, ROTA_PLANLAYICI }
 
+@Serializable
 data class MainCard(
     val id: String,
     val ad: String,

@@ -1,12 +1,12 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.model.RotaYerEkleIstek
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,8 +37,7 @@ class RotaYerDuzenleViewModel(
     val mekanId: Int,
     baslangic: RotaMekaniAdmin,
     mevcutAnlatim: String?,
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+) : ViewModel() {
     private val anlatimOrijinal = mevcutAnlatim ?: ""
     private val _state = MutableStateFlow(
         RotaYerDuzenleUiState(
@@ -88,7 +87,7 @@ class RotaYerDuzenleViewModel(
             _state.value = s.copy(genelHata = "'Ziyaret Süresi' sıfırdan büyük bir tam sayı olmalı.")
             return
         }
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, basariMesaji = null)
             try {
                 repo.rotaYeriGuncelle(
@@ -112,6 +111,7 @@ class RotaYerDuzenleViewModel(
                     _state.value.copy(kaydediliyor = false, genelHata = e.detay)
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] rota-yer-guncelle ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     kaydediliyor = false,

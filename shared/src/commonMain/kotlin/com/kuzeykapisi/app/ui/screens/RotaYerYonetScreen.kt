@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.AnlatimRozeti
@@ -62,10 +63,9 @@ fun RotaYerYonetScreen(
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo) { RotaYerListeViewModel(repo) }
+    val vm = viewModel { RotaYerListeViewModel(repo, token) }
     val ui by vm.state.collectAsState()
 
-    LaunchedEffect(vm) { vm.yukle(token) }
     LaunchedEffect(ui.oturumGecersiz) {
         if (ui.oturumGecersiz) onYetkisiz()
     }

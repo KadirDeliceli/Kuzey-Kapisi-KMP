@@ -14,9 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.AnlatimiKaldirSecimi
@@ -37,7 +37,7 @@ fun RotaYerDuzenleScreen(
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo, mekan.id) { RotaYerDuzenleViewModel(repo, mekan.id, mekan, mevcutAnlatim) }
+    val vm = viewModel { RotaYerDuzenleViewModel(repo, mekan.id, mekan, mevcutAnlatim) }
     val ui by vm.state.collectAsState()
 
     LaunchedEffect(ui.oturumGecersiz) {

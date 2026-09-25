@@ -1,11 +1,11 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,13 +23,17 @@ data class RotaYerListeUiState(
     val oturumGecersiz: Boolean = false,
 )
 
-class RotaYerListeViewModel(private val repo: KuzeyRepository) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+/** [ilkToken]: ilk liste yüklemesi ViewModel oluşurken bir kez yapılır (döndürmede tekrarlanmaz). */
+class RotaYerListeViewModel(private val repo: KuzeyRepository, ilkToken: String) : ViewModel() {
     private val _state = MutableStateFlow(RotaYerListeUiState())
     val state: StateFlow<RotaYerListeUiState> = _state.asStateFlow()
 
+    init {
+        yukle(ilkToken)
+    }
+
     fun yukle(token: String) {
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
             try {
                 val mekanlar = repo.rotaYerleriListele(token)
@@ -42,6 +46,7 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) {
                     _state.value.copy(yukleniyor = false, hata = e.detay)
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] rota-yerleri listesi ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     yukleniyor = false,
@@ -58,7 +63,7 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) {
      * yalnızca başarılı olursa `onHazir` çağrılır.
      */
     fun duzenlemeyiBaslat(mekan: RotaMekaniAdmin, token: String, onHazir: (RotaMekaniAdmin, String?) -> Unit) {
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(duzenlemeYukleniyorId = mekan.id, duzenlemeHatasi = null)
             try {
                 val detay = repo.rotaYeriGetir(mekanId = mekan.id, token = token)
@@ -75,6 +80,7 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) {
                     )
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] rota-yeri-getir ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     duzenlemeYukleniyorId = null,
@@ -94,7 +100,7 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) {
 
     fun silmeyiOnayla(token: String) {
         val mekan = _state.value.silinecekMekan ?: return
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(silmeYukleniyor = true, silmeHatasi = null)
             try {
                 repo.rotaYeriSil(token = token, mekanId = mekan.id)
@@ -108,6 +114,7 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) {
                     _state.value.copy(silmeYukleniyor = false, silmeHatasi = e.detay)
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] rota-yer-sil ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     silmeYukleniyor = false,

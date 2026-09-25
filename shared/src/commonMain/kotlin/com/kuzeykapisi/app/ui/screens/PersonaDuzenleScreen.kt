@@ -16,10 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.ADMIN_PERSONA_KATEGORILERI
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
@@ -44,7 +44,7 @@ fun PersonaDuzenleScreen(
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo, detay) { PersonaDuzenleViewModel(repo, detay.kategori, detay.kod, detay) }
+    val vm = viewModel { PersonaDuzenleViewModel(repo, detay.kategori, detay.kod, detay) }
     val ui by vm.state.collectAsState()
 
     LaunchedEffect(ui.oturumGecersiz) {

@@ -1,13 +1,14 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.model.resimSec
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.domain.slugify
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,8 +30,7 @@ data class PersonaEkleUiState(
     val oturumGecersiz: Boolean = false,
 )
 
-class PersonaEkleViewModel(private val repo: KuzeyRepository) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+class PersonaEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
     private val _state = MutableStateFlow(PersonaEkleUiState())
     val state: StateFlow<PersonaEkleUiState> = _state.asStateFlow()
 
@@ -61,7 +61,8 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) {
     }
 
     fun gorselSec() {
-        scope.launch {
+        // Görsel baytları okunurken UI thread'i bloklanmasın diye (önceki davranış gibi) arka planda.
+        viewModelScope.launch(Dispatchers.Default) {
             val secilen = runCatching { resimSec() }.getOrNull()
             if (secilen != null) _state.value = _state.value.copy(gorsel = secilen)
         }
@@ -79,7 +80,7 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) {
             _state.value = s.copy(genelHata = "Lütfen bir görsel seçin.")
             return
         }
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, kodHatasi = null)
             try {
                 val yanit = repo.personaEkle(
@@ -107,6 +108,7 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) {
                     else -> _state.value.copy(kaydediliyor = false, genelHata = e.detay)
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] persona-ekle ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     kaydediliyor = false,

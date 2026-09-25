@@ -1,13 +1,13 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.model.Katalog
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,18 +26,22 @@ data class PersonaListeUiState(
     val oturumGecersiz: Boolean = false,
 )
 
-class PersonaListeViewModel(private val repo: KuzeyRepository) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
     private val _state = MutableStateFlow(PersonaListeUiState())
     val state: StateFlow<PersonaListeUiState> = _state.asStateFlow()
 
+    init {
+        yukle()
+    }
+
     fun yukle() {
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
             try {
                 val katalog = repo.katalog()
                 _state.value = _state.value.copy(katalog = katalog, yukleniyor = false)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] persona listesi yüklenemedi: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     yukleniyor = false,
@@ -59,7 +63,7 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) {
      */
     fun duzenlemeyiBaslat(oge: KatalogOge, token: String, onHazir: (PersonaDetay) -> Unit) {
         val kategori = _state.value.kategori
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(duzenlemeYukleniyorKod = oge.kod, duzenlemeHatasi = null)
             try {
                 val detay = repo.personaGetir(kategori = kategori, kod = oge.kod, token = token)
@@ -76,6 +80,7 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) {
                     )
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] persona-getir ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     duzenlemeYukleniyorKod = null,
@@ -96,7 +101,7 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) {
     fun silmeyiOnayla(token: String) {
         val oge = _state.value.silinecekOge ?: return
         val kategori = _state.value.kategori
-        scope.launch {
+        viewModelScope.launch {
             _state.value = _state.value.copy(silmeYukleniyor = true, silmeHatasi = null)
             try {
                 repo.personaSil(token = token, kategori = kategori, kod = oge.kod)
@@ -110,6 +115,7 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) {
                     _state.value.copy(silmeYukleniyor = false, silmeHatasi = e.detay)
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] persona-sil ağ hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     silmeYukleniyor = false,

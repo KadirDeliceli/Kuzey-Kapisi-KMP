@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.ADMIN_PERSONA_KATEGORILERI
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.model.PersonaDetay
@@ -69,10 +70,9 @@ fun PersonaYonetScreen(
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(repo) { PersonaListeViewModel(repo) }
+    val vm = viewModel { PersonaListeViewModel(repo) }
     val ui by vm.state.collectAsState()
 
-    LaunchedEffect(vm) { vm.yukle() }
     LaunchedEffect(ui.oturumGecersiz) {
         if (ui.oturumGecersiz) onYetkisiz()
     }

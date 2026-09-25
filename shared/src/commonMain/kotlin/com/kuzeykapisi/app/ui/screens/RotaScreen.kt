@@ -31,12 +31,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.RotaDurak
 import com.kuzeykapisi.app.data.model.RotaYaniti
@@ -66,6 +67,7 @@ import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.components.rotaHaritasiHtmlOlustur
 import com.kuzeykapisi.app.ui.components.tumRotaGoogleMapsUrl
+import com.kuzeykapisi.app.ui.nav.VmKapsami
 import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
@@ -95,18 +97,17 @@ fun RotaScreen(
 ) {
     KonumIzniEfekti()
 
-    val vm = remember(repo) { RotaViewModel(repo) }
+    // İlk yükleme RotaViewModel oluşurken (init) bir kez yapılır; eski boş
+    // onDispose'lu DisposableEffect'e gerek kalmadı.
+    val vm = viewModel { RotaViewModel(repo) }
     val ui by vm.state.collectAsState()
-    DisposableEffect(vm) {
-        vm.basla()
-        onDispose { }
-    }
 
     // Rota durağı anlatım overlay'i: RotaDetayGorunumu'nun ÜSTÜNE bindirilir,
     // altındaki içerik (dolayısıyla vm'nin gosterilenRota state'i ve
     // LazyColumn scroll pozisyonu) hiç kaldırılmaz — App.kt'deki sohbet
-    // overlay'iyle aynı "state'i canlı tut" yaklaşımı.
-    var acikDurakAnlatimi by remember { mutableStateOf<RotaDurak?>(null) }
+    // overlay'iyle aynı "state'i canlı tut" yaklaşımı. Açık durağın yalnızca
+    // id'si saklanır (döndürmede korunur); durak, ViewModel'deki rotadan bulunur.
+    var acikDurakId by rememberSaveable { mutableStateOf<Int?>(null) }
 
     // Sistem/donanım geri tuşu: önce açık detay görünümünü kapatır (galeriye
     // döner), galerideyken tekrar basılırsa RotaScreen'den çıkılır — App.kt'deki
@@ -123,22 +124,31 @@ fun RotaScreen(
     val ilkYuklemeHatasi = ui.ilkYuklemeHatasi
     when {
         gosterilenRota != null -> Box(modifier = modifier.fillMaxSize()) {
+            val acikDurak = acikDurakId?.let { id -> gosterilenRota.rota.firstOrNull { it.id == id } }
             RotaDetayGorunumu(
                 rota = gosterilenRota,
                 onGeri = { vm.detaydanCik() },
-                onDurakSesTiklandi = { durak -> acikDurakAnlatimi = durak },
-                haritaGizli = acikDurakAnlatimi != null,
+                onDurakSesTiklandi = { durak -> acikDurakId = durak.id },
+                haritaGizli = acikDurak != null,
                 modifier = Modifier.fillMaxSize(),
             )
-            val acikDurak = acikDurakAnlatimi
             if (acikDurak != null) {
-                AnlatimEkrani(
-                    repo = repo,
-                    kaynak = AnlatimKaynagi.RotaDuragi(mekanId = acikDurak.id),
-                    baslik = acikDurak.ad,
-                    onGeri = { acikDurakAnlatimi = null },
-                    modifier = Modifier.fillMaxSize().background(KaranlikLacivert),
-                )
+                // Her durak anlatımının kendi ViewModel kapsamı var (bu ekranın
+                // kapsamının altında): overlay kapanınca AnlatimViewModel
+                // temizlenir ve ses durur; başka bir durak açılınca yeni bir
+                // ViewModel gelir, öncekinin metni gösterilmez.
+                VmKapsami(
+                    anahtar = "rota-anlatim-${acikDurak.id}",
+                    halaGerekli = { acikDurakId == acikDurak.id },
+                ) {
+                    AnlatimEkrani(
+                        repo = repo,
+                        kaynak = AnlatimKaynagi.RotaDuragi(mekanId = acikDurak.id),
+                        baslik = acikDurak.ad,
+                        onGeri = { acikDurakId = null },
+                        modifier = Modifier.fillMaxSize().background(KaranlikLacivert),
+                    )
+                }
             }
         }
         // Konum + varsayılan rotalar tamamlanana kadar galerinin HİÇBİR

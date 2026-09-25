@@ -1,5 +1,7 @@
 package com.kuzeykapisi.app.ui.vm
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.data.model.ChatUiState
 import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
@@ -10,9 +12,9 @@ import com.kuzeykapisi.app.data.ses.SesKaydedici
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
 import com.kuzeykapisi.app.data.tts.AnlatimOynatici
 import io.ktor.client.plugins.ClientRequestException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,8 +29,7 @@ class ChatViewModel(
     private val repo: KuzeyRepository,
     private val kategori: String,
     private val oge: String,
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+) : ViewModel() {
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
@@ -50,7 +51,7 @@ class ChatViewModel(
     private var kayitBaslangic: TimeSource.Monotonic.ValueTimeMark? = null
 
     init {
-        scope.launch {
+        viewModelScope.launch {
             oynatici.durum.collect { d ->
                 // Ses kendiliğinden bitince (kullanıcı durdurmadan) buton
                 // otomatik eski hâline dönsün.
@@ -59,10 +60,13 @@ class ChatViewModel(
                 }
             }
         }
+        // Oturum ViewModel oluşurken bir kez açılır; döndürmede ViewModel
+        // korunduğu için yeniden açılmaz (sohbet geçmişi de korunur).
+        basla()
     }
 
-    fun basla() {
-        scope.launch {
+    private fun basla() {
+        viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
             println("[KuzeyKapisi] POST /oturum/baslat isteği başlatılıyor (kategori=$kategori, oge=$oge)...")
             try {
@@ -75,6 +79,7 @@ class ChatViewModel(
                     yukleniyor = false,
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] /oturum/baslat hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(yukleniyor = false, hata = e.message ?: "Oturum başlatılamadı")
             }
@@ -88,7 +93,7 @@ class ChatViewModel(
             mesajlar = _state.value.mesajlar + Mesaj(metin = mesaj, benden = true),
             yaziyor = true,
         )
-        scope.launch {
+        viewModelScope.launch {
             println("[KuzeyKapisi] gonder(): guvenliSohbet çağrısı başlatılıyor (sessionId=$sessionId, mesaj=$mesaj)")
             try {
                 val sonuc = repo.guvenliSohbet(kategori, oge, sessionId, mesaj)
@@ -109,6 +114,7 @@ class ChatViewModel(
                 )
                 println("[KuzeyKapisi] gonder(): state güncellendi — yeni mesajlar.size=${_state.value.mesajlar.size}")
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 println("[KuzeyKapisi] /sohbet hatası: ${e::class.simpleName}: ${e.message}")
                 _state.value = _state.value.copy(
                     yaziyor = false,
@@ -127,7 +133,7 @@ class ChatViewModel(
             }
             KayitDurumu.KAYIT_YAPILIYOR -> {
                 val baslangic = kayitBaslangic
-                scope.launch {
+                viewModelScope.launch {
                     val ses = sesKaydedici.kayidiDurdurVeAl()
                     val yeterinceUzun = baslangic == null || baslangic.elapsedNow() >= MIN_KAYIT_SURESI
                     if (ses != null && yeterinceUzun) {
@@ -163,6 +169,7 @@ class ChatViewModel(
             )
             mesajSesiCal(botMesajId)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             println("[KuzeyKapisi] /voice-chat hatası: ${e::class.simpleName}: ${e.message}")
             val hataMetni = if (e is ClientRequestException && e.response.status.value == 400) {
                 "Sizi anlayamadım, lütfen tekrar deneyin."
@@ -199,14 +206,21 @@ class ChatViewModel(
         }
     }
 
-    fun temizle() {
-        scope.launch { repo.oturumKapat(_state.value.sessionId ?: return@launch) }
+    /**
+     * Sohbet paneli kapanıp kapsamı temizlendiğinde çalışır (yapılandırma
+     * değişikliğinde çalışmaz). viewModelScope burada zaten iptal edilmiş
+     * olduğu için sunucudaki oturumu kapatma ve yarım kalan kaydı bırakma
+     * işleri ekrandan bağımsız, "at ve unut" olarak GlobalScope'ta yapılır.
+     */
+    @OptIn(DelicateCoroutinesApi::class)
+    override fun onCleared() {
+        _state.value.sessionId?.let { id -> GlobalScope.launch { repo.oturumKapat(id) } }
         oynatici.durdur()
         oynatici.serbestBirak()
         _oynatilanMesajId.value = null
         if (sesKaydedici.durum.value != KayitDurumu.BOSTA) {
             // Devam eden kayıt varsa iptal edilip temizlenir — sonuç GÖNDERİLMEZ.
-            scope.launch { sesKaydedici.kayidiDurdurVeAl() }
+            GlobalScope.launch { sesKaydedici.kayidiDurdurVeAl() }
         }
     }
 }
