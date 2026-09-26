@@ -2,6 +2,7 @@
 
 package com.kuzeykapisi.app.data.ses
 
+import com.kuzeykapisi.app.Metinler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,11 +11,9 @@ import kotlin.coroutines.resume
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-private const val MESAJ_IZIN_YOK = "Mikrofon izni verilmedi."
-private const val MESAJ_KALICI_RET =
-    "Mikrofon erişimi engellenmiş. Tarayıcının adres çubuğundaki kilit/site bilgisi " +
-        "simgesine tıklayıp mikrofon iznini 'İzin Ver' yapın, sonra sayfayı yenileyin."
-private const val MESAJ_KAYDEDILEMEDI = "Ses kaydedilemedi."
+private const val MESAJ_IZIN_YOK = Metinler.MIKROFON_IZNI_YOK
+private const val MESAJ_KALICI_RET = Metinler.MIKROFON_TARAYICIDA_ENGELLI
+private const val MESAJ_KAYDEDILEMEDI = Metinler.SES_KAYDEDILEMEDI
 
 /** getUserMedia'nın reddettiğinde verdiği hata adı — standart ve eski (legacy) isimlerin ikisi de kontrol edilir. */
 private fun izinReddiMi(hataAdi: String): Boolean = hataAdi == "NotAllowedError" || hataAdi == "PermissionDeniedError"

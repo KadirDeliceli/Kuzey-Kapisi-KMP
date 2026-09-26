@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+<!--
+	RELEASE yapılandırmasının Info.plist'i. NSAppTransportSecurity BİLEREK YOK:
+	ATS varsayılan (güvenli) davranışta kalır, yalnızca HTTPS'e izin verilir.
+	Yerel geliştirme sunucusuna HTTP izni yalnızca Debug yapılandırmasında,
+	Info-Debug.plist üzerinden verilir. Bu dosyadaki diğer anahtarlar
+	Info-Debug.plist ile aynı tutulmalıdır.
+-->
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sesli mesaj göndermek için mikrofon erişimi gereklidir.</string>
 </dict>

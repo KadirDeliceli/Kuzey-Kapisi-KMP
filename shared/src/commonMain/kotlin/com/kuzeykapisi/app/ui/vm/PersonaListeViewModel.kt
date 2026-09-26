@@ -2,11 +2,14 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.Katalog
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,10 +45,10 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
                 _state.value = _state.value.copy(katalog = katalog, yukleniyor = false)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] persona listesi yüklenemedi: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "persona listesi yüklenemedi: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     yukleniyor = false,
-                    hata = "Liste yüklenemedi, lütfen tekrar deneyin.",
+                    hata = Metinler.LISTE_YUKLENEMEDI,
                 )
             }
         }
@@ -70,21 +73,21 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
                 _state.value = _state.value.copy(duzenlemeYukleniyorKod = null)
                 onHazir(detay)
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] persona-getir hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "persona-getir hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {
                     _state.value.copy(duzenlemeYukleniyorKod = null, oturumGecersiz = true)
                 } else {
                     _state.value.copy(
                         duzenlemeYukleniyorKod = null,
-                        duzenlemeHatasi = "Bu içerik yüklenemedi: ${e.detay}",
+                        duzenlemeHatasi = Metinler.adminHataMesaji(e),
                     )
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] persona-getir ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "persona-getir hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     duzenlemeYukleniyorKod = null,
-                    duzenlemeHatasi = "İçerik yüklenemedi, lütfen tekrar deneyin.",
+                    duzenlemeHatasi = Metinler.ICERIK_YUKLENEMEDI,
                 )
             }
         }
@@ -108,18 +111,18 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
                 _state.value = _state.value.copy(silmeYukleniyor = false, silinecekOge = null)
                 yukle()
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] persona-sil hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "persona-sil hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {
                     _state.value.copy(silmeYukleniyor = false, oturumGecersiz = true)
                 } else {
-                    _state.value.copy(silmeYukleniyor = false, silmeHatasi = e.detay)
+                    _state.value.copy(silmeYukleniyor = false, silmeHatasi = Metinler.adminHataMesaji(e))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] persona-sil ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "persona-sil hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     silmeYukleniyor = false,
-                    silmeHatasi = "Ağ hatası: lütfen bağlantınızı kontrol edip tekrar deneyin.",
+                    silmeHatasi = Metinler.hataMesaji(e),
                 )
             }
         }

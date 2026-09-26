@@ -8,6 +8,7 @@ import android.media.MediaRecorder
 import android.net.Uri
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.location.AndroidContextHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,10 +18,10 @@ import java.io.File
 private const val TERCIHLER_ADI = "ses_kaydedici_izin_tercihleri"
 private const val ANAHTAR_RET_SAYACI = "ret_sayaci"
 
-private const val MESAJ_IZIN_YOK = "Mikrofon izni verilmedi."
-private const val MESAJ_KALICI_RET = "Mikrofon izni kapalı. Ayarlardan açabilirsiniz."
-private const val MESAJ_BASLATILAMADI = "Ses kaydı başlatılamadı."
-private const val MESAJ_KAYDEDILEMEDI = "Ses kaydedilemedi."
+private const val MESAJ_IZIN_YOK = Metinler.MIKROFON_IZNI_YOK
+private const val MESAJ_KALICI_RET = Metinler.MIKROFON_IZNI_KAPALI
+private const val MESAJ_BASLATILAMADI = Metinler.SES_KAYDI_BASLATILAMADI
+private const val MESAJ_KAYDEDILEMEDI = Metinler.SES_KAYDEDILEMEDI
 
 /**
  * MediaRecorder(Context) kurucusu API 31 gerektirir; minSdk 24 olduğu için

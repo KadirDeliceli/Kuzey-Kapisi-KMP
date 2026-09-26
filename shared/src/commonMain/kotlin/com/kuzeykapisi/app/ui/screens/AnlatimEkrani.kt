@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
 import com.kuzeykapisi.app.ui.components.EkranBasligi
@@ -90,8 +91,24 @@ fun AnlatimEkrani(
 
         when {
             ui.yukleniyor -> YukleniyorGorunumu(modifier = Modifier.fillMaxSize())
+            // Anlatım gerçekten yok: bu bir hata değil (hata rengi yok) ve tekrar
+            // denemek sonucu değiştirmez (buton yok).
+            ui.anlatimYok -> Box(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = when (kaynak) {
+                        is AnlatimKaynagi.Persona -> Metinler.ANLATIM_YOK
+                        is AnlatimKaynagi.RotaDuragi -> Metinler.ANLATIM_YOK_DURAK
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = SisGrisi,
+                    textAlign = TextAlign.Center,
+                )
+            }
             ui.hata != null -> HataGorunumu(
-                mesaj = ui.hata ?: "Anlatım yüklenemedi.",
+                mesaj = ui.hata ?: Metinler.ANLATIM_YUKLENEMEDI,
                 modifier = Modifier.fillMaxSize(),
                 onTekrarDene = { vm.yukle() },
             )
@@ -169,7 +186,7 @@ private fun OynatimKontrolleri(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     AnlatimButonu(
-                        metin = "Devam Et",
+                        metin = "Devam et",
                         simge = AnlatimSimgesi.OYNAT,
                         dolgu = true,
                         kompakt = true,
@@ -177,7 +194,7 @@ private fun OynatimKontrolleri(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     AnlatimButonu(
-                        metin = "Baştan Başla",
+                        metin = "Baştan başla",
                         simge = AnlatimSimgesi.BASTAN_BASLA,
                         dolgu = false,
                         kompakt = true,
@@ -191,7 +208,7 @@ private fun OynatimKontrolleri(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     AnlatimButonu(
-                        metin = "Devam Et",
+                        metin = "Devam et",
                         simge = AnlatimSimgesi.OYNAT,
                         dolgu = true,
                         kompakt = true,
@@ -199,7 +216,7 @@ private fun OynatimKontrolleri(
                         modifier = Modifier.weight(1f),
                     )
                     AnlatimButonu(
-                        metin = "Baştan Başla",
+                        metin = "Baştan başla",
                         simge = AnlatimSimgesi.BASTAN_BASLA,
                         dolgu = false,
                         kompakt = true,

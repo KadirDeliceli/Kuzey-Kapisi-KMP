@@ -2,12 +2,15 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.Konum
 import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.model.VARSAYILAN_KONUM
 import com.kuzeykapisi.app.data.model.guncelKonumAl
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,8 +51,8 @@ class RotaViewModel(private val repo: KuzeyRepository) : ViewModel() {
                 _state.value = _state.value.copy(kategoriler = kategoriler)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] /rota/kategoriler hatası: ${e::class.simpleName}: ${e.message}")
-                _state.value = _state.value.copy(hata = "Kategoriler yüklenemedi, lütfen tekrar deneyin.")
+                Logger.d { "rota kategorileri yüklenemedi: ${e.logOzeti()}" }
+                _state.value = _state.value.copy(hata = Metinler.ROTA_KATEGORILER_YUKLENEMEDI)
             }
         }
         ilkYuklemeBaslat()
@@ -69,11 +72,11 @@ class RotaViewModel(private val repo: KuzeyRepository) : ViewModel() {
                 )
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] /rota/varsayilanlar hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "varsayılan rotalar yüklenemedi: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     konum = konum,
                     ilkYuklemeTamamlandi = true,
-                    ilkYuklemeHatasi = "Rotalar yüklenemedi, lütfen tekrar deneyin.",
+                    ilkYuklemeHatasi = Metinler.ROTALAR_YUKLENEMEDI,
                 )
             }
         }
@@ -92,7 +95,7 @@ class RotaViewModel(private val repo: KuzeyRepository) : ViewModel() {
         val mevcut = _state.value.seciliTurler
         _state.value = when {
             kod in mevcut -> _state.value.copy(seciliTurler = mevcut - kod)
-            mevcut.size >= MAKS_SECILI_TUR -> _state.value.copy(uyari = "En fazla $MAKS_SECILI_TUR kategori seçebilirsin.")
+            mevcut.size >= MAKS_SECILI_TUR -> _state.value.copy(uyari = Metinler.rotaEnFazlaTur(MAKS_SECILI_TUR))
             else -> _state.value.copy(seciliTurler = mevcut + kod)
         }
     }
@@ -106,18 +109,18 @@ class RotaViewModel(private val repo: KuzeyRepository) : ViewModel() {
         viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyorOzel = true, hata = null)
             val konum = _state.value.konum ?: runCatching { guncelKonumAl() }.getOrDefault(VARSAYILAN_KONUM)
-            println("[KuzeyKapisi] POST /rota/olustur isteği başlatılıyor (sureSaat=$sureSaat, turler=${_state.value.seciliTurler})...")
+            Logger.d { "rota oluşturuluyor (sureSaat=$sureSaat, turler=${_state.value.seciliTurler})" }
             try {
                 val yanit = repo.rotaOlustur(konum.enlem, konum.boylam, sureSaat, _state.value.seciliTurler.toList())
-                println("[KuzeyKapisi] /rota/olustur başarılı, durak sayısı=${yanit.rota.size}")
+                Logger.d { "rota oluşturuldu: ${yanit.rota.size} durak" }
                 _state.value = _state.value.copy(konum = konum, ozelSonuc = yanit, yukleniyorOzel = false)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] /rota/olustur hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "rota oluşturulamadı: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     konum = konum,
                     yukleniyorOzel = false,
-                    hata = e.message ?: "Rota oluşturulamadı, lütfen tekrar deneyin.",
+                    hata = Metinler.hataMesaji(e),
                 )
             }
         }

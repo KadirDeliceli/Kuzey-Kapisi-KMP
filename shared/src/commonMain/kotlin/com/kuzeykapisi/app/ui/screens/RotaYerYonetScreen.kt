@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.AnlatimRozeti
@@ -95,7 +96,7 @@ fun RotaYerYonetScreen(
                 modifier = Modifier.fillMaxWidth().height(140.dp),
             )
             ui.hata != null -> HataMetni(ui.hata ?: "")
-            ui.mekanlar.isEmpty() -> BosDurumGorunumu("Henüz mekan eklenmedi.")
+            ui.mekanlar.isEmpty() -> BosDurumGorunumu(Metinler.HENUZ_MEKAN_YOK)
             else -> {
                 Text(
                     text = "${ui.mekanlar.size} mekan",

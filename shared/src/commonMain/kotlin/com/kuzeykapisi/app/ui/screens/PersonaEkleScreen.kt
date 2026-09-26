@@ -96,7 +96,7 @@ fun PersonaEkleScreen(
             etiket = "Kod (dosya adı)",
             tekSatir = true,
             hataMetni = ui.kodHatasi,
-            yardimMetni = "Boş bırakırsan Ad'dan otomatik üretilir. Aynı isimde içerik varsa burayı değiştir.",
+            yardimMetni = "Boş bırakırsanız Ad'dan otomatik üretilir. Aynı isimde içerik varsa burayı değiştirin.",
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -126,7 +126,7 @@ fun PersonaEkleScreen(
             deger = ui.anlatim,
             onDegisti = { vm.anlatimDegisti(it) },
             etiket = "Anlatım Metni (opsiyonel)",
-            yardimMetni = "Doldurursan sesli dinleme özelliği de eklenir. Boş bırakabilirsin.",
+            yardimMetni = "Doldurursanız sesli dinleme özelliği de eklenir. Boş bırakabilirsiniz.",
             enAzSatir = 4,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -139,7 +139,7 @@ fun PersonaEkleScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             IkincilButon(
-                metin = if (ui.gorsel == null) "Görsel Seç" else "Görseli Değiştir",
+                metin = if (ui.gorsel == null) "Görsel seç" else "Görseli değiştir",
                 onClick = { vm.gorselSec() },
             )
             val secilenGorsel = ui.gorsel

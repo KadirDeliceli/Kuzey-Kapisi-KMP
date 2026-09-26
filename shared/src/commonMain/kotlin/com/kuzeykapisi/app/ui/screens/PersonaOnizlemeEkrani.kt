@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.EkranBasligi
 import com.kuzeykapisi.app.ui.components.FenerHalesi
@@ -81,7 +82,7 @@ private val OKUMA_SUTUNU_GENISLIGI = 680.dp
 private sealed interface AnlatimYukleme {
     data object Yukleniyor : AnlatimYukleme
     data class Hazir(val metin: String) : AnlatimYukleme
-    data object Hata : AnlatimYukleme
+    data class Hata(val mesaj: String) : AnlatimYukleme
 }
 
 /**
@@ -137,18 +138,19 @@ private fun AnlatimIcerigi(repo: KuzeyRepository, kategori: String, kod: String)
     val durum by produceState<AnlatimYukleme>(AnlatimYukleme.Yukleniyor, repo, kategori, kod, deneme) {
         value = AnlatimYukleme.Yukleniyor
         value = try {
-            AnlatimYukleme.Hazir(repo.anlatimGetir(kategori, kod))
+            // null: backend bu öge için anlatım olmadığını söyledi (404) — hata değil.
+            AnlatimYukleme.Hazir(repo.anlatimGetir(kategori, kod).orEmpty())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            AnlatimYukleme.Hata
+            AnlatimYukleme.Hata(Metinler.hataMesaji(e))
         }
     }
 
     when (val d = durum) {
         AnlatimYukleme.Yukleniyor -> YukleniyorGorunumu(modifier = Modifier.fillMaxSize())
-        AnlatimYukleme.Hata -> HataGorunumu(
-            mesaj = "Anlatım yüklenemedi.",
+        is AnlatimYukleme.Hata -> HataGorunumu(
+            mesaj = d.mesaj,
             modifier = Modifier.fillMaxSize(),
             onTekrarDene = { deneme++ },
         )
@@ -205,14 +207,14 @@ private fun AnlatimYokDurumu() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Bu içerik için sesli anlatım bulunmuyor.",
+                text = Metinler.ANLATIM_YOK,
                 style = MaterialTheme.typography.titleMedium,
                 color = TasBeyazi,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Doğrudan sohbet ekranına geçebilirsiniz.",
+                text = Metinler.ANLATIM_YOK_ACIKLAMA,
                 style = MaterialTheme.typography.bodyMedium,
                 color = SisGrisi,
                 textAlign = TextAlign.Center,

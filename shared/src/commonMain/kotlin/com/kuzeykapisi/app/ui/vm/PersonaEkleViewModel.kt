@@ -2,11 +2,14 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.model.resimSec
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.domain.slugify
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,12 +75,12 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
         val s = _state.value
         if (s.ad.isBlank() || s.karsilama.isBlank() || s.icerik.isBlank()) {
             _state.value = s.copy(
-                genelHata = "'Ad', 'Açılış Mesajı' ve 'Detaylı İçerik' alanları boş olamaz.",
+                genelHata = Metinler.FORM_PERSONA_ZORUNLU_ALANLAR,
             )
             return
         }
         if (s.gorsel == null) {
-            _state.value = s.copy(genelHata = "Lütfen bir görsel seçin.")
+            _state.value = s.copy(genelHata = Metinler.FORM_GORSEL_GEREKLI)
             return
         }
         viewModelScope.launch {
@@ -95,24 +98,24 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
                 )
                 _state.value = PersonaEkleUiState(
                     kategori = s.kategori,
-                    basariMesaji = "Eklendi: ${yanit.ad}",
+                    basariMesaji = Metinler.eklendi(yanit.ad),
                 )
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] persona-ekle hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "persona-ekle hatası: ${e.logOzeti()}" }
                 _state.value = when {
                     e.httpKodu == 401 -> _state.value.copy(kaydediliyor = false, oturumGecersiz = true)
-                    e.detay.contains("zaten var") -> _state.value.copy(
+                    e.detay?.contains("zaten var") == true -> _state.value.copy(
                         kaydediliyor = false,
-                        kodHatasi = "${e.detay} Lütfen yukarıdaki 'Kod' alanını değiştirip tekrar deneyin.",
+                        kodHatasi = Metinler.kodZatenVar(e.detay.orEmpty()),
                     )
-                    else -> _state.value.copy(kaydediliyor = false, genelHata = e.detay)
+                    else -> _state.value.copy(kaydediliyor = false, genelHata = Metinler.adminHataMesaji(e))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] persona-ekle ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "persona-ekle hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     kaydediliyor = false,
-                    genelHata = "Ağ hatası: lütfen bağlantınızı kontrol edip tekrar deneyin.",
+                    genelHata = Metinler.hataMesaji(e),
                 )
             }
         }

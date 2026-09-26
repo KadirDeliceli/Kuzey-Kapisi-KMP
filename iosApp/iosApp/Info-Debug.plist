@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+	YALNIZCA Debug yapılandırması kullanır (project.pbxproj -> INFOPLIST_FILE).
+	Release, ATS'nin güvenli varsayılanıyla Info.plist'i kullanır. Diğer
+	anahtarlar Info.plist ile aynı tutulmalıdır.
+
+	ATS istisnası dar kapsamlıdır; tüm yükler (NSAllowsArbitraryLoads) AÇILMAZ:
+	- NSAllowsLocalNetworking: yalnızca yerel ağ kaynakları (iOS Simulator'ın
+	  kullandığı 127.0.0.1, .local adları, aynı ağdaki geliştirme makinesi).
+	  ATS'nin NSExceptionDomains anahtarı IP adresi kabul etmez; IP ile yerel
+	  sunucuya erişimi bu anahtar karşılar.
+	- NSExceptionDomains/localhost: "localhost" adıyla yapılan HTTP istekleri.
+	İnternetteki her alan adı için ATS (yalnızca HTTPS) aynen geçerlidir.
+-->
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sesli mesaj göndermek için mikrofon erişimi gereklidir.</string>
+</dict>
+</plist>

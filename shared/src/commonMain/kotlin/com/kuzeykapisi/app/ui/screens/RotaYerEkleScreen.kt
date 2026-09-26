@@ -103,7 +103,7 @@ fun RotaYerEkleScreen(
             deger = ui.anlatim,
             onDegisti = { vm.anlatimDegisti(it) },
             etiket = "Anlatım Metni (opsiyonel)",
-            yardimMetni = "Doldurursan sesli dinleme özelliği de eklenir. Boş bırakabilirsin.",
+            yardimMetni = "Doldurursanız sesli dinleme özelliği de eklenir. Boş bırakabilirsiniz.",
             enAzSatir = 4,
             modifier = Modifier.fillMaxWidth(),
         )

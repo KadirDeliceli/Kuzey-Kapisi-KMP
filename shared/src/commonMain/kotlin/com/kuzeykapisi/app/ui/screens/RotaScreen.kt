@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.RotaDurak
 import com.kuzeykapisi.app.data.model.RotaYaniti
@@ -155,7 +156,7 @@ fun RotaScreen(
         // parçası çizilmez — tek bir tam ekran gösterge yeterli.
         !ui.ilkYuklemeTamamlandi -> YukleniyorGorunumu(
             modifier = modifier.fillMaxSize(),
-            metin = "Rotalar hazırlanıyor…",
+            metin = Metinler.ROTALAR_HAZIRLANIYOR,
         )
         ilkYuklemeHatasi != null -> HataGorunumu(
             mesaj = ilkYuklemeHatasi,
@@ -210,14 +211,14 @@ private fun RotaGaleriGorunumu(
             .padding(horizontal = 24.dp, vertical = 16.dp),
     ) {
         EkranBasligi(
-            baslik = "Ne kadar vaktin var, ne görmek istiyorsun?",
+            baslik = "Ne kadar vaktiniz var, ne görmek istiyorsunuz?",
             etiket = "Akıllı Rota",
             geriMetni = "Başlıklara dön",
             onGeri = onGeri,
         )
         Text(
-            text = "İstersen aşağıdaki hazır turlardan birini seç, istersen süreni ve " +
-                "ilgi alanlarını belirleyip kendi turunu oluştur.",
+            text = "İsterseniz aşağıdaki hazır turlardan birini seçin, isterseniz sürenizi ve " +
+                "ilgi alanlarınızı belirleyip kendi turunuzu oluşturun.",
             style = MaterialTheme.typography.bodyLarge,
             color = SisGrisi,
             modifier = Modifier.padding(top = 10.dp, start = 6.dp).widthIn(max = 640.dp),
@@ -234,7 +235,7 @@ private fun RotaGaleriGorunumu(
         val varsayilanlar = ui.varsayilanlar
         if (varsayilanlar.isNullOrEmpty()) {
             BosDurumGorunumu(
-                mesaj = "Önerilen turlar şu an yüklenemiyor.",
+                mesaj = Metinler.ROTA_ONERILENLER_YUKLENEMIYOR,
                 modifier = Modifier.padding(start = 6.dp),
             )
         } else {
@@ -254,7 +255,7 @@ private fun RotaGaleriGorunumu(
         }
 
         BolumBasligi(
-            metin = "Kendi Turunu Oluştur",
+            metin = "Kendi Turunuzu Oluşturun",
             modifier = Modifier.padding(top = 34.dp, bottom = 14.dp, start = 6.dp),
         )
 
@@ -279,7 +280,7 @@ private fun RotaGaleriGorunumu(
         val kategoriler = ui.kategoriler
         if (kategoriler == null) {
             BosDurumGorunumu(
-                mesaj = "Kategoriler yükleniyor…",
+                mesaj = Metinler.ROTA_KATEGORILER_YUKLENIYOR,
                 modifier = Modifier.padding(start = 6.dp),
             )
         } else {
@@ -437,8 +438,7 @@ private fun RotaDetayGorunumu(
         if (rota.rota.isEmpty()) {
             item {
                 BosDurumGorunumu(
-                    mesaj = "Bu tercihlere uyan bir durak bulamadık. Süreyi ya da ilgi alanlarını " +
-                        "değiştirip tekrar dene.",
+                    mesaj = Metinler.ROTA_DURAK_BULUNAMADI,
                 )
             }
         } else {
@@ -481,7 +481,7 @@ private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>, gizli: Boolean) {
             }
         }
         BirincilButon(
-            metin = "Rotayı Google Maps'te Aç",
+            metin = "Rotayı Google Maps'te aç",
             onClick = { uriHandler.openUri(tumRotaGoogleMapsUrl(duraklar)) },
             hale = true,
             modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
@@ -556,7 +556,7 @@ private fun RotaDurakKart(durak: RotaDurak, onSesTiklandi: () -> Unit) {
             VeriSatiri("${durak.varisToplamDk} dk toplam", "Buraya kadar (yol + gezi)")
         }
         IkincilButon(
-            metin = "Google Maps'te Aç",
+            metin = "Google Maps'te aç",
             onClick = { uriHandler.openUri(durak.googleMapsUrl) },
             modifier = Modifier.padding(top = 16.dp),
         )

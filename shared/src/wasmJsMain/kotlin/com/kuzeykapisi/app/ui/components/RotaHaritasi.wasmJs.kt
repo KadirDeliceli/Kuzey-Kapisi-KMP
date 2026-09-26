@@ -16,6 +16,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.HtmlElementView
+import com.kuzeykapisi.app.Metinler
 import kotlinx.browser.document
 import org.w3c.dom.HTMLIFrameElement
 
@@ -41,7 +42,7 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Rota haritası şu an yüklenemiyor.",
+                text = Metinler.ROTA_HARITASI_YUKLENEMIYOR,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

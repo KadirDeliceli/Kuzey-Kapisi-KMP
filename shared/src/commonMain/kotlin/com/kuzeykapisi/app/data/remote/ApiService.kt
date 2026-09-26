@@ -1,6 +1,7 @@
 package com.kuzeykapisi.app.data.remote
 
 import com.kuzeykapisi.app.config.Config
+import com.kuzeykapisi.app.log.Logger
 import com.kuzeykapisi.app.data.model.AdminGirisIstek
 import com.kuzeykapisi.app.data.model.AdminGirisYaniti
 import com.kuzeykapisi.app.data.model.AnlatimYaniti
@@ -40,44 +41,37 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
-import io.ktor.http.content.PartData
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 
 class ApiService(private val client: HttpClient = createHttpClient()) {
 
     suspend fun katalog(): Katalog {
-        println("[KuzeyKapisi] GET /katalog isteği gönderiliyor")
+        Logger.d { "GET /katalog isteği gönderiliyor" }
         val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}katalog") }
-        println("[KuzeyKapisi] GET /katalog ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
     suspend fun oturumBaslat(kategori: String, oge: String): OturumBaslatYaniti {
         val istek = OturumBaslatIstek(kategori, oge)
-        println("[KuzeyKapisi] POST /oturum/baslat istek gövdesi: ${apiJson.encodeToString(istek)}")
         val hamCevap = calVeHamMetniAl {
             client.post("${Config.BASE_URL}oturum/baslat") {
                 contentType(ContentType.Application.Json)
                 setBody(istek)
             }
         }
-        println("[KuzeyKapisi] POST /oturum/baslat ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
     suspend fun sohbet(sessionId: String, mesaj: String): SohbetYaniti {
         val istek = SohbetIstek(sessionId, mesaj)
-        println("[KuzeyKapisi] POST /sohbet istek gövdesi: ${apiJson.encodeToString(istek)}")
         val hamCevap = calVeHamMetniAl {
             client.post("${Config.BASE_URL}sohbet") {
                 contentType(ContentType.Application.Json)
                 setBody(istek)
             }
         }
-        println("[KuzeyKapisi] POST /sohbet ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
@@ -87,7 +81,7 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
      * dener, 400/502 ise ChatViewModel'e kadar yükselir.
      */
     suspend fun sesliSohbet(sessionId: String, ses: KaydedilenSes): VoiceChatYaniti {
-        println("[KuzeyKapisi] POST /voice-chat isteği gönderiliyor (sessionId=$sessionId, dosyaAdi=${ses.dosyaAdi})")
+        Logger.d { "POST /voice-chat isteği gönderiliyor" }
         val yanit = client.submitFormWithBinaryData(
             url = "${Config.BASE_URL}voice-chat",
             formData = formData {
@@ -103,67 +97,58 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
             },
         )
         val hamCevap = yanit.bodyAsText()
-        println("[KuzeyKapisi] POST /voice-chat ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
     suspend fun oturumKapat(sessionId: String) {
         val istek = OturumKapatIstek(sessionId)
-        println("[KuzeyKapisi] POST /oturum/kapat istek gövdesi: ${apiJson.encodeToString(istek)}")
-        val hamCevap = calVeHamMetniAl {
+        calVeHamMetniAl {
             client.post("${Config.BASE_URL}oturum/kapat") {
                 contentType(ContentType.Application.Json)
                 setBody(istek)
             }
         }
-        println("[KuzeyKapisi] POST /oturum/kapat ham cevap: $hamCevap")
     }
 
     suspend fun rotaKategorileriGetir(): Map<String, KategoriBilgi> {
-        println("[KuzeyKapisi] GET /rota/kategoriler isteği gönderiliyor")
+        Logger.d { "GET /rota/kategoriler isteği gönderiliyor" }
         val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}rota/kategoriler") }
-        println("[KuzeyKapisi] GET /rota/kategoriler ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
     suspend fun varsayilanRotalariGetir(enlem: Double, boylam: Double): List<RotaYaniti> {
-        println("[KuzeyKapisi] GET /rota/varsayilanlar isteği gönderiliyor (enlem=$enlem, boylam=$boylam)")
+        Logger.d { "GET /rota/varsayilanlar isteği gönderiliyor" }
         val hamCevap = calVeHamMetniAl {
             client.get("${Config.BASE_URL}rota/varsayilanlar") {
                 parameter("enlem", enlem)
                 parameter("boylam", boylam)
             }
         }
-        println("[KuzeyKapisi] GET /rota/varsayilanlar ham cevap: $hamCevap")
         return apiJson.decodeFromString<VarsayilanRotalarYaniti>(hamCevap).rotalar
     }
 
     suspend fun rotaOlustur(enlem: Double, boylam: Double, sureSaat: Int, turler: List<String>): RotaYaniti {
         val istek = RotaIstek(enlem, boylam, sureSaat, turler)
-        println("[KuzeyKapisi] POST /rota/olustur istek gövdesi: ${apiJson.encodeToString(istek)}")
         val hamCevap = calVeHamMetniAl {
             client.post("${Config.BASE_URL}rota/olustur") {
                 contentType(ContentType.Application.Json)
                 setBody(istek)
             }
         }
-        println("[KuzeyKapisi] POST /rota/olustur ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
     /** 404'te (backend'de anlatım yoksa) ClientRequestException fırlatır — repo katmanı bunu yakalar. */
     suspend fun anlatimGetir(kategori: String, kod: String): AnlatimYaniti {
-        println("[KuzeyKapisi] GET /anlatim/$kategori/$kod isteği gönderiliyor")
+        Logger.d { "GET /anlatim/$kategori/$kod isteği gönderiliyor" }
         val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}anlatim/$kategori/$kod") }
-        println("[KuzeyKapisi] GET /anlatim/$kategori/$kod ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
     /** 404'te (backend'de bu durak için anlatım yoksa) ClientRequestException fırlatır — repo katmanı bunu yakalar. */
     suspend fun rotaAnlatimGetir(mekanId: Int): AnlatimYaniti {
-        println("[KuzeyKapisi] GET /rota-anlatim/$mekanId isteği gönderiliyor")
+        Logger.d { "GET /rota-anlatim/$mekanId isteği gönderiliyor" }
         val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}rota-anlatim/$mekanId") }
-        println("[KuzeyKapisi] GET /rota-anlatim/$mekanId ham cevap: $hamCevap")
         return apiJson.decodeFromString(hamCevap)
     }
 
@@ -255,23 +240,13 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
                     )
                 }
             }
-            println("[KuzeyKapisi][DEBUG] persona-guncelle formData'ya eklenen parçalar:")
-            parcalar.forEach { parca ->
-                when (parca) {
-                    is PartData.FormItem ->
-                        println("  ${parca.name} = \"${parca.value}\" (uzunluk=${parca.value.length})")
-                    is PartData.FileItem -> println("  ${parca.name} = <dosya: ${parca.originalFileName}>")
-                    else -> println("  ${parca.name} = <diğer parça türü>")
-                }
-            }
-            val yanit = client.submitFormWithBinaryData(
+            client.submitFormWithBinaryData(
                 url = "${Config.BASE_URL}admin/persona-guncelle/$kategori/$kod",
                 formData = parcalar,
             ) {
                 method = HttpMethod.Put
                 header("X-Admin-Token", token)
             }
-            println("[KuzeyKapisi] PUT /admin/persona-guncelle/$kategori/$kod ham cevap: ${yanit.bodyAsText()}")
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }
@@ -292,10 +267,9 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
 
     suspend fun personaSil(token: String, kategori: String, kod: String) {
         try {
-            val yanit = client.delete("${Config.BASE_URL}admin/persona-sil/$kategori/$kod") {
+            client.delete("${Config.BASE_URL}admin/persona-sil/$kategori/$kod") {
                 header("X-Admin-Token", token)
             }
-            println("[KuzeyKapisi] DELETE /admin/persona-sil/$kategori/$kod ham cevap: ${yanit.bodyAsText()}")
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }
@@ -345,14 +319,13 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
     /** anlatim null ise gövdeye hiç eklenmez (encodeDefaults=false) — backend bunu "mevcut anlatıma dokunma" olarak yorumluyor. */
     suspend fun rotaYeriGuncelle(token: String, mekanId: Int, istek: RotaYerEkleIstek) {
         try {
-            val hamCevap = calVeHamMetniAl {
+            calVeHamMetniAl {
                 client.put("${Config.BASE_URL}admin/rota-yer-guncelle/$mekanId") {
                     contentType(ContentType.Application.Json)
                     header("X-Admin-Token", token)
                     setBody(istek)
                 }
             }
-            println("[KuzeyKapisi] PUT /admin/rota-yer-guncelle/$mekanId ham cevap: $hamCevap")
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }
@@ -360,10 +333,9 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
 
     suspend fun rotaYeriSil(token: String, mekanId: Int) {
         try {
-            val yanit = client.delete("${Config.BASE_URL}admin/rota-yer-sil/$mekanId") {
+            client.delete("${Config.BASE_URL}admin/rota-yer-sil/$mekanId") {
                 header("X-Admin-Token", token)
             }
-            println("[KuzeyKapisi] DELETE /admin/rota-yer-sil/$mekanId ham cevap: ${yanit.bodyAsText()}")
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }
@@ -376,20 +348,24 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         else -> "application/octet-stream"
     }
 
-    /** Backend'in FastAPI HTTPException'ları hep {"detail": "..."} şeklinde döner. */
+    /**
+     * Backend'in FastAPI HTTPException'ları hep {"detail": "..."} şeklinde döner.
+     * detail tek bir metin değilse (ör. 422 doğrulama listesi) null bırakılır;
+     * kullanıcıya gösterilecek metni Metinler.adminHataMesaji seçer.
+     */
     private suspend fun adminHataFirlat(e: ClientRequestException): Nothing {
         val govde = runCatching { e.response.bodyAsText() }.getOrNull()
         val detay = govde
             ?.let { runCatching { apiJson.decodeFromString<HataYaniti>(it).detail }.getOrNull() }
-            ?: "Bir hata oluştu, lütfen tekrar deneyin."
+            ?.takeIf { it.isNotBlank() }
         throw AdminApiHatasi(e.response.status.value, detay)
     }
 
     /**
      * İsteği yapar ve HAM (decode edilmemiş) yanıt metnini döner.
      * expectSuccess=true olduğu için 2xx dışı durumlarda çağrı burada
-     * ResponseException fırlatır; o durumda hata gövdesini loglayıp
-     * yeniden fırlatıyoruz — asla hata gövdesini başarı tipiyle decode
+     * ResponseException fırlatır; o durumda yalnızca HTTP kodunu loglayıp
+     * (gövde ASLA loglanmaz) yeniden fırlatıyoruz — asla hata gövdesini başarı tipiyle decode
      * etmeye ÇALIŞMIYORUZ.
      */
     private suspend inline fun calVeHamMetniAl(
@@ -399,11 +375,7 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
             val yanit = istek()
             yanit.bodyAsText()
         } catch (e: ResponseException) {
-            val hataGovdesi = runCatching { e.response.bodyAsText() }.getOrNull()
-            println(
-                "[KuzeyKapisi] İstek başarısız — HTTP ${e.response.status.value}, " +
-                    "hata gövdesi: $hataGovdesi",
-            )
+            Logger.d { "İstek başarısız — HTTP ${e.response.status.value}" }
             throw e
         }
     }

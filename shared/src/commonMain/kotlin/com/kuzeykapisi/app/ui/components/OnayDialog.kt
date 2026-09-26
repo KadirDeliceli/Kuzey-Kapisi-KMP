@@ -18,7 +18,7 @@ fun OnayDialog(
     metin: String,
     onOnay: () -> Unit,
     onVazgec: () -> Unit,
-    onayMetni: String = "Evet, Sil",
+    onayMetni: String = "Evet, sil",
 ) {
     KuzeyDialogKabugu(
         onDismiss = onVazgec,

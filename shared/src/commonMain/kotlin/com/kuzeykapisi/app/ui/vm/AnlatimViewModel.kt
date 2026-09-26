@@ -2,8 +2,11 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.tts.AnlatimOynatici
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +28,9 @@ data class AnlatimUiState(
     val metin: String? = null,
     val yukleniyor: Boolean = true,
     val hata: String? = null,
+    // true: backend bu kaynak için anlatım olmadığını söyledi (404). Tekrar
+    // denemek sonucu değiştirmez; ağ/sunucu hatasından (hata) ayrı tutulur.
+    val anlatimYok: Boolean = false,
 )
 
 class AnlatimViewModel(
@@ -42,16 +48,21 @@ class AnlatimViewModel(
 
     fun yukle() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(yukleniyor = true, hata = null)
+            _state.value = _state.value.copy(yukleniyor = true, hata = null, anlatimYok = false)
             try {
                 val metin = when (kaynak) {
                     is AnlatimKaynagi.Persona -> repo.anlatimGetir(kaynak.kategori, kaynak.kod)
                     is AnlatimKaynagi.RotaDuragi -> repo.rotaAnlatimGetir(kaynak.mekanId)
                 }
-                _state.value = _state.value.copy(metin = metin, yukleniyor = false)
+                _state.value = if (metin.isNullOrBlank()) {
+                    _state.value.copy(yukleniyor = false, anlatimYok = true)
+                } else {
+                    _state.value.copy(metin = metin, yukleniyor = false)
+                }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                _state.value = _state.value.copy(yukleniyor = false, hata = "Anlatım yüklenemedi.")
+                Logger.d { "anlatım yüklenemedi: ${e.logOzeti()}" }
+                _state.value = _state.value.copy(yukleniyor = false, hata = Metinler.hataMesaji(e))
             }
         }
     }

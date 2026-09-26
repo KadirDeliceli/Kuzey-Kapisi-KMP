@@ -108,7 +108,7 @@ fun PersonaDuzenleScreen(
             onDegisti = { vm.anlatimDegisti(it) },
             etiket = "Anlatım Metni (opsiyonel)",
             etkin = !ui.anlatimiKaldir,
-            yardimMetni = "Dokunmadan bırakırsan mevcut anlatım (varsa) korunur.",
+            yardimMetni = "Dokunmadan bırakırsanız mevcut anlatım (varsa) korunur.",
             enAzSatir = 4,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -125,7 +125,7 @@ fun PersonaDuzenleScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             IkincilButon(
-                metin = if (ui.gorsel == null) "Görsel Seç" else "Görseli Değiştir",
+                metin = if (ui.gorsel == null) "Görsel seç" else "Görseli değiştir",
                 onClick = { vm.gorselSec() },
             )
             val secilenGorsel = ui.gorsel

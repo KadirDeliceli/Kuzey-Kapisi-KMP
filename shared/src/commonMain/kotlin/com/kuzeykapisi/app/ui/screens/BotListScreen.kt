@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.domain.MAIN_CARDS
@@ -102,8 +103,9 @@ fun BotListScreen(
             when {
                 ui.yukleniyor -> YukleniyorGorunumu(modifier = Modifier.fillMaxSize())
                 ui.hata != null -> DurumKutusu(
-                    baslik = "İçerik yüklenemedi.",
-                    aciklama = "Bağlantınızı kontrol edip tekrar deneyin.",
+                    baslik = Metinler.ICERIK_YUKLENEMEDI_BASLIK,
+                    // Türüne göre: bağlantı yok / sunucu sorunu / içerik yok...
+                    aciklama = ui.hata ?: Metinler.HATA_BILINMEYEN,
                     butonMetni = "Tekrar dene",
                     onButon = { vm.yukle() },
                 )
@@ -111,8 +113,8 @@ fun BotListScreen(
                     val ogeler = ui.katalog[kategori]?.ogeler ?: emptyList()
                     if (ogeler.isEmpty()) {
                         DurumKutusu(
-                            baslik = "Bu başlıkta henüz içerik yok.",
-                            aciklama = "Başka bir başlık seçmek için geri dönün.",
+                            baslik = Metinler.BASLIKTA_ICERIK_YOK,
+                            aciklama = Metinler.BASLIKTA_ICERIK_YOK_ACIKLAMA,
                             butonMetni = "Başlıklara dön",
                             onButon = onGeri,
                         )

@@ -2,6 +2,7 @@
 
 package com.kuzeykapisi.app.data.ses
 
+import com.kuzeykapisi.app.Metinler
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,9 +27,9 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 import platform.posix.memcpy
 
-private const val MESAJ_KALICI_RET = "Mikrofon izni kapalı. Ayarlardan açabilirsiniz."
-private const val MESAJ_BASLATILAMADI = "Ses kaydı başlatılamadı."
-private const val MESAJ_KAYDEDILEMEDI = "Ses kaydedilemedi."
+private const val MESAJ_KALICI_RET = Metinler.MIKROFON_IZNI_KAPALI
+private const val MESAJ_BASLATILAMADI = Metinler.SES_KAYDI_BASLATILAMADI
+private const val MESAJ_KAYDEDILEMEDI = Metinler.SES_KAYDEDILEMEDI
 
 private fun NSData.tumBaytlariAl(): ByteArray {
     val boy = length.toInt()

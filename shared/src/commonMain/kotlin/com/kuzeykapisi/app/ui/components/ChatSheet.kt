@@ -249,7 +249,7 @@ fun ChatSheet(
                 )
                 if (mikrofonIzniDurumu == MikrofonIzniDurumu.KALICI_REDDEDILDI && vm.ayarlarDestekleniyor) {
                     IkincilButon(
-                        metin = "Ayarları Aç",
+                        metin = "Ayarları aç",
                         onClick = { vm.ayarlariAc() },
                         modifier = Modifier.padding(top = 8.dp),
                     )

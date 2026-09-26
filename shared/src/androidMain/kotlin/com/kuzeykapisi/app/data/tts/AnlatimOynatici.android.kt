@@ -6,6 +6,7 @@ import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.location.AndroidContextHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -70,7 +71,7 @@ actual class AnlatimOynatici actual constructor() {
             if (utteranceId != aktifSeslendirmeId) return
             sonKarakterKonumu = 0
             _durum.value = AnlatimDurumu.DURDU
-            _hata.value = "Anlatım okunamadı."
+            _hata.value = Metinler.ANLATIM_OKUNAMADI
         }
 
         override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
@@ -119,14 +120,14 @@ actual class AnlatimOynatici actual constructor() {
                 tts = null
                 motoruBaslat(context, googleMotoruDene = false)
             } else {
-                _hata.value = "Ses motoru başlatılamadı."
+                _hata.value = Metinler.SES_MOTORU_BASLATILAMADI
             }
             return
         }
 
         val dilSonucu = runCatching { motor.setLanguage(Locale("tr", "TR")) }.getOrNull()
         if (dilSonucu == TextToSpeech.LANG_MISSING_DATA || dilSonucu == TextToSpeech.LANG_NOT_SUPPORTED) {
-            _hata.value = "Bu cihazda Türkçe seslendirme desteklenmiyor."
+            _hata.value = Metinler.SESLENDIRME_TURKCE_YOK
             return
         }
 

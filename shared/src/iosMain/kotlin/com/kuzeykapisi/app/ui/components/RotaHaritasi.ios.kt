@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.UIKitView
+import com.kuzeykapisi.app.Metinler
 import platform.CoreGraphics.CGRectZero
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
@@ -32,7 +33,7 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Rota haritası şu an yüklenemiyor.",
+                text = Metinler.ROTA_HARITASI_YUKLENEMIYOR,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

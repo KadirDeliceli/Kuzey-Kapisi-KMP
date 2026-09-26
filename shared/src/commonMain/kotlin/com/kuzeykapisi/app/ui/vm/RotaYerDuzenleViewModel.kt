@@ -2,10 +2,13 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.model.RotaYerEkleIstek
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -76,15 +79,15 @@ class RotaYerDuzenleViewModel(
         val boylam = s.boylam.trim().replace(',', '.').toDoubleOrNull()
         val sureDk = s.sureDk.trim().toIntOrNull()
         if (s.ad.isBlank() || s.aciklama.isBlank()) {
-            _state.value = s.copy(genelHata = "'Ad' ve 'Açıklama' alanları boş olamaz.")
+            _state.value = s.copy(genelHata = Metinler.FORM_MEKAN_ZORUNLU_ALANLAR)
             return
         }
         if (enlem == null || boylam == null) {
-            _state.value = s.copy(genelHata = "'Enlem' ve 'Boylam' geçerli birer sayı olmalı.")
+            _state.value = s.copy(genelHata = Metinler.FORM_KOORDINAT_GECERSIZ)
             return
         }
         if (sureDk == null || sureDk <= 0) {
-            _state.value = s.copy(genelHata = "'Ziyaret Süresi' sıfırdan büyük bir tam sayı olmalı.")
+            _state.value = s.copy(genelHata = Metinler.FORM_SURE_GECERSIZ)
             return
         }
         viewModelScope.launch {
@@ -102,20 +105,20 @@ class RotaYerDuzenleViewModel(
                         anlatim = anlatimGonderilecek(s),
                     ),
                 )
-                _state.value = _state.value.copy(kaydediliyor = false, basariMesaji = "Güncellendi.")
+                _state.value = _state.value.copy(kaydediliyor = false, basariMesaji = Metinler.GUNCELLENDI)
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] rota-yer-guncelle hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "rota-yer-guncelle hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {
                     _state.value.copy(kaydediliyor = false, oturumGecersiz = true)
                 } else {
-                    _state.value.copy(kaydediliyor = false, genelHata = e.detay)
+                    _state.value.copy(kaydediliyor = false, genelHata = Metinler.adminHataMesaji(e))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] rota-yer-guncelle ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "rota-yer-guncelle hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     kaydediliyor = false,
-                    genelHata = "Ağ hatası: lütfen bağlantınızı kontrol edip tekrar deneyin.",
+                    genelHata = Metinler.hataMesaji(e),
                 )
             }
         }

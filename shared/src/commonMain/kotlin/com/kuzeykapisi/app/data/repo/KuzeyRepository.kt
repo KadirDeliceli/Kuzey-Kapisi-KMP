@@ -13,6 +13,7 @@ import com.kuzeykapisi.app.data.model.RotaYeriDetay
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.remote.ApiService
 import com.kuzeykapisi.app.data.ses.KaydedilenSes
+import com.kuzeykapisi.app.log.Logger
 import io.ktor.client.plugins.ClientRequestException
 
 data class SohbetSonuc(val cevap: String, val sessionId: String, val yenilendi: Boolean)
@@ -87,30 +88,22 @@ class KuzeyRepository(private val api: ApiService) {
     suspend fun rotaYeriGetir(mekanId: Int, token: String): RotaYeriDetay =
         api.rotaYeriGetir(token, mekanId)
 
-    /** 404'te (backend'de bu öge için anlatım yoksa) anlaşılır bir hata fırlatır. */
-    suspend fun anlatimGetir(kategori: String, kod: String): String {
-        return try {
-            api.anlatimGetir(kategori, kod).metin
-        } catch (e: ClientRequestException) {
-            if (e.response.status.value == 404) {
-                throw IllegalStateException("Bu içerik için anlatım bulunamadı.")
-            } else {
-                throw e
-            }
-        }
-    }
+    /**
+     * Anlatım metni; backend 404 dönerse (bu öge için anlatım GERÇEKTEN yok)
+     * null. Ağ/sunucu hataları null'a ÇEVRİLMEZ, olduğu gibi fırlatılır —
+     * böylece arayüz "anlatım yok" ile "yüklenemedi"yi ayırt edebilir.
+     */
+    suspend fun anlatimGetir(kategori: String, kod: String): String? =
+        yoksaNull { api.anlatimGetir(kategori, kod).metin }
 
-    /** 404'te (backend'de bu durak için anlatım yoksa) anlaşılır bir hata fırlatır. */
-    suspend fun rotaAnlatimGetir(mekanId: Int): String {
-        return try {
-            api.rotaAnlatimGetir(mekanId).metin
-        } catch (e: ClientRequestException) {
-            if (e.response.status.value == 404) {
-                throw IllegalStateException("Bu durak için anlatım bulunamadı.")
-            } else {
-                throw e
-            }
-        }
+    /** [anlatimGetir] ile aynı sözleşme: 404 → null (bu durak için anlatım yok), diğer hatalar fırlatılır. */
+    suspend fun rotaAnlatimGetir(mekanId: Int): String? =
+        yoksaNull { api.rotaAnlatimGetir(mekanId).metin }
+
+    private inline fun <T> yoksaNull(istek: () -> T): T? = try {
+        istek()
+    } catch (e: ClientRequestException) {
+        if (e.response.status.value == 404) null else throw e
     }
 
     suspend fun guvenliSohbet(kategori: String, oge: String, sessionId: String, mesaj: String): SohbetSonuc {
@@ -119,9 +112,8 @@ class KuzeyRepository(private val api: ApiService) {
             SohbetSonuc(y.cevap, sessionId, yenilendi = false)
         } catch (e: ClientRequestException) {
             if (e.response.status.value == 404) {
-                println("[KuzeyKapisi] guvenliSohbet: sessionId=$sessionId için 404 alındı, oturum yeniden başlatılıyor (kategori=$kategori, oge=$oge)")
+                Logger.d { "guvenliSohbet: oturum süresi dolmuş (404), yeniden başlatılıyor (kategori=$kategori, oge=$oge)" }
                 val yeni = api.oturumBaslat(kategori, oge)
-                println("[KuzeyKapisi] guvenliSohbet: yeni sessionId=${yeni.sessionId}")
                 val y = api.sohbet(yeni.sessionId, mesaj)
                 SohbetSonuc(y.cevap, yeni.sessionId, yenilendi = true)
             } else throw e
@@ -144,9 +136,8 @@ class KuzeyRepository(private val api: ApiService) {
             SesliSohbetSonuc(y.kullaniciMetni, y.cevap, sessionId, yenilendi = false)
         } catch (e: ClientRequestException) {
             if (e.response.status.value == 404) {
-                println("[KuzeyKapisi] guvenliSesliSohbet: sessionId=$sessionId için 404 alındı, oturum yeniden başlatılıyor (kategori=$kategori, oge=$oge)")
+                Logger.d { "guvenliSesliSohbet: oturum süresi dolmuş (404), yeniden başlatılıyor (kategori=$kategori, oge=$oge)" }
                 val yeni = api.oturumBaslat(kategori, oge)
-                println("[KuzeyKapisi] guvenliSesliSohbet: yeni sessionId=${yeni.sessionId}")
                 val y = api.sesliSohbet(yeni.sessionId, ses)
                 SesliSohbetSonuc(y.kullaniciMetni, y.cevap, yeni.sessionId, yenilendi = true)
             } else throw e

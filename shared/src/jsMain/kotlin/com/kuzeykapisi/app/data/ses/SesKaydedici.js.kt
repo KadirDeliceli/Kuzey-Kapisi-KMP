@@ -1,5 +1,6 @@
 package com.kuzeykapisi.app.data.ses
 
+import com.kuzeykapisi.app.Metinler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,7 @@ actual class SesKaydedici actual constructor() {
     actual val ayarlarDestekleniyor: Boolean = false
 
     actual fun kayidaBasla() {
-        _hata.value = "Bu platformda ses kaydı desteklenmiyor."
+        _hata.value = Metinler.SES_KAYDI_DESTEKLENMIYOR
     }
 
     actual suspend fun kayidiDurdurVeAl(): KaydedilenSes? = null

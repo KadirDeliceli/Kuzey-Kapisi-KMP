@@ -2,7 +2,10 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +29,7 @@ class AdminViewModel(private val repo: KuzeyRepository) : ViewModel() {
 
     fun girisYap(kullaniciAdi: String, sifre: String) {
         if (kullaniciAdi.isBlank() || sifre.isBlank()) {
-            _state.value = _state.value.copy(hata = "Kullanıcı adı ve şifre gerekli.")
+            _state.value = _state.value.copy(hata = Metinler.GIRIS_BILGI_EKSIK)
             return
         }
         viewModelScope.launch {
@@ -36,10 +39,12 @@ class AdminViewModel(private val repo: KuzeyRepository) : ViewModel() {
                 _state.value = _state.value.copy(token = token, yukleniyor = false, hata = null)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] admin girişi başarısız: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "admin girişi başarısız: ${e.logOzeti()}" }
+                // Yalnızca gerçek 401 "şifre hatalı" demektir; sunucu kapalıyken
+                // kullanıcıya şifresinin yanlış olduğu söylenmez.
                 _state.value = _state.value.copy(
                     yukleniyor = false,
-                    hata = "Kullanıcı adı veya şifre hatalı.",
+                    hata = Metinler.girisHataMesaji(e),
                 )
             }
         }

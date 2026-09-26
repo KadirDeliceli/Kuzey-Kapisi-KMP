@@ -2,11 +2,14 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.data.model.resimSec
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,7 +86,7 @@ class PersonaDuzenleViewModel(
         val s = _state.value
         if (s.ad.isBlank() || s.karsilama.isBlank() || s.icerik.isBlank()) {
             _state.value = s.copy(
-                genelHata = "'Ad', 'Açılış Mesajı' ve 'Detaylı İçerik' alanları boş olamaz.",
+                genelHata = Metinler.FORM_PERSONA_ZORUNLU_ALANLAR,
             )
             return
         }
@@ -91,11 +94,6 @@ class PersonaDuzenleViewModel(
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, basariMesaji = null)
             try {
                 val anlatimGonderim = anlatimGonderilecek(s)
-                println(
-                    "[KuzeyKapisi][DEBUG] persona-guncelle anlatim kararı: " +
-                        "metin=\"${anlatimGonderim.metin}\" (uzunluk=${anlatimGonderim.metin.length}), " +
-                        "anlatim_kaldir=${anlatimGonderim.kaldir}",
-                )
                 repo.personaGuncelle(
                     token = token,
                     kategori = kategori,
@@ -107,20 +105,20 @@ class PersonaDuzenleViewModel(
                     anlatimKaldir = anlatimGonderim.kaldir,
                     gorsel = s.gorsel,
                 )
-                _state.value = _state.value.copy(kaydediliyor = false, basariMesaji = "Güncellendi.")
+                _state.value = _state.value.copy(kaydediliyor = false, basariMesaji = Metinler.GUNCELLENDI)
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] persona-guncelle hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "persona-guncelle hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {
                     _state.value.copy(kaydediliyor = false, oturumGecersiz = true)
                 } else {
-                    _state.value.copy(kaydediliyor = false, genelHata = e.detay)
+                    _state.value.copy(kaydediliyor = false, genelHata = Metinler.adminHataMesaji(e))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] persona-guncelle ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "persona-guncelle hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     kaydediliyor = false,
-                    genelHata = "Ağ hatası: lütfen bağlantınızı kontrol edip tekrar deneyin.",
+                    genelHata = Metinler.hataMesaji(e),
                 )
             }
         }

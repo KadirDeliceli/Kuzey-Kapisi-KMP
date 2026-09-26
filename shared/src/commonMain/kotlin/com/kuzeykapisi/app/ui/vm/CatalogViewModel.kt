@@ -2,8 +2,11 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.Katalog
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,15 +30,14 @@ class CatalogViewModel(private val repo: KuzeyRepository) : ViewModel() {
     fun yukle() {
         viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
-            println("[KuzeyKapisi] GET /katalog isteği başlatılıyor...")
             try {
                 val katalog = repo.katalog()
-                println("[KuzeyKapisi] /katalog başarılı, ${katalog.size} kategori geldi")
+                Logger.d { "katalog yüklendi: ${katalog.size} kategori" }
                 _state.value = _state.value.copy(katalog = katalog, yukleniyor = false)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] katalog() hatası: ${e::class.simpleName}: ${e.message}")
-                _state.value = _state.value.copy(yukleniyor = false, hata = e.message ?: "Katalog yüklenemedi")
+                Logger.d { "katalog yüklenemedi: ${e.logOzeti()}" }
+                _state.value = _state.value.copy(yukleniyor = false, hata = Metinler.hataMesaji(e))
             }
         }
     }

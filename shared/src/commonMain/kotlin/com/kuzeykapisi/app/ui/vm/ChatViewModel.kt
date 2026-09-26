@@ -2,8 +2,10 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.ChatUiState
 import com.kuzeykapisi.app.data.model.Mesaj
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.ses.KayitDurumu
 import com.kuzeykapisi.app.data.ses.KaydedilenSes
@@ -11,6 +13,7 @@ import com.kuzeykapisi.app.data.ses.MikrofonIzniDurumu
 import com.kuzeykapisi.app.data.ses.SesKaydedici
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
 import com.kuzeykapisi.app.data.tts.AnlatimOynatici
+import com.kuzeykapisi.app.log.Logger
 import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -68,10 +71,10 @@ class ChatViewModel(
     private fun basla() {
         viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
-            println("[KuzeyKapisi] POST /oturum/baslat isteği başlatılıyor (kategori=$kategori, oge=$oge)...")
+            Logger.d { "oturum başlatılıyor (kategori=$kategori, oge=$oge)" }
             try {
                 val yanit = repo.oturumBaslat(kategori, oge)
-                println("[KuzeyKapisi] /oturum/baslat başarılı, sessionId=${yanit.sessionId}")
+                Logger.d { "oturum başlatıldı" }
                 _state.value = _state.value.copy(
                     baslik = yanit.baslik,
                     sessionId = yanit.sessionId,
@@ -80,8 +83,8 @@ class ChatViewModel(
                 )
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] /oturum/baslat hatası: ${e::class.simpleName}: ${e.message}")
-                _state.value = _state.value.copy(yukleniyor = false, hata = e.message ?: "Oturum başlatılamadı")
+                Logger.d { "oturum başlatılamadı: ${e.logOzeti()}" }
+                _state.value = _state.value.copy(yukleniyor = false, hata = Metinler.hataMesaji(e))
             }
         }
     }
@@ -94,14 +97,12 @@ class ChatViewModel(
             yaziyor = true,
         )
         viewModelScope.launch {
-            println("[KuzeyKapisi] gonder(): guvenliSohbet çağrısı başlatılıyor (sessionId=$sessionId, mesaj=$mesaj)")
             try {
                 val sonuc = repo.guvenliSohbet(kategori, oge, sessionId, mesaj)
-                println("[KuzeyKapisi] gonder(): guvenliSohbet sonucu döndü — sessionId=${sonuc.sessionId}, yenilendi=${sonuc.yenilendi}, cevap=\"${sonuc.cevap}\"")
                 var mesajlar = _state.value.mesajlar
                 if (sonuc.yenilendi) {
                     mesajlar = mesajlar + Mesaj(
-                        metin = "Bağlantı yenilendi — sohbet geçmişi sıfırlandı.",
+                        metin = Metinler.SOHBET_YENILENDI,
                         benden = false,
                         sistemNotu = true,
                     )
@@ -112,13 +113,13 @@ class ChatViewModel(
                     mesajlar = mesajlar,
                     yaziyor = false,
                 )
-                println("[KuzeyKapisi] gonder(): state güncellendi — yeni mesajlar.size=${_state.value.mesajlar.size}")
+                Logger.d { "sohbet yanıtı alındı (yenilendi=${sonuc.yenilendi}, mesaj sayısı=${mesajlar.size})" }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] /sohbet hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "sohbet hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     yaziyor = false,
-                    hata = e.message ?: "Mesaj gönderilemedi",
+                    hata = Metinler.hataMesaji(e),
                 )
             }
         }
@@ -147,15 +148,14 @@ class ChatViewModel(
 
     private suspend fun gonderSesliMesaj(ses: KaydedilenSes) {
         val sessionId = _state.value.sessionId ?: return
-        println("[KuzeyKapisi] gonderSesliMesaj(): guvenliSesliSohbet çağrısı başlatılıyor (sessionId=$sessionId)")
+        Logger.d { "sesli mesaj gönderiliyor" }
         _state.value = _state.value.copy(yaziyor = true)
         try {
             val sonuc = repo.guvenliSesliSohbet(kategori, oge, sessionId, ses)
-            println("[KuzeyKapisi] gonderSesliMesaj(): sonuç döndü — sessionId=${sonuc.sessionId}, yenilendi=${sonuc.yenilendi}, kullaniciMetni=\"${sonuc.kullaniciMetni}\", cevap=\"${sonuc.cevap}\"")
             var mesajlar = _state.value.mesajlar + Mesaj(metin = sonuc.kullaniciMetni, benden = true)
             if (sonuc.yenilendi) {
                 mesajlar = mesajlar + Mesaj(
-                    metin = "Bağlantı yenilendi — sohbet geçmişi sıfırlandı.",
+                    metin = Metinler.SOHBET_YENILENDI,
                     benden = false,
                     sistemNotu = true,
                 )
@@ -170,11 +170,13 @@ class ChatViewModel(
             mesajSesiCal(botMesajId)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            println("[KuzeyKapisi] /voice-chat hatası: ${e::class.simpleName}: ${e.message}")
+            Logger.d { "sesli sohbet hatası: ${e.logOzeti()}" }
+            // 400: ses çözümlenemedi (sessiz/anlaşılmaz kayıt) — kullanıcının
+            // yeniden konuşması gerekir. Diğerleri türüne göre.
             val hataMetni = if (e is ClientRequestException && e.response.status.value == 400) {
-                "Sizi anlayamadım, lütfen tekrar deneyin."
+                Metinler.SOHBET_SES_ANLASILAMADI
             } else {
-                "Yanıt alınamadı, lütfen tekrar deneyin."
+                Metinler.hataMesaji(e)
             }
             _state.value = _state.value.copy(
                 yaziyor = false,

@@ -45,6 +45,7 @@ import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.domain.MainCard
 import com.kuzeykapisi.app.domain.MainCardType
 import com.kuzeykapisi.app.domain.SubCard
+import com.kuzeykapisi.app.log.Logger
 import com.kuzeykapisi.app.ui.components.ACILIS_BILGILENDIRME_METNI
 import com.kuzeykapisi.app.ui.components.AdminGirisDialog
 import com.kuzeykapisi.app.ui.components.BIZ_KIMIZ_METNI
@@ -142,7 +143,7 @@ private val CHAT_PANEL_GENISLIGI = 400.dp
 fun App() {
     remember {
         kurulumYapImageLoader()
-        println("[KuzeyKapisi] Config.BASE_URL = ${Config.BASE_URL}")
+        Logger.d { "Config.BASE_URL = ${Config.BASE_URL}" }
         Unit
     }
     // Uygulama düzeyi ViewModel'ler (Activity'nin store'unda, döndürmeden sağ

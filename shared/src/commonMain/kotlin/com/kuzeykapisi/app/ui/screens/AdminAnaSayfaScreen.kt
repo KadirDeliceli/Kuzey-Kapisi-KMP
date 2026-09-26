@@ -132,7 +132,7 @@ fun AdminAnaSayfaScreen(
                 AdminBolumu(etiket = "PERSONALAR", sayi = personaSayisi, genisEkran = genisEkran) { kartModifier ->
                     AdminKart(
                         baslik = "Persona Ekle",
-                        aciklama = "Yeni bir tarihi kişilik, mekan, lezzet, doğa ya da tescilli ürün botu ekle",
+                        aciklama = "Yeni bir tarihi kişilik, mekan, lezzet, doğa ya da tescilli ürün botu ekleyin",
                         ikon = AdminIkonu.KisiEkle,
                         ikonRengi = FenerAlevi,
                         onClick = onPersonaEkleTiklandi,
@@ -140,7 +140,7 @@ fun AdminAnaSayfaScreen(
                     )
                     AdminKart(
                         baslik = "Personaları Yönet",
-                        aciklama = "Mevcut personaları listele, düzenle ya da sil",
+                        aciklama = "Mevcut personaları listeleyin, düzenleyin ya da silin",
                         ikon = AdminIkonu.Liste,
                         ikonRengi = SisGrisi,
                         onClick = onPersonalariYonetTiklandi,
@@ -153,7 +153,7 @@ fun AdminAnaSayfaScreen(
                 AdminBolumu(etiket = "ROTA NOKTALARI", sayi = rotaSayisi, genisEkran = genisEkran) { kartModifier ->
                     AdminKart(
                         baslik = "Rota İçin Yeni Yer Ekle",
-                        aciklama = "Akıllı Rota Planlayıcı'nın önerebileceği yeni bir mekan ekle",
+                        aciklama = "Akıllı Rota Planlayıcı'nın önerebileceği yeni bir mekan ekleyin",
                         ikon = AdminIkonu.KonumEkle,
                         ikonRengi = FenerAlevi,
                         onClick = onRotaYeriEkleTiklandi,
@@ -161,7 +161,7 @@ fun AdminAnaSayfaScreen(
                     )
                     AdminKart(
                         baslik = "Rota Yerlerini Yönet",
-                        aciklama = "Mevcut rota mekanlarını listele, düzenle ya da sil",
+                        aciklama = "Mevcut rota mekanlarını listeleyin, düzenleyin ya da silin",
                         ikon = AdminIkonu.Harita,
                         ikonRengi = SisGrisi,
                         onClick = onRotaYerleriniYonetTiklandi,

@@ -1,5 +1,6 @@
 package com.kuzeykapisi.app.data.tts
 
+import com.kuzeykapisi.app.Metinler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,7 +68,7 @@ actual class AnlatimOynatici actual constructor() {
         _hata.value = null
         val ses = enIyiTrSesi
         if (ses == null) {
-            _hata.value = "Bu cihazda Türkçe seslendirme desteklenmiyor."
+            _hata.value = Metinler.SESLENDIRME_TURKCE_YOK
             return
         }
         if (synthesizer.speaking || synthesizer.paused) {

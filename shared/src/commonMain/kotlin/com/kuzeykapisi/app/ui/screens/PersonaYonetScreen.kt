@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.ADMIN_PERSONA_KATEGORILERI
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.model.PersonaDetay
@@ -121,7 +122,7 @@ fun PersonaYonetScreen(
             else -> {
                 val ogeler = ui.katalog[ui.kategori]?.ogeler ?: emptyList()
                 if (ogeler.isEmpty()) {
-                    BosDurumGorunumu("Bu kategoride henüz içerik yok.")
+                    BosDurumGorunumu(Metinler.KATEGORIDE_ICERIK_YOK)
                 } else {
                     Text(
                         text = "${ogeler.size} persona",

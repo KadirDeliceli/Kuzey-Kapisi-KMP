@@ -2,6 +2,7 @@
 
 package com.kuzeykapisi.app.data.tts
 
+import com.kuzeykapisi.app.Metinler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,16 +47,21 @@ actual class AnlatimOynatici actual constructor() {
                 bitti = {
                     if (jeton == etkinJeton) _durum.value = AnlatimDurumu.DURDU
                 },
-                hataOldu = {
+                hataOldu = { kod ->
                     if (jeton == etkinJeton) {
                         _durum.value = AnlatimDurumu.DURDU
-                        _hata.value = "Bu tarayıcıda seslendirme desteklenmiyor."
+                        _hata.value = seslendirmeHataMesaji(kod)
                     }
                 },
             )
-            _durum.value = AnlatimDurumu.OYNUYOR
+            // Tarayıcıda API yoksa hataOldu senkron çağrılmış ve durum zaten
+            // DURDU + hata doludur; OYNUYOR'a çekilmez.
+            if (_hata.value == null) _durum.value = AnlatimDurumu.OYNUYOR
         }.onFailure {
-            _hata.value = "Bu tarayıcıda seslendirme desteklenmiyor."
+            // speak() beklenmedik bir istisna fırlattı: API var ama bu deneme
+            // başarısız — "desteklenmiyor" DEĞİL, geçici hata.
+            _durum.value = AnlatimDurumu.DURDU
+            _hata.value = Metinler.SESLENDIRME_GECICI_HATA
         }
     }
 
@@ -123,19 +129,41 @@ private fun jsSesleriIsit() {
  *     kendi varsayılanına bırakılır (liste henüz dolmadıysa da bu yola girilir
  *     ve ses yine de çıkar).
  */
+/**
+ * SpeechSynthesisErrorEvent.error koduna göre kullanıcı mesajı. null: kullanıcıya
+ * gösterilecek bir şey yok (konuşma bilerek kesildi).
+ */
+private fun seslendirmeHataMesaji(kod: String): String? = when (kod) {
+    // cancel()/yeni oynat() ile bilerek kesilen konuşma: hata değil.
+    "interrupted", "canceled" -> null
+    // Tarayıcıda Web Speech API hiç yok ya da sentez motoru kullanılamıyor.
+    DESTEK_YOK, "synthesis-unavailable" -> Metinler.SESLENDIRME_TARAYICIDA_YOK
+    // API var ama Türkçe ses yok.
+    "language-unavailable", "voice-unavailable" -> Metinler.SESLENDIRME_TURKCE_YOK
+    // audio-busy, audio-hardware, network, not-allowed, text-too-long...: bu
+    // deneme başarısız, bir sonraki deneme çalışabilir.
+    else -> Metinler.SESLENDIRME_GECICI_HATA
+}
+
+/** jsKonusBaslat'ın "API yok" durumunda hataOldu'ya verdiği kod (tarayıcı kodlarıyla çakışmaz). */
+private const val DESTEK_YOK = "kuzey-destek-yok"
+
 private fun jsKonusBaslat(
     metin: String,
     dil: String,
     hiz: Double,
     perde: Double,
     bitti: () -> Unit,
-    hataOldu: () -> Unit,
+    hataOldu: (String) -> Unit,
 ) {
     js(
         """
         (function() {
             var sentez = window.speechSynthesis;
-            if (!sentez) { hataOldu(); return; }
+            if (!sentez || typeof SpeechSynthesisUtterance === 'undefined') {
+                hataOldu('kuzey-destek-yok');
+                return;
+            }
 
             // Askıda kalmış bir konuşma yeni speak()'i sessizce engelleyebilir.
             // cancel() tek başına global "paused" bayrağını TEMİZLEMEZ: daha
@@ -169,7 +197,7 @@ private fun jsKonusBaslat(
             utterance.rate = hiz;
             utterance.pitch = perde;
             utterance.onend = function() { bitti(); };
-            utterance.onerror = function() { hataOldu(); };
+            utterance.onerror = function(olay) { hataOldu(String((olay && olay.error) || '')); };
             sentez.speak(utterance);
         })();
         """,

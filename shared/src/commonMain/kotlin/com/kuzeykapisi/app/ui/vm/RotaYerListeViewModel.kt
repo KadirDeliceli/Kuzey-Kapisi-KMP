@@ -2,9 +2,12 @@ package com.kuzeykapisi.app.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
+import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,18 +42,18 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository, ilkToken: String)
                 val mekanlar = repo.rotaYerleriListele(token)
                 _state.value = _state.value.copy(mekanlar = mekanlar, yukleniyor = false)
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] rota-yerleri listesi hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "rota-yerleri listesi hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {
                     _state.value.copy(yukleniyor = false, oturumGecersiz = true)
                 } else {
-                    _state.value.copy(yukleniyor = false, hata = e.detay)
+                    _state.value.copy(yukleniyor = false, hata = Metinler.adminHataMesaji(e))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] rota-yerleri listesi ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "rota-yerleri listesi hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     yukleniyor = false,
-                    hata = "Liste yüklenemedi, lütfen tekrar deneyin.",
+                    hata = Metinler.LISTE_YUKLENEMEDI,
                 )
             }
         }
@@ -70,21 +73,21 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository, ilkToken: String)
                 _state.value = _state.value.copy(duzenlemeYukleniyorId = null)
                 onHazir(mekan, detay.anlatim)
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] rota-yeri-getir hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "rota-yeri-getir hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {
                     _state.value.copy(duzenlemeYukleniyorId = null, oturumGecersiz = true)
                 } else {
                     _state.value.copy(
                         duzenlemeYukleniyorId = null,
-                        duzenlemeHatasi = "Bu içerik yüklenemedi: ${e.detay}",
+                        duzenlemeHatasi = Metinler.adminHataMesaji(e),
                     )
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] rota-yeri-getir ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "rota-yeri-getir hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     duzenlemeYukleniyorId = null,
-                    duzenlemeHatasi = "İçerik yüklenemedi, lütfen tekrar deneyin.",
+                    duzenlemeHatasi = Metinler.ICERIK_YUKLENEMEDI,
                 )
             }
         }
@@ -107,18 +110,18 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository, ilkToken: String)
                 _state.value = _state.value.copy(silmeYukleniyor = false, silinecekMekan = null)
                 yukle(token)
             } catch (e: AdminApiHatasi) {
-                println("[KuzeyKapisi] rota-yer-sil hatası: HTTP ${e.httpKodu} — ${e.detay}")
+                Logger.d { "rota-yer-sil hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {
                     _state.value.copy(silmeYukleniyor = false, oturumGecersiz = true)
                 } else {
-                    _state.value.copy(silmeYukleniyor = false, silmeHatasi = e.detay)
+                    _state.value.copy(silmeYukleniyor = false, silmeHatasi = Metinler.adminHataMesaji(e))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                println("[KuzeyKapisi] rota-yer-sil ağ hatası: ${e::class.simpleName}: ${e.message}")
+                Logger.d { "rota-yer-sil hatası: ${e.logOzeti()}" }
                 _state.value = _state.value.copy(
                     silmeYukleniyor = false,
-                    silmeHatasi = "Ağ hatası: lütfen bağlantınızı kontrol edip tekrar deneyin.",
+                    silmeHatasi = Metinler.hataMesaji(e),
                 )
             }
         }

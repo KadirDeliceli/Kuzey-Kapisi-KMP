@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.kuzeykapisi.app.Metinler
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -70,7 +71,7 @@ private fun RotaHaritasiHataMesaji(modifier: Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "Rota haritası şu an yüklenemiyor.",
+            text = Metinler.ROTA_HARITASI_YUKLENEMIYOR,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

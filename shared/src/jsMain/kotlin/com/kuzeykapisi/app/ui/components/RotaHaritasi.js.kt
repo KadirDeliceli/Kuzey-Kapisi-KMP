@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.Metinler
 
 // Eski (legacy) Kotlin/JS hedefi — asıl "web" hedefi wasmJs'tir (bkz.
 // RotaHaritasi.wasmJs.kt / CLAUDE.md §0). Burada nazik bir hata mesajına
@@ -24,7 +25,7 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "Rota haritası şu an yüklenemiyor.",
+            text = Metinler.ROTA_HARITASI_YUKLENEMIYOR,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
