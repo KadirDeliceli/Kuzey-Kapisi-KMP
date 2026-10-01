@@ -232,9 +232,19 @@ private fun RotaGaleriGorunumu(
             modifier = Modifier.padding(top = 30.dp, bottom = 14.dp, start = 6.dp),
         )
         val varsayilanlar = ui.varsayilanlar
+        // 0 duraklı bir rota kart olarak gösterilmez ("6 sa · 0 durak" anlamsız).
+        // Önerilen turların HEPSİ boşsa sebep konumdur (Sinop'tan çok uzak):
+        // kartlar yerine bunu söyleyen tek bir mesaj gösterilir.
+        val doluTurlar = varsayilanlar.orEmpty().filter { it.rota.isNotEmpty() }
+        val konumKapsamDisi = !varsayilanlar.isNullOrEmpty() && doluTurlar.isEmpty()
         if (varsayilanlar.isNullOrEmpty()) {
             BosDurumGorunumu(
                 mesaj = Metinler.ROTA_ONERILENLER_YUKLENEMIYOR,
+                modifier = Modifier.padding(start = 6.dp),
+            )
+        } else if (konumKapsamDisi) {
+            BosDurumGorunumu(
+                mesaj = Metinler.ROTA_KONUM_KAPSAM_DISI,
                 modifier = Modifier.padding(start = 6.dp),
             )
         } else {
@@ -242,7 +252,7 @@ private fun RotaGaleriGorunumu(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
             ) {
-                items(varsayilanlar) { rota ->
+                items(doluTurlar) { rota ->
                     TurKart(
                         rota = rota,
                         kategoriler = ui.kategoriler,
@@ -337,12 +347,21 @@ private fun RotaGaleriGorunumu(
                 metin = "Aranan Rota",
                 modifier = Modifier.padding(top = 28.dp, bottom = 12.dp, start = 6.dp),
             )
-            TurKart(
-                rota = ozelSonuc,
-                kategoriler = ui.kategoriler,
-                onClick = { vm.rotaGoster(ozelSonuc) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
-            )
+            if (ozelSonuc.rota.isEmpty()) {
+                // Boş sonuç kart olarak gösterilmez. Konum kapsam dışıysa sebep
+                // odur; değilse seçilen süre/ilgi alanlarına uyan durak yoktur.
+                BosDurumGorunumu(
+                    mesaj = if (konumKapsamDisi) Metinler.ROTA_KONUM_KAPSAM_DISI else Metinler.ROTA_DURAK_BULUNAMADI,
+                    modifier = Modifier.padding(start = 6.dp),
+                )
+            } else {
+                TurKart(
+                    rota = ozelSonuc,
+                    kategoriler = ui.kategoriler,
+                    onClick = { vm.rotaGoster(ozelSonuc) },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(28.dp))

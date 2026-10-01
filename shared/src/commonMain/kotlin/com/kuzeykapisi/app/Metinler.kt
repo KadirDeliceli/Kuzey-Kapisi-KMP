@@ -113,6 +113,8 @@ object Metinler {
     const val ROTALAR_YUKLENEMEDI = "Rotalar yüklenemedi, lütfen tekrar deneyin."
     const val ROTALAR_HAZIRLANIYOR = "Rotalar hazırlanıyor…"
     const val ROTA_ONERILENLER_YUKLENEMIYOR = "Önerilen turlar şu an yüklenemiyor."
+    const val ROTA_KONUM_KAPSAM_DISI =
+        "Bulunduğunuz konum için önerilecek bir rota bulunamadı. Sinop çevresindeyken tekrar deneyin."
     const val ROTA_HARITASI_YUKLENEMIYOR = "Rota haritası şu an yüklenemiyor."
     const val ROTA_DURAK_BULUNAMADI =
         "Bu tercihlere uyan bir durak bulamadık. Süreyi ya da ilgi alanlarını değiştirip tekrar deneyin."
