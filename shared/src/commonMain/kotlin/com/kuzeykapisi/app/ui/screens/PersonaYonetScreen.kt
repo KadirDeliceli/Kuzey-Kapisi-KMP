@@ -65,7 +65,6 @@ private val ICERIK_MAX_GENISLIK = 900.dp
 @Composable
 fun PersonaYonetScreen(
     repo: KuzeyRepository,
-    token: String,
     onGeri: () -> Unit,
     onDuzenleTiklandi: (PersonaDetay) -> Unit,
     onYetkisiz: () -> Unit,
@@ -136,7 +135,7 @@ fun PersonaYonetScreen(
                                 oge = oge,
                                 duzenlemeYukleniyor = ui.duzenlemeYukleniyorKod == oge.kod,
                                 onDuzenle = {
-                                    vm.duzenlemeyiBaslat(oge, token) { detay -> onDuzenleTiklandi(detay) }
+                                    vm.duzenlemeyiBaslat(oge) { detay -> onDuzenleTiklandi(detay) }
                                 },
                                 onSil = { vm.silmeyiBaslat(oge) },
                             )
@@ -164,7 +163,7 @@ fun PersonaYonetScreen(
         OnayDialog(
             baslik = "Silinsin mi?",
             metin = "'${silinecekOge.ad}' silinecek. Görseli ve anlatımı da gider, bu işlem geri alınamaz.",
-            onOnay = { vm.silmeyiOnayla(token) },
+            onOnay = { vm.silmeyiOnayla() },
             onVazgec = { vm.silmeyiVazgec() },
         )
     }

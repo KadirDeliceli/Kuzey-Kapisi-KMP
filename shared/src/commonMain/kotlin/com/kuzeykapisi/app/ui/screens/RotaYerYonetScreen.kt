@@ -58,13 +58,12 @@ private val ICERIK_MAX_GENISLIK = 900.dp
 @Composable
 fun RotaYerYonetScreen(
     repo: KuzeyRepository,
-    token: String,
     onGeri: () -> Unit,
     onDuzenleTiklandi: (mekan: RotaMekaniAdmin, mevcutAnlatim: String?) -> Unit,
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = viewModel { RotaYerListeViewModel(repo, token) }
+    val vm = viewModel { RotaYerListeViewModel(repo) }
     val ui by vm.state.collectAsState()
 
     LaunchedEffect(ui.oturumGecersiz) {
@@ -110,7 +109,7 @@ fun RotaYerYonetScreen(
                             mekan = mekan,
                             duzenlemeYukleniyor = ui.duzenlemeYukleniyorId == mekan.id,
                             onDuzenle = {
-                                vm.duzenlemeyiBaslat(mekan, token) { m, anlatim -> onDuzenleTiklandi(m, anlatim) }
+                                vm.duzenlemeyiBaslat(mekan) { m, anlatim -> onDuzenleTiklandi(m, anlatim) }
                             },
                             onSil = { vm.silmeyiBaslat(mekan) },
                         )
@@ -137,7 +136,7 @@ fun RotaYerYonetScreen(
         OnayDialog(
             baslik = "Silinsin mi?",
             metin = "'${silinecekMekan.ad}' silinecek. Anlatımı da gider, bu işlem geri alınamaz.",
-            onOnay = { vm.silmeyiOnayla(token) },
+            onOnay = { vm.silmeyiOnayla() },
             onVazgec = { vm.silmeyiVazgec() },
         )
     }

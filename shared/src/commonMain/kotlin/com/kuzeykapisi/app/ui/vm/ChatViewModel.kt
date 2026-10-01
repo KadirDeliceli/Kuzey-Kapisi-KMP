@@ -18,15 +18,21 @@ import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /** Yanlışlıkla dokunmayı yanlış anlamamak için bu süreden kısa kayıtlar gönderilmez, sessizce atılır. */
 private val MIN_KAYIT_SURESI = 500.milliseconds
+
+/** Gönderim uyarısı bu süre sonra (yeni deneme olmasa da) kendiliğinden kaybolur. */
+private val AG_UYARISI_SURESI = 7.seconds
 
 class ChatViewModel(
     private val repo: KuzeyRepository,
@@ -52,6 +58,24 @@ class ChatViewModel(
     val oynatilanMesajId: StateFlow<Int?> = _oynatilanMesajId.asStateFlow()
 
     private var kayitBaslangic: TimeSource.Monotonic.ValueTimeMark? = null
+
+    private var agUyarisiZamanlayici: Job? = null
+
+    /** Gönderim uyarısını gösterir ve [AG_UYARISI_SURESI] sonra kendiliğinden kaldırır. */
+    private fun agUyarisiGoster(mesaj: String) {
+        agUyarisiZamanlayici?.cancel()
+        _state.value = _state.value.copy(agUyarisi = mesaj)
+        agUyarisiZamanlayici = viewModelScope.launch {
+            delay(AG_UYARISI_SURESI)
+            _state.value = _state.value.copy(agUyarisi = null)
+        }
+    }
+
+    private fun agUyarisiniKaldir() {
+        agUyarisiZamanlayici?.cancel()
+        agUyarisiZamanlayici = null
+        if (_state.value.agUyarisi != null) _state.value = _state.value.copy(agUyarisi = null)
+    }
 
     init {
         viewModelScope.launch {
@@ -92,6 +116,8 @@ class ChatViewModel(
     fun gonder(mesaj: String) {
         val sessionId = _state.value.sessionId ?: return
         if (mesaj.isBlank()) return
+        // Yeni deneme başlar başlamaz eski uyarı kalkar (sonucu beklenmez).
+        agUyarisiniKaldir()
         _state.value = _state.value.copy(
             mesajlar = _state.value.mesajlar + Mesaj(metin = mesaj, benden = true),
             yaziyor = true,
@@ -113,14 +139,13 @@ class ChatViewModel(
                     mesajlar = mesajlar,
                     yaziyor = false,
                 )
+                agUyarisiniKaldir()
                 Logger.d { "sohbet yanıtı alındı (yenilendi=${sonuc.yenilendi}, mesaj sayısı=${mesajlar.size})" }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "sohbet hatası: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(
-                    yaziyor = false,
-                    hata = Metinler.hataMesaji(e),
-                )
+                _state.value = _state.value.copy(yaziyor = false)
+                agUyarisiGoster(Metinler.hataMesaji(e))
             }
         }
     }
@@ -149,6 +174,7 @@ class ChatViewModel(
     private suspend fun gonderSesliMesaj(ses: KaydedilenSes) {
         val sessionId = _state.value.sessionId ?: return
         Logger.d { "sesli mesaj gönderiliyor" }
+        agUyarisiniKaldir()
         _state.value = _state.value.copy(yaziyor = true)
         try {
             val sonuc = repo.guvenliSesliSohbet(kategori, oge, sessionId, ses)
@@ -167,6 +193,7 @@ class ChatViewModel(
                 mesajlar = mesajlar,
                 yaziyor = false,
             )
+            agUyarisiniKaldir()
             mesajSesiCal(botMesajId)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -178,10 +205,8 @@ class ChatViewModel(
             } else {
                 Metinler.hataMesaji(e)
             }
-            _state.value = _state.value.copy(
-                yaziyor = false,
-                mesajlar = _state.value.mesajlar + Mesaj(metin = hataMetni, benden = false, sistemNotu = true),
-            )
+            _state.value = _state.value.copy(yaziyor = false)
+            agUyarisiGoster(hataMetni)
         }
     }
 

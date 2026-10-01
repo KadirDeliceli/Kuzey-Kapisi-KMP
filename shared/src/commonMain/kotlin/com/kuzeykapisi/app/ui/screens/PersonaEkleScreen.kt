@@ -39,7 +39,6 @@ import com.kuzeykapisi.app.ui.vm.PersonaEkleViewModel
 @Composable
 fun PersonaEkleScreen(
     repo: KuzeyRepository,
-    token: String,
     onGeri: () -> Unit,
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
@@ -164,7 +163,7 @@ fun PersonaEkleScreen(
 
         BirincilButon(
             metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
-            onClick = { vm.kaydet(token) },
+            onClick = { vm.kaydet() },
             etkin = !ui.kaydediliyor,
             hale = true,
             modifier = Modifier.fillMaxWidth(),

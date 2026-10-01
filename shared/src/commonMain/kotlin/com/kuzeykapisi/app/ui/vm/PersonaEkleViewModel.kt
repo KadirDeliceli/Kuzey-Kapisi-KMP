@@ -71,7 +71,7 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
         }
     }
 
-    fun kaydet(token: String) {
+    fun kaydet() {
         val s = _state.value
         if (s.ad.isBlank() || s.karsilama.isBlank() || s.icerik.isBlank()) {
             _state.value = s.copy(
@@ -87,7 +87,6 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, kodHatasi = null)
             try {
                 val yanit = repo.personaEkle(
-                    token = token,
                     kategori = s.kategori,
                     ad = s.ad.trim(),
                     kod = s.kod.trim(),

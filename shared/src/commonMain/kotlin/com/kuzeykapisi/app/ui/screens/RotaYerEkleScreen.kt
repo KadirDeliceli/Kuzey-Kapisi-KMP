@@ -28,7 +28,6 @@ import com.kuzeykapisi.app.ui.vm.RotaYerEkleViewModel
 @Composable
 fun RotaYerEkleScreen(
     repo: KuzeyRepository,
-    token: String,
     onGeri: () -> Unit,
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
@@ -120,7 +119,7 @@ fun RotaYerEkleScreen(
 
         BirincilButon(
             metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
-            onClick = { vm.kaydet(token) },
+            onClick = { vm.kaydet() },
             etkin = !ui.kaydediliyor,
             hale = true,
             modifier = Modifier.fillMaxWidth(),

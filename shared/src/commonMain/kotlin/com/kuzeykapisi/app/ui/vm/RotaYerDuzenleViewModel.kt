@@ -73,7 +73,7 @@ class RotaYerDuzenleViewModel(
         else -> s.anlatim.trim()
     }
 
-    fun kaydet(token: String) {
+    fun kaydet() {
         val s = _state.value
         val enlem = s.enlem.trim().replace(',', '.').toDoubleOrNull()
         val boylam = s.boylam.trim().replace(',', '.').toDoubleOrNull()
@@ -94,7 +94,6 @@ class RotaYerDuzenleViewModel(
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, basariMesaji = null)
             try {
                 repo.rotaYeriGuncelle(
-                    token = token,
                     mekanId = mekanId,
                     istek = RotaYerEkleIstek(
                         ad = s.ad.trim(),

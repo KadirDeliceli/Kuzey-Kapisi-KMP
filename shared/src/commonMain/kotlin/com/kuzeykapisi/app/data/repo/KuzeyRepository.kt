@@ -45,7 +45,6 @@ class KuzeyRepository(private val api: ApiService) {
         api.adminGiris(kullaniciAdi, sifre)
 
     suspend fun personaEkle(
-        token: String,
         kategori: String,
         ad: String,
         kod: String,
@@ -53,10 +52,9 @@ class KuzeyRepository(private val api: ApiService) {
         icerik: String,
         anlatim: String?,
         gorsel: SecilenResim,
-    ): PersonaEkleYaniti = api.personaEkle(token, kategori, ad, kod, karsilama, icerik, anlatim, gorsel)
+    ): PersonaEkleYaniti = api.personaEkle(kategori, ad, kod, karsilama, icerik, anlatim, gorsel)
 
     suspend fun personaGuncelle(
-        token: String,
         kategori: String,
         kod: String,
         ad: String,
@@ -65,28 +63,28 @@ class KuzeyRepository(private val api: ApiService) {
         anlatim: String,
         anlatimKaldir: Boolean,
         gorsel: SecilenResim?,
-    ) = api.personaGuncelle(token, kategori, kod, ad, karsilama, icerik, anlatim, anlatimKaldir, gorsel)
+    ) = api.personaGuncelle(kategori, kod, ad, karsilama, icerik, anlatim, anlatimKaldir, gorsel)
 
-    suspend fun personaSil(token: String, kategori: String, kod: String) =
-        api.personaSil(token, kategori, kod)
+    suspend fun personaSil(kategori: String, kod: String) =
+        api.personaSil(kategori, kod)
 
-    suspend fun personaGetir(kategori: String, kod: String, token: String): PersonaDetay =
-        api.personaGetir(token, kategori, kod)
+    suspend fun personaGetir(kategori: String, kod: String): PersonaDetay =
+        api.personaGetir(kategori, kod)
 
-    suspend fun rotaYerEkle(token: String, istek: RotaYerEkleIstek): RotaYerEkleYaniti =
-        api.rotaYerEkle(token, istek)
+    suspend fun rotaYerEkle(istek: RotaYerEkleIstek): RotaYerEkleYaniti =
+        api.rotaYerEkle(istek)
 
-    suspend fun rotaYerleriListele(token: String): List<RotaMekaniAdmin> =
-        api.rotaYerleriListele(token)
+    suspend fun rotaYerleriListele(): List<RotaMekaniAdmin> =
+        api.rotaYerleriListele()
 
-    suspend fun rotaYeriGuncelle(token: String, mekanId: Int, istek: RotaYerEkleIstek) =
-        api.rotaYeriGuncelle(token, mekanId, istek)
+    suspend fun rotaYeriGuncelle(mekanId: Int, istek: RotaYerEkleIstek) =
+        api.rotaYeriGuncelle(mekanId, istek)
 
-    suspend fun rotaYeriSil(token: String, mekanId: Int) =
-        api.rotaYeriSil(token, mekanId)
+    suspend fun rotaYeriSil(mekanId: Int) =
+        api.rotaYeriSil(mekanId)
 
-    suspend fun rotaYeriGetir(mekanId: Int, token: String): RotaYeriDetay =
-        api.rotaYeriGetir(token, mekanId)
+    suspend fun rotaYeriGetir(mekanId: Int): RotaYeriDetay =
+        api.rotaYeriGetir(mekanId)
 
     /**
      * Anlatım metni; backend 404 dönerse (bu öge için anlatım GERÇEKTEN yok)

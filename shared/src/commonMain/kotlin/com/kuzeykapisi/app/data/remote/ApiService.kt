@@ -32,7 +32,6 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -45,7 +44,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 
-class ApiService(private val client: HttpClient = createHttpClient()) {
+class ApiService(private val client: HttpClient) {
 
     suspend fun katalog(): Katalog {
         Logger.d { "GET /katalog isteği gönderiliyor" }
@@ -168,7 +167,6 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
     }
 
     suspend fun personaEkle(
-        token: String,
         kategori: String,
         ad: String,
         kod: String,
@@ -196,9 +194,7 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
                         },
                     )
                 },
-            ) {
-                header("X-Admin-Token", token)
-            }
+            )
             apiJson.decodeFromString(yanit.bodyAsText())
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
@@ -210,7 +206,6 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
      * dokunma" olarak yorumluyor.
      */
     suspend fun personaGuncelle(
-        token: String,
         kategori: String,
         kod: String,
         ad: String,
@@ -245,19 +240,16 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
                 formData = parcalar,
             ) {
                 method = HttpMethod.Put
-                header("X-Admin-Token", token)
             }
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }
     }
 
-    suspend fun personaGetir(token: String, kategori: String, kod: String): PersonaDetay {
+    suspend fun personaGetir(kategori: String, kod: String): PersonaDetay {
         return try {
             val hamCevap = calVeHamMetniAl {
-                client.get("${Config.BASE_URL}admin/persona/$kategori/$kod") {
-                    header("X-Admin-Token", token)
-                }
+                client.get("${Config.BASE_URL}admin/persona/$kategori/$kod")
             }
             apiJson.decodeFromString(hamCevap)
         } catch (e: ClientRequestException) {
@@ -265,22 +257,19 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         }
     }
 
-    suspend fun personaSil(token: String, kategori: String, kod: String) {
+    suspend fun personaSil(kategori: String, kod: String) {
         try {
-            client.delete("${Config.BASE_URL}admin/persona-sil/$kategori/$kod") {
-                header("X-Admin-Token", token)
-            }
+            client.delete("${Config.BASE_URL}admin/persona-sil/$kategori/$kod")
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }
     }
 
-    suspend fun rotaYerEkle(token: String, istek: RotaYerEkleIstek): RotaYerEkleYaniti {
+    suspend fun rotaYerEkle(istek: RotaYerEkleIstek): RotaYerEkleYaniti {
         return try {
             val hamCevap = calVeHamMetniAl {
                 client.post("${Config.BASE_URL}admin/rota-yer-ekle") {
                     contentType(ContentType.Application.Json)
-                    header("X-Admin-Token", token)
                     setBody(istek)
                 }
             }
@@ -290,12 +279,10 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         }
     }
 
-    suspend fun rotaYerleriListele(token: String): List<RotaMekaniAdmin> {
+    suspend fun rotaYerleriListele(): List<RotaMekaniAdmin> {
         return try {
             val hamCevap = calVeHamMetniAl {
-                client.get("${Config.BASE_URL}admin/rota-yerleri") {
-                    header("X-Admin-Token", token)
-                }
+                client.get("${Config.BASE_URL}admin/rota-yerleri")
             }
             apiJson.decodeFromString<RotaYerleriYaniti>(hamCevap).mekanlar
         } catch (e: ClientRequestException) {
@@ -303,12 +290,10 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         }
     }
 
-    suspend fun rotaYeriGetir(token: String, mekanId: Int): RotaYeriDetay {
+    suspend fun rotaYeriGetir(mekanId: Int): RotaYeriDetay {
         return try {
             val hamCevap = calVeHamMetniAl {
-                client.get("${Config.BASE_URL}admin/rota-yeri/$mekanId") {
-                    header("X-Admin-Token", token)
-                }
+                client.get("${Config.BASE_URL}admin/rota-yeri/$mekanId")
             }
             apiJson.decodeFromString(hamCevap)
         } catch (e: ClientRequestException) {
@@ -317,12 +302,11 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
     }
 
     /** anlatim null ise gövdeye hiç eklenmez (encodeDefaults=false) — backend bunu "mevcut anlatıma dokunma" olarak yorumluyor. */
-    suspend fun rotaYeriGuncelle(token: String, mekanId: Int, istek: RotaYerEkleIstek) {
+    suspend fun rotaYeriGuncelle(mekanId: Int, istek: RotaYerEkleIstek) {
         try {
             calVeHamMetniAl {
                 client.put("${Config.BASE_URL}admin/rota-yer-guncelle/$mekanId") {
                     contentType(ContentType.Application.Json)
-                    header("X-Admin-Token", token)
                     setBody(istek)
                 }
             }
@@ -331,11 +315,9 @@ class ApiService(private val client: HttpClient = createHttpClient()) {
         }
     }
 
-    suspend fun rotaYeriSil(token: String, mekanId: Int) {
+    suspend fun rotaYeriSil(mekanId: Int) {
         try {
-            client.delete("${Config.BASE_URL}admin/rota-yer-sil/$mekanId") {
-                header("X-Admin-Token", token)
-            }
+            client.delete("${Config.BASE_URL}admin/rota-yer-sil/$mekanId")
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }

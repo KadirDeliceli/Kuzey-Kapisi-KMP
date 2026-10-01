@@ -42,6 +42,7 @@ import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.model.PersonaDetay
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
+import com.kuzeykapisi.app.data.remote.OturumSonlanmaNedeni
 import com.kuzeykapisi.app.domain.MainCard
 import com.kuzeykapisi.app.domain.MainCardType
 import com.kuzeykapisi.app.domain.SubCard
@@ -150,10 +151,11 @@ fun App() {
     // çıkar): repository + ekran kapsamlarının store'ları, ve admin oturumu.
     val vmDeposu = viewModel { VmDeposu() }
     val repo = vmDeposu.repo
-    // Admin: token yalnızca bellekte tutulur (kalıcı depolama yok), ama
-    // ViewModel olduğu için döndürmede kaybolmaz.
-    val adminVm = viewModel { AdminViewModel(repo) }
-    val adminUi by adminVm.state.collectAsState()
+    // Admin: token yalnızca bellekte, tek kaynakta (AdminOturumu) tutulur;
+    // HttpClient onu /admin/... isteklerine kendisi ekler. Ekranlar token görmez.
+    val adminOturumu = vmDeposu.adminOturumu
+    val adminVm = viewModel { AdminViewModel(repo, adminOturumu) }
+    val adminAcik by adminOturumu.acik.collectAsState()
 
     // Ekran geçmişi bir yığın olarak tutulur: yeni ekrana geçişte push, geri
     // gidişte pop. Böylece geri adımı her zaman SADECE bir üst seviyeye çıkar.
@@ -163,7 +165,7 @@ fun App() {
     // açıldıysa; token kasıtlı olarak kalıcı değil) admin ekranları atılır.
     // Döndürmede token korunduğu için burası hiçbir şey yapmaz.
     remember {
-        if (adminUi.token == null) ekranYigini.kaldir { it.adminEkrani }
+        if (!adminOturumu.acik.value) ekranYigini.kaldir { it.adminEkrani }
         Unit
     }
     var aktifBot by rememberSaveable(stateSaver = BotRefSaver) { mutableStateOf<BotRef?>(null) }
@@ -179,8 +181,14 @@ fun App() {
     var adminGirisDialoguAcik by remember { mutableStateOf(false) }
 
     val git: (Screen) -> Unit = { hedef ->
-        gecisIleri = true
-        ekranYigini.ekle(hedef)
+        // Oturum yokken hiçbir admin ekranı yığına girmez; yerine giriş istenir.
+        if (hedef.adminEkrani && !adminOturumu.acik.value) {
+            adminVm.hataTemizle()
+            adminGirisDialoguAcik = true
+        } else {
+            gecisIleri = true
+            ekranYigini.ekle(hedef)
+        }
     }
     val geriGit: () -> Unit = {
         if (ekranYigini.boyut > 1) {
@@ -188,12 +196,20 @@ fun App() {
             ekranYigini.cikar()
         }
     }
-    // Tüm admin ekranlarında 401 alındığında ortak davranış: token sıfırlanır,
-    // ekrandan çıkılır ve giriş dialogu tekrar açılır.
-    val onAdminYetkisiz: () -> Unit = {
-        adminVm.oturumuSifirla()
-        geriGit()
-        adminGirisDialoguAcik = true
+    // Admin ekranları 401 görünce bunu çağırır. HttpClient oturumu zaten
+    // kapatmış olur; asıl temizlik aşağıdaki sonlanma dinleyicisinde.
+    val onAdminYetkisiz: () -> Unit = { adminVm.yetkisizBildir() }
+
+    // Oturum NASIL biterse bitsin (401, "Çıkış yap", hareketsizlik) tek yol:
+    // yığındaki TÜM admin ekranları TEK SEFERDE atılır ve Ana Sayfa'ya dönülür;
+    // kullanıcı token'sız bir ara admin ekranında kalamaz. Çıkış dışındaki
+    // nedenlerde giriş dialogu, nedeni söyleyen bir mesajla açılır.
+    LaunchedEffect(adminOturumu) {
+        adminOturumu.sonlanma.collect { neden ->
+            if (ekranYigini.boyut > 1) gecisIleri = false
+            ekranYigini.kaldir { true }
+            if (neden != OturumSonlanmaNedeni.CIKIS) adminGirisDialoguAcik = true
+        }
     }
 
     KuzeyKapisiTheme {
@@ -221,9 +237,7 @@ fun App() {
                     TopBar(
                         onBizKimizClick = { dialogTuru = DialogTuru.BIZ_KIMIZ },
                         onProjeHakkindaClick = { dialogTuru = DialogTuru.PROJE_HAKKINDA },
-                        onAdminIkonClick = {
-                            if (adminUi.token != null) git(Screen.AdminAnaSayfa) else adminGirisDialoguAcik = true
-                        },
+                        onAdminIkonClick = { git(Screen.AdminAnaSayfa) },
                     )
                     Box(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -267,6 +281,12 @@ fun App() {
                                         Modifier.fillMaxHeight().widthIn(max = 1100.dp)
                                     },
                                 ) {
+                                    // Guard: oturum kapalıyken hiçbir admin ekranı (ve
+                                    // ViewModel'i) oluşturulmaz, dolayısıyla token'sız
+                                    // tek bir admin isteği bile başlatılamaz. Yığın
+                                    // aynı karede sonlanma dinleyicisi tarafından
+                                    // temizlenir.
+                                    if (s.adminEkrani && !adminAcik) return@Box
                                     when (s) {
                                         is Screen.Home -> HomeScreen(
                                             onKartTiklandi = { kart ->
@@ -345,8 +365,8 @@ fun App() {
                                         )
                                         is Screen.AdminAnaSayfa -> AdminAnaSayfaScreen(
                                             repo = repo,
-                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
+                                            onCikisYap = { adminVm.cikisYap() },
                                             onPersonaEkleTiklandi = { git(Screen.AdminPersonaEkle) },
                                             onRotaYeriEkleTiklandi = { git(Screen.AdminRotaYerEkle) },
                                             onPersonalariYonetTiklandi = { git(Screen.AdminPersonaYonet) },
@@ -355,21 +375,18 @@ fun App() {
                                         )
                                         is Screen.AdminPersonaEkle -> PersonaEkleScreen(
                                             repo = repo,
-                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminRotaYerEkle -> RotaYerEkleScreen(
                                             repo = repo,
-                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminPersonaYonet -> PersonaYonetScreen(
                                             repo = repo,
-                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
                                             onDuzenleTiklandi = { detay -> git(Screen.AdminPersonaDuzenle(detay = detay)) },
                                             onYetkisiz = onAdminYetkisiz,
@@ -378,14 +395,12 @@ fun App() {
                                         is Screen.AdminPersonaDuzenle -> PersonaDuzenleScreen(
                                             repo = repo,
                                             detay = s.detay,
-                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminRotaYerYonet -> RotaYerYonetScreen(
                                             repo = repo,
-                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
                                             onDuzenleTiklandi = { mekan, mevcutAnlatim ->
                                                 git(Screen.AdminRotaYerDuzenle(mekan = mekan, mevcutAnlatim = mevcutAnlatim))
@@ -397,7 +412,6 @@ fun App() {
                                             repo = repo,
                                             mekan = s.mekan,
                                             mevcutAnlatim = s.mevcutAnlatim,
-                                            token = adminUi.token.orEmpty(),
                                             onGeri = geriGit,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),

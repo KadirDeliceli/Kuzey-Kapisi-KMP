@@ -38,7 +38,7 @@ class RotaYerEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
     fun aciklamaDegisti(v: String) { _state.value = _state.value.copy(aciklama = v) }
     fun anlatimDegisti(v: String) { _state.value = _state.value.copy(anlatim = v) }
 
-    fun kaydet(token: String) {
+    fun kaydet() {
         val s = _state.value
         val enlem = s.enlem.trim().replace(',', '.').toDoubleOrNull()
         val boylam = s.boylam.trim().replace(',', '.').toDoubleOrNull()
@@ -59,7 +59,6 @@ class RotaYerEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
             _state.value = _state.value.copy(kaydediliyor = true, genelHata = null)
             try {
                 repo.rotaYerEkle(
-                    token = token,
                     istek = RotaYerEkleIstek(
                         ad = s.ad.trim(),
                         enlem = enlem,

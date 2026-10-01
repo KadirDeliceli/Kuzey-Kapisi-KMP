@@ -54,6 +54,11 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
         factory = {
             runCatching {
                 (document.createElement("iframe") as HTMLIFrameElement).apply {
+                    // Yalnızca betik çalıştırma izni: allow-same-origin YOK, yani
+                    // harita belgesi opak bir origin'de çalışır — ana sayfanın
+                    // DOM'una, çerezlerine/depolamasına ve Kotlin uygulamasına
+                    // erişemez. Bu, srcdoc'tan ÖNCE ayarlanmalıdır.
+                    setAttribute("sandbox", "allow-scripts")
                     style.border = "none"
                     style.width = "100%"
                     style.height = "100%"
@@ -61,7 +66,9 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
                 }
             }.getOrElse {
                 hata = true
-                document.createElement("iframe") as HTMLIFrameElement
+                (document.createElement("iframe") as HTMLIFrameElement).apply {
+                    setAttribute("sandbox", "allow-scripts")
+                }
             }
         },
         modifier = modifier,

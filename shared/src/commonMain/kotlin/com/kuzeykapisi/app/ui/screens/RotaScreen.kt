@@ -66,7 +66,7 @@ import com.kuzeykapisi.app.ui.components.RotaHaritasiWebView
 import com.kuzeykapisi.app.ui.components.SesIkonuButonu
 import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
-import com.kuzeykapisi.app.ui.components.rotaHaritasiHtmlOlustur
+import com.kuzeykapisi.app.ui.components.rememberRotaHaritasiHtml
 import com.kuzeykapisi.app.ui.components.tumRotaGoogleMapsUrl
 import com.kuzeykapisi.app.ui.nav.VmKapsami
 import com.kuzeykapisi.app.ui.theme.AlcakYuzey
@@ -456,7 +456,7 @@ private fun RotaDetayGorunumu(
 @Composable
 private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>, gizli: Boolean) {
     val uriHandler = LocalUriHandler.current
-    val html = remember(duraklar) { rotaHaritasiHtmlOlustur(duraklar) }
+    val html = rememberRotaHaritasiHtml(duraklar)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         BolumBasligi(metin = "Rota Haritası", modifier = Modifier.padding(bottom = 12.dp))
@@ -476,7 +476,7 @@ private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>, gizli: Boolean) {
             // native görünüm kompozisyondan çıkarılır — listenin geri kalanı ve
             // scroll durumu etkilenmez, overlay kapanınca harita normal şekilde
             // geri gelir.
-            if (!gizli) {
+            if (!gizli && html != null) {
                 RotaHaritasiWebView(html = html, modifier = Modifier.fillMaxSize())
             }
         }

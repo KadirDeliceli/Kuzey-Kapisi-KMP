@@ -11,7 +11,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import com.kuzeykapisi.app.data.remote.AdminOturumu
 import com.kuzeykapisi.app.data.remote.ApiService
+import com.kuzeykapisi.app.data.remote.createHttpClient
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 
 /**
@@ -28,7 +30,9 @@ import com.kuzeykapisi.app.data.repo.KuzeyRepository
  * onCleared()'ı çalışır ve viewModelScope iptal olur.
  */
 class VmDeposu : ViewModel() {
-    val repo = KuzeyRepository(ApiService())
+    /** Admin token'ının tek kaynağı; HttpClient /admin/... isteklerine token'ı buradan ekler. */
+    val adminOturumu = AdminOturumu()
+    val repo = KuzeyRepository(ApiService(createHttpClient(adminOturumu)))
 
     private val depolar = mutableMapOf<String, ViewModelStore>()
 

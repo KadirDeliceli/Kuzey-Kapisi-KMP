@@ -64,12 +64,12 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
      * çağrılır ve çağıran taraf düzenleme ekranını açar. Başarısız olursa
      * form hiç açılmaz, hata bu ekranda gösterilir.
      */
-    fun duzenlemeyiBaslat(oge: KatalogOge, token: String, onHazir: (PersonaDetay) -> Unit) {
+    fun duzenlemeyiBaslat(oge: KatalogOge, onHazir: (PersonaDetay) -> Unit) {
         val kategori = _state.value.kategori
         viewModelScope.launch {
             _state.value = _state.value.copy(duzenlemeYukleniyorKod = oge.kod, duzenlemeHatasi = null)
             try {
-                val detay = repo.personaGetir(kategori = kategori, kod = oge.kod, token = token)
+                val detay = repo.personaGetir(kategori = kategori, kod = oge.kod)
                 _state.value = _state.value.copy(duzenlemeYukleniyorKod = null)
                 onHazir(detay)
             } catch (e: AdminApiHatasi) {
@@ -101,13 +101,13 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
         _state.value = _state.value.copy(silinecekOge = null)
     }
 
-    fun silmeyiOnayla(token: String) {
+    fun silmeyiOnayla() {
         val oge = _state.value.silinecekOge ?: return
         val kategori = _state.value.kategori
         viewModelScope.launch {
             _state.value = _state.value.copy(silmeYukleniyor = true, silmeHatasi = null)
             try {
-                repo.personaSil(token = token, kategori = kategori, kod = oge.kod)
+                repo.personaSil(kategori = kategori, kod = oge.kod)
                 _state.value = _state.value.copy(silmeYukleniyor = false, silinecekOge = null)
                 yukle()
             } catch (e: AdminApiHatasi) {

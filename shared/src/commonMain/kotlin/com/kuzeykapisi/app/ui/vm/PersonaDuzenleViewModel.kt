@@ -82,7 +82,7 @@ class PersonaDuzenleViewModel(
         return AnlatimGonderim(metin = metin, kaldir = s.anlatimiKaldir)
     }
 
-    fun kaydet(token: String) {
+    fun kaydet() {
         val s = _state.value
         if (s.ad.isBlank() || s.karsilama.isBlank() || s.icerik.isBlank()) {
             _state.value = s.copy(
@@ -95,7 +95,6 @@ class PersonaDuzenleViewModel(
             try {
                 val anlatimGonderim = anlatimGonderilecek(s)
                 repo.personaGuncelle(
-                    token = token,
                     kategori = kategori,
                     kod = kod,
                     ad = s.ad.trim(),

@@ -3,6 +3,7 @@ package com.kuzeykapisi.app.data.remote
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -24,10 +25,22 @@ val apiJson: Json = Json {
     isLenient = true
 }
 
-fun createHttpClient(): HttpClient = HttpClient(httpEngine()) {
+/**
+ * [adminOturumu]: admin token'ının tek kaynağı. /admin/... isteklerine token'ı
+ * [adminTokenEklentisi] ekler; bir admin isteğine 401 dönerse oturum burada,
+ * merkezi olarak kapatılır (ekranlar ayrıca bir şey yapmak zorunda değildir).
+ */
+fun createHttpClient(adminOturumu: AdminOturumu): HttpClient = HttpClient(httpEngine()) {
     expectSuccess = true
+    install(adminTokenEklentisi(adminOturumu))
     HttpResponseValidator {
-        handleResponseExceptionWithRequest { cause, _ ->
+        handleResponseExceptionWithRequest { cause, istek ->
+            if (cause is ResponseException &&
+                cause.response.status.value == 401 &&
+                tokenGerektirenAdminYolu(istek.url.encodedPath)
+            ) {
+                adminOturumu.sonlandir(OturumSonlanmaNedeni.YETKISIZ)
+            }
             if (motorAgHatasiniErrorOlarakFirlatir && cause !is Exception) throw BaglantiHatasi(cause)
         }
     }

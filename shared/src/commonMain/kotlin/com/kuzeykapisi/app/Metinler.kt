@@ -53,6 +53,13 @@ object Metinler {
     const val GIRIS_BILGI_HATALI = "Kullanıcı adı veya şifre hatalı."
     const val GIRIS_SUNUCUYA_ULASILAMIYOR = "Sunucuya ulaşılamıyor, tekrar deneyin."
 
+    // --- Yönetici oturumu -----------------------------------------------------
+
+    const val ADMIN_OTURUM_NOTU = "Oturumunuz 15 dakika işlem yapılmazsa kendiliğinden kapanır."
+    const val ADMIN_OTURUM_SURESI_DOLDU =
+        "15 dakika işlem yapılmadığı için oturumunuz kapatıldı. Devam etmek için yeniden giriş yapın."
+    const val ADMIN_OTURUM_GECERSIZ = "Oturumunuz sona erdi. Devam etmek için yeniden giriş yapın."
+
     /** YALNIZCA gerçek 401 "şifre hatalı" demektir; ağ/sunucu hatası kimlik bilgisi hatası gibi gösterilmez. */
     fun girisHataMesaji(e: Throwable): String = when {
         e is AdminApiHatasi && e.httpKodu == 401 -> GIRIS_BILGI_HATALI

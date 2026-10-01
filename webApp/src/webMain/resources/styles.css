@@ -1,7 +1,44 @@
+/* Yükleme ekranı renkleri tasarım sistemi token'larıdır (tokens/colors.json):
+   uygulama açılmadan önce de markasız beyaz bir flaş görünmesin. */
+:root {
+    --kk-karanlik-lacivert: #0B1E2D; /* KaranlikLacivert — navy.500 */
+    --kk-fener-alevi: #E8A33D;       /* FenerAlevi — amber.400 */
+}
+
 html, body {
     width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background: var(--kk-karanlik-lacivert);
+    color-scheme: dark;
+}
+
+.kk-yukleniyor {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.kk-yukleniyor-iz {
+    stroke: var(--kk-fener-alevi);
+    stroke-opacity: 0.22;
+}
+
+.kk-yukleniyor-yay {
+    stroke: var(--kk-fener-alevi);
+    transform-origin: 25px 25px;
+    animation: kk-don 1s linear infinite;
+}
+
+@keyframes kk-don {
+    to { transform: rotate(360deg); }
+}
+
+/* Hareketi azaltma tercihinde dönme durur; gösterge sabit bir yay olarak kalır. */
+@media (prefers-reduced-motion: reduce) {
+    .kk-yukleniyor-yay { animation: none; }
 }

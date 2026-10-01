@@ -26,20 +26,20 @@ data class RotaYerListeUiState(
     val oturumGecersiz: Boolean = false,
 )
 
-/** [ilkToken]: ilk liste yüklemesi ViewModel oluşurken bir kez yapılır (döndürmede tekrarlanmaz). */
-class RotaYerListeViewModel(private val repo: KuzeyRepository, ilkToken: String) : ViewModel() {
+/** İlk liste yüklemesi ViewModel oluşurken bir kez yapılır (döndürmede tekrarlanmaz). */
+class RotaYerListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
     private val _state = MutableStateFlow(RotaYerListeUiState())
     val state: StateFlow<RotaYerListeUiState> = _state.asStateFlow()
 
     init {
-        yukle(ilkToken)
+        yukle()
     }
 
-    fun yukle(token: String) {
+    fun yukle() {
         viewModelScope.launch {
             _state.value = _state.value.copy(yukleniyor = true, hata = null)
             try {
-                val mekanlar = repo.rotaYerleriListele(token)
+                val mekanlar = repo.rotaYerleriListele()
                 _state.value = _state.value.copy(mekanlar = mekanlar, yukleniyor = false)
             } catch (e: AdminApiHatasi) {
                 Logger.d { "rota-yerleri listesi hatası: ${e.logOzeti()}" }
@@ -65,11 +65,11 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository, ilkToken: String)
      * anlatim eksikti) — küçük yükleniyor göstergesi bu sırada gösterilir,
      * yalnızca başarılı olursa `onHazir` çağrılır.
      */
-    fun duzenlemeyiBaslat(mekan: RotaMekaniAdmin, token: String, onHazir: (RotaMekaniAdmin, String?) -> Unit) {
+    fun duzenlemeyiBaslat(mekan: RotaMekaniAdmin, onHazir: (RotaMekaniAdmin, String?) -> Unit) {
         viewModelScope.launch {
             _state.value = _state.value.copy(duzenlemeYukleniyorId = mekan.id, duzenlemeHatasi = null)
             try {
-                val detay = repo.rotaYeriGetir(mekanId = mekan.id, token = token)
+                val detay = repo.rotaYeriGetir(mekanId = mekan.id)
                 _state.value = _state.value.copy(duzenlemeYukleniyorId = null)
                 onHazir(mekan, detay.anlatim)
             } catch (e: AdminApiHatasi) {
@@ -101,14 +101,14 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository, ilkToken: String)
         _state.value = _state.value.copy(silinecekMekan = null)
     }
 
-    fun silmeyiOnayla(token: String) {
+    fun silmeyiOnayla() {
         val mekan = _state.value.silinecekMekan ?: return
         viewModelScope.launch {
             _state.value = _state.value.copy(silmeYukleniyor = true, silmeHatasi = null)
             try {
-                repo.rotaYeriSil(token = token, mekanId = mekan.id)
+                repo.rotaYeriSil(mekanId = mekan.id)
                 _state.value = _state.value.copy(silmeYukleniyor = false, silinecekMekan = null)
-                yukle(token)
+                yukle()
             } catch (e: AdminApiHatasi) {
                 Logger.d { "rota-yer-sil hatası: ${e.logOzeti()}" }
                 _state.value = if (e.httpKodu == 401) {

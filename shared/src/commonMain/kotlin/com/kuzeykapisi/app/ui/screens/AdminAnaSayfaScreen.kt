@@ -51,15 +51,18 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.EkranBasligi
 import com.kuzeykapisi.app.ui.components.FenerHalesi
+import com.kuzeykapisi.app.ui.components.IkincilButon
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.NotrGeceCizgi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
@@ -86,8 +89,8 @@ private enum class AdminIkonu { KisiEkle, Liste, KonumEkle, Harita }
 @Composable
 fun AdminAnaSayfaScreen(
     repo: KuzeyRepository,
-    token: String,
     onGeri: () -> Unit,
+    onCikisYap: () -> Unit,
     onPersonaEkleTiklandi: () -> Unit,
     onRotaYeriEkleTiklandi: () -> Unit,
     onPersonalariYonetTiklandi: () -> Unit,
@@ -99,12 +102,10 @@ fun AdminAnaSayfaScreen(
     val personaSayisi by produceState<KayitSayisi>(KayitSayisi.Yukleniyor, repo) {
         value = sayiGetir { repo.katalog().values.sumOf { it.ogeler.size } }
     }
-    val rotaSayisi by produceState<KayitSayisi>(
-        if (token.isBlank()) KayitSayisi.Gizli else KayitSayisi.Yukleniyor,
-        repo,
-        token,
-    ) {
-        if (token.isNotBlank()) value = sayiGetir { repo.rotaYerleriListele(token).size }
+    // Token'ı HttpClient ekler (bkz. AdminTokenEklentisi); bu ekran yalnızca
+    // oturum açıkken çizilir (App.kt), o yüzden burada token kontrolü yok.
+    val rotaSayisi by produceState<KayitSayisi>(KayitSayisi.Yukleniyor, repo) {
+        value = sayiGetir { repo.rotaYerleriListele().size }
     }
 
     BoxWithConstraints(modifier = modifier) {
@@ -168,8 +169,45 @@ fun AdminAnaSayfaScreen(
                         modifier = kartModifier,
                     )
                 }
+                Spacer(modifier = Modifier.height(BOLUM_ARALIGI))
+                OturumSatiri(genisEkran = genisEkran, onCikisYap = onCikisYap)
                 Spacer(modifier = Modifier.height(24.dp))
             }
+        }
+    }
+}
+
+/**
+ * Panelin sonu: oturumun nasıl kapandığını söyleyen not ve "Çıkış yap".
+ * Çıkış nötr bir eylemdir (veri silmez) — ikincil buton, yıkıcı DEĞİL.
+ */
+@Composable
+private fun OturumSatiri(genisEkran: Boolean, onCikisYap: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(NotrGeceCizgi))
+        Spacer(modifier = Modifier.height(20.dp))
+        val not: @Composable (Modifier) -> Unit = { m ->
+            Text(
+                text = Metinler.ADMIN_OTURUM_NOTU,
+                style = MaterialTheme.typography.bodySmall,
+                color = SisGrisi,
+                modifier = m,
+            )
+        }
+        val buton: @Composable () -> Unit = { IkincilButon(metin = "Çıkış yap", onClick = onCikisYap) }
+        if (genisEkran) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                not(Modifier.weight(1f))
+                buton()
+            }
+        } else {
+            not(Modifier)
+            Spacer(modifier = Modifier.height(12.dp))
+            buton()
         }
     }
 }

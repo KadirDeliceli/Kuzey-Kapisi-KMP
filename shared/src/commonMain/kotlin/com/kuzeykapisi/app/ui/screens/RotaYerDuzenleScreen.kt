@@ -32,7 +32,6 @@ fun RotaYerDuzenleScreen(
     repo: KuzeyRepository,
     mekan: RotaMekaniAdmin,
     mevcutAnlatim: String?,
-    token: String,
     onGeri: () -> Unit,
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
@@ -130,7 +129,7 @@ fun RotaYerDuzenleScreen(
 
         BirincilButon(
             metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
-            onClick = { vm.kaydet(token) },
+            onClick = { vm.kaydet() },
             etkin = !ui.kaydediliyor,
             hale = true,
             modifier = Modifier.fillMaxWidth(),

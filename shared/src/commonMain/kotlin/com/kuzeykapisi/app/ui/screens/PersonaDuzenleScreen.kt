@@ -39,7 +39,6 @@ import com.kuzeykapisi.app.ui.vm.PersonaDuzenleViewModel
 fun PersonaDuzenleScreen(
     repo: KuzeyRepository,
     detay: PersonaDetay,
-    token: String,
     onGeri: () -> Unit,
     onYetkisiz: () -> Unit,
     modifier: Modifier = Modifier,
@@ -159,7 +158,7 @@ fun PersonaDuzenleScreen(
 
         BirincilButon(
             metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
-            onClick = { vm.kaydet(token) },
+            onClick = { vm.kaydet() },
             etkin = !ui.kaydediliyor,
             hale = true,
             modifier = Modifier.fillMaxWidth(),

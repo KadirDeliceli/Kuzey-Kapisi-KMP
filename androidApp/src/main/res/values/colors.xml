@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Açılış penceresi zemini = KaranlikLacivert (tokens/colors.json navy.500,
+         Color.kt). Compose ilk kareyi çizene kadar görünen tek renk budur; Compose
+         teması değil, sistem penceresi kullanır, bu yüzden XML'de tanımlıdır. -->
+    <color name="acilis_zemini">#0B1E2D</color>
+</resources>

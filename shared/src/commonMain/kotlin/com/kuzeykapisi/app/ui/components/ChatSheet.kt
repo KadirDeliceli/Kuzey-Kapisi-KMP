@@ -1,11 +1,14 @@
 package com.kuzeykapisi.app.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,6 +56,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -199,6 +205,9 @@ fun ChatSheet(
                 .navigationBarsPadding()
                 .padding(12.dp),
         ) {
+            // Gönderim uyarısı: mesaj balonlarının ARASINDA değil, giriş
+            // kutusunun hemen üstünde sabit bir bant; sohbet geçmişine girmez.
+            AgUyarisiBandi(mesaj = ui.agUyarisi)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -255,6 +264,58 @@ fun ChatSheet(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Geçici gönderim uyarısı bandı. [mesaj] null olunca kısa bir fade ile
+ * kaybolur; kaybolurken son metni göstermeye devam eder (boş bant görünmez).
+ * Ekran okuyucuya "polite" canlı bölge olarak duyurulur. Renk: uyarı tonu
+ * (Kehribar / colorScheme.error) — SinopKirmizisi yıkıcı eylemlere kilitli.
+ */
+@Composable
+private fun AgUyarisiBandi(mesaj: String?) {
+    var sonMesaj by remember { mutableStateOf(mesaj.orEmpty()) }
+    if (mesaj != null && mesaj != sonMesaj) sonMesaj = mesaj
+    val uyariRengi = MaterialTheme.colorScheme.error
+    AnimatedVisibility(
+        visible = mesaj != null,
+        enter = fadeIn(animationSpec = tween(MIKRO_SURE)),
+        exit = fadeOut(animationSpec = tween(MIKRO_SURE)),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp)
+                .clip(SatirSekli)
+                .background(uyariRengi.copy(alpha = 0.12f))
+                .border(1.dp, uyariRengi.copy(alpha = 0.45f), SatirSekli)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Uyarı işareti (ünlem dairesi) — renk tek başına anlam taşımasın diye.
+            Canvas(modifier = Modifier.size(16.dp)) {
+                val w = size.width
+                val kalinlik = w * 0.11f
+                drawCircle(color = uyariRengi, radius = w / 2f - kalinlik / 2f, style = Stroke(width = kalinlik))
+                drawLine(
+                    color = uyariRengi,
+                    start = Offset(w / 2f, w * 0.27f),
+                    end = Offset(w / 2f, w * 0.58f),
+                    strokeWidth = kalinlik,
+                    cap = StrokeCap.Round,
+                )
+                drawCircle(color = uyariRengi, radius = kalinlik * 0.7f, center = Offset(w / 2f, w * 0.74f))
+            }
+            Text(
+                text = sonMesaj,
+                style = MaterialTheme.typography.bodySmall,
+                color = uyariRengi,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }

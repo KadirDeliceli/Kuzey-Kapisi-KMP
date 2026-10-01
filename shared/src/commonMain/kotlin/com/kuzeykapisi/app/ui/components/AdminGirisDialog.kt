@@ -66,8 +66,8 @@ fun AdminGirisDialog(
     var kullaniciAdi by remember { mutableStateOf("") }
     var sifre by remember { mutableStateOf("") }
 
-    LaunchedEffect(ui.token) {
-        if (ui.token != null) onBasarili()
+    LaunchedEffect(ui.oturumAcik) {
+        if (ui.oturumAcik) onBasarili()
     }
 
     Dialog(

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Koyu açılış teması: pencere, Compose içeriği gelmeden önce de uygulamanın
+         gece denizi zemininde açılır (eskiden Theme.Material.Light beyaz flaş
+         veriyordu). Sistem çubukları da aynı renkte; enableEdgeToEdge sonradan
+         kendi şeffaf ayarlarını uygular. -->
+    <style name="Theme.KuzeyKapisi" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/acilis_zemini</item>
+        <item name="android:colorBackground">@color/acilis_zemini</item>
+        <item name="android:statusBarColor">@color/acilis_zemini</item>
+        <item name="android:navigationBarColor">@color/acilis_zemini</item>
+    </style>
+</resources>
