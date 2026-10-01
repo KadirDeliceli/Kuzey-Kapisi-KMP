@@ -132,6 +132,8 @@ object Metinler {
 
     const val FORM_PERSONA_ZORUNLU_ALANLAR = "'Ad', 'Açılış Mesajı' ve 'Detaylı İçerik' alanları boş olamaz."
     const val FORM_GORSEL_GEREKLI = "Lütfen bir görsel seçin."
+    const val FORM_KOD_URETILEMEDI =
+        "Bu addan kod üretilemedi. 'Kod' alanına harf ya da rakam içeren bir kod yazın."
     const val FORM_MEKAN_ZORUNLU_ALANLAR = "'Ad' ve 'Açıklama' alanları boş olamaz."
     const val FORM_KOORDINAT_GECERSIZ = "'Enlem' ve 'Boylam' geçerli birer sayı olmalı."
     const val FORM_SURE_GECERSIZ = "'Ziyaret Süresi' sıfırdan büyük bir tam sayı olmalı."

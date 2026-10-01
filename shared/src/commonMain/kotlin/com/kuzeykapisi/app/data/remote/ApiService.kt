@@ -42,6 +42,7 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLPathPart
 import kotlinx.serialization.Serializable
 
 class ApiService(private val client: HttpClient) {
@@ -140,7 +141,7 @@ class ApiService(private val client: HttpClient) {
     /** 404'te (backend'de anlatım yoksa) ClientRequestException fırlatır — repo katmanı bunu yakalar. */
     suspend fun anlatimGetir(kategori: String, kod: String): AnlatimYaniti {
         Logger.d { "GET /anlatim/$kategori/$kod isteği gönderiliyor" }
-        val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}anlatim/$kategori/$kod") }
+        val hamCevap = calVeHamMetniAl { client.get("${Config.BASE_URL}anlatim/${yol(kategori, kod)}") }
         return apiJson.decodeFromString(hamCevap)
     }
 
@@ -236,7 +237,7 @@ class ApiService(private val client: HttpClient) {
                 }
             }
             client.submitFormWithBinaryData(
-                url = "${Config.BASE_URL}admin/persona-guncelle/$kategori/$kod",
+                url = "${Config.BASE_URL}admin/persona-guncelle/${yol(kategori, kod)}",
                 formData = parcalar,
             ) {
                 method = HttpMethod.Put
@@ -249,7 +250,7 @@ class ApiService(private val client: HttpClient) {
     suspend fun personaGetir(kategori: String, kod: String): PersonaDetay {
         return try {
             val hamCevap = calVeHamMetniAl {
-                client.get("${Config.BASE_URL}admin/persona/$kategori/$kod")
+                client.get("${Config.BASE_URL}admin/persona/${yol(kategori, kod)}")
             }
             apiJson.decodeFromString(hamCevap)
         } catch (e: ClientRequestException) {
@@ -259,7 +260,7 @@ class ApiService(private val client: HttpClient) {
 
     suspend fun personaSil(kategori: String, kod: String) {
         try {
-            client.delete("${Config.BASE_URL}admin/persona-sil/$kategori/$kod")
+            client.delete("${Config.BASE_URL}admin/persona-sil/${yol(kategori, kod)}")
         } catch (e: ClientRequestException) {
             adminHataFirlat(e)
         }
@@ -365,3 +366,10 @@ class ApiService(private val client: HttpClient) {
 
 @Serializable
 private data class HataYaniti(val detail: String)
+
+/**
+ * URL yolu parçalarını (kategori, kod) birleştirir; her parça ayrı ayrı
+ * yüzde-kodlanır. Böylece bir değerdeki "/", "?", "#", boşluk ya da Türkçe
+ * karakter yolun yapısını bozamaz, başka bir uç noktaya taşınamaz.
+ */
+internal fun yol(vararg parcalar: String): String = parcalar.joinToString("/") { it.encodeURLPathPart() }

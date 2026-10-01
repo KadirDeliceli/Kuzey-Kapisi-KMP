@@ -1,5 +1,7 @@
 package com.kuzeykapisi.app.config
 
+import com.kuzeykapisi.app.data.remote.yol
+
 object Config {
     // GERÇEK CİHAZ (Android telefon / iOS gerçek cihaz, PC ile aynı ağda):
     // PC'nin LAN IP'si — `ipconfig` (Windows) ile bul, değişebilir.
@@ -14,5 +16,5 @@ object Config {
     // Web (tarayıcı, başka cihaz): PC'nin LAN IP'si
     // CANLI:                  "https://api.kuzeykapisi.example.com/"
 
-    fun gorselUrl(kategori: String, kod: String) = "${BASE_URL}gorseller/$kategori/$kod"
+    fun gorselUrl(kategori: String, kod: String) = "${BASE_URL}gorseller/${yol(kategori, kod)}"
 }
