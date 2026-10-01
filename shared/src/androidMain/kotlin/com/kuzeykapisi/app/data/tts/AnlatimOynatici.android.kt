@@ -8,10 +8,12 @@ import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.location.AndroidContextHolder
+import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Google'ın kendi TTS motoru — kurulu ise OEM (Samsung vb.) motorlarından genelde daha kaliteli sesler sunar. */
 private const val GOOGLE_TTS_PAKET_ADI = "com.google.android.tts"
@@ -19,6 +21,9 @@ private const val GOOGLE_TTS_PAKET_ADI = "com.google.android.tts"
 /** Ses hızı/perdesi — kolayca ayarlanabilir sabitler. */
 private const val KONUSMA_HIZI = 0.92f
 private const val KONUSMA_PERDESI = 1.0f
+
+/** Açık (shutdown edilmemiş) TextToSpeech motoru sayısı — yalnızca sızıntı teşhisi için loglanır. */
+private val canliMotorSayisi = AtomicInteger(0)
 
 @Suppress("DEPRECATION")
 actual class AnlatimOynatici actual constructor() {
@@ -36,6 +41,11 @@ actual class AnlatimOynatici actual constructor() {
     @Volatile private var tts: TextToSpeech? = null
     @Volatile private var hazir = false
     @Volatile private var bekleyenEylem: (() -> Unit)? = null
+
+    // serbestBirak() çağrıldıktan sonra bu nesne bir daha motor YARATMAZ:
+    // motor hazır olmadan ekran kapanırsa ertelenmiş initTamamlandi()
+    // "motor == null" görüp yeni bir motor açardı ve o motor hiç kapanmazdı.
+    @Volatile private var serbestBirakildi = false
 
     // TextToSpeech native pause/resume desteklemez — konum burada simüle
     // edilir. orijinalMetin: son oynat() ile verilen tam metin. sonKarakterKonumu:
@@ -88,6 +98,7 @@ actual class AnlatimOynatici actual constructor() {
     }
 
     private fun motoruBaslat(context: Context, googleMotoruDene: Boolean) {
+        if (serbestBirakildi) return
         val dinleyici = TextToSpeech.OnInitListener { sonuc ->
             // onInit, motor bağlanamadığında TextToSpeech KURUCUSUNUN İÇİNDEN
             // senkron olarak çağrılabilir — o anda 'tts' alanı henüz atanmamış
@@ -103,12 +114,23 @@ actual class AnlatimOynatici actual constructor() {
                 TextToSpeech(context, dinleyici)
             }
         }.getOrNull()
+        if (yeniTts != null) {
+            Logger.d { "TTS motoru açıldı (açık motor: ${canliMotorSayisi.incrementAndGet()})" }
+        }
         tts = yeniTts
         yeniTts?.setOnUtteranceProgressListener(ilerlemeDinleyicisi)
     }
 
+    private fun motoruKapat(motor: TextToSpeech?) {
+        if (motor == null) return
+        runCatching { motor.shutdown() }
+        Logger.d { "TTS motoru kapatıldı (açık motor: ${canliMotorSayisi.decrementAndGet()})" }
+    }
+
     /** Motor/dil/ses seçiminin TAMAMI init tamamlandıktan SONRA yapılır. */
     private fun initTamamlandi(sonuc: Int, context: Context, googleMotoruDenendi: Boolean) {
+        // Ekran motor hazır olmadan kapandıysa: hiçbir şey yapma, YENİ motor yaratma.
+        if (serbestBirakildi) return
         val motor = tts
         if (sonuc != TextToSpeech.SUCCESS || motor == null) {
             // Google motoru istendi ama açılamadı (kurulu değil / bağlanamadı).
@@ -116,7 +138,7 @@ actual class AnlatimOynatici actual constructor() {
             // BAŞINA düşmez — bu yüzden burada varsayılan motorla bir kez daha
             // denenir; ancak o da başarısız olursa hata gösterilir.
             if (googleMotoruDenendi) {
-                runCatching { motor?.shutdown() }
+                motoruKapat(motor)
                 tts = null
                 motoruBaslat(context, googleMotoruDene = false)
             } else {
@@ -235,10 +257,13 @@ actual class AnlatimOynatici actual constructor() {
     }
 
     actual fun serbestBirak() {
+        serbestBirakildi = true
+        // Henüz çalışmamış, ertelenmiş initTamamlandi() çağrıları da iptal.
+        anaThread.removeCallbacksAndMessages(null)
         aktifSeslendirmeId = null
         bekleyenEylem = null
         hazir = false
-        tts?.shutdown()
+        motoruKapat(tts)
         tts = null
     }
 }

@@ -62,7 +62,7 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
                     style.border = "none"
                     style.width = "100%"
                     style.height = "100%"
-                    srcdoc = html
+                    // İlk yükleme update'te yapılır (factory'nin hemen ardından çağrılır).
                 }
             }.getOrElse {
                 hata = true
@@ -73,7 +73,11 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
         },
         modifier = modifier,
         update = { iframe ->
-            runCatching { iframe.srcdoc = html }.onFailure { hata = true }
+            // srcdoc'a AYNI değeri yeniden atamak bile iframe'i baştan yükler
+            // (harita titrer, yakınlaştırma sıfırlanır) — yalnızca değiştiyse ata.
+            if (iframe.srcdoc != html) {
+                runCatching { iframe.srcdoc = html }.onFailure { hata = true }
+            }
         },
     )
 }

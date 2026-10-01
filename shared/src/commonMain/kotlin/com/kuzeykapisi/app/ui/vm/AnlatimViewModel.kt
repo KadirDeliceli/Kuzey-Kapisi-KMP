@@ -11,6 +11,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -48,21 +49,23 @@ class AnlatimViewModel(
 
     fun yukle() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(yukleniyor = true, hata = null, anlatimYok = false)
+            _state.update { it.copy(yukleniyor = true, hata = null, anlatimYok = false) }
             try {
                 val metin = when (kaynak) {
                     is AnlatimKaynagi.Persona -> repo.anlatimGetir(kaynak.kategori, kaynak.kod)
                     is AnlatimKaynagi.RotaDuragi -> repo.rotaAnlatimGetir(kaynak.mekanId)
                 }
-                _state.value = if (metin.isNullOrBlank()) {
-                    _state.value.copy(yukleniyor = false, anlatimYok = true)
-                } else {
-                    _state.value.copy(metin = metin, yukleniyor = false)
+                _state.update { st ->
+                    if (metin.isNullOrBlank()) {
+                        st.copy(yukleniyor = false, anlatimYok = true)
+                    } else {
+                        st.copy(metin = metin, yukleniyor = false)
+                    }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "anlatım yüklenemedi: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(yukleniyor = false, hata = Metinler.hataMesaji(e))
+                _state.update { it.copy(yukleniyor = false, hata = Metinler.hataMesaji(e)) }
             }
         }
     }

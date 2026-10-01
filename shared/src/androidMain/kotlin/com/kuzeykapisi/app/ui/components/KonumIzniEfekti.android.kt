@@ -6,19 +6,23 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 
 @Composable
-actual fun KonumIzniEfekti() {
+actual fun KonumIzniEfekti(onSonuc: (verildi: Boolean) -> Unit) {
     val context = LocalContext.current
+    val guncelOnSonuc by rememberUpdatedState(onSonuc)
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { /* sonuç guncelKonumAl() çağrıldığında tekrar kontrol edilir */ }
+    ) { verildi -> guncelOnSonuc(verildi) }
 
     LaunchedEffect(Unit) {
         val izinli = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
-        if (!izinli) launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        // İzin zaten varsa sonuç hemen bildirilir; yoksa diyalog sonucu beklenir.
+        if (izinli) guncelOnSonuc(true) else launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 }

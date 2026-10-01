@@ -23,6 +23,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -64,17 +66,17 @@ class ChatViewModel(
     /** Gönderim uyarısını gösterir ve [AG_UYARISI_SURESI] sonra kendiliğinden kaldırır. */
     private fun agUyarisiGoster(mesaj: String) {
         agUyarisiZamanlayici?.cancel()
-        _state.value = _state.value.copy(agUyarisi = mesaj)
+        _state.update { it.copy(agUyarisi = mesaj) }
         agUyarisiZamanlayici = viewModelScope.launch {
             delay(AG_UYARISI_SURESI)
-            _state.value = _state.value.copy(agUyarisi = null)
+            _state.update { it.copy(agUyarisi = null) }
         }
     }
 
     private fun agUyarisiniKaldir() {
         agUyarisiZamanlayici?.cancel()
         agUyarisiZamanlayici = null
-        if (_state.value.agUyarisi != null) _state.value = _state.value.copy(agUyarisi = null)
+        _state.update { it.copy(agUyarisi = null) }
     }
 
     init {
@@ -94,21 +96,23 @@ class ChatViewModel(
 
     private fun basla() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(yukleniyor = true, hata = null)
+            _state.update { it.copy(yukleniyor = true, hata = null) }
             Logger.d { "oturum başlatılıyor (kategori=$kategori, oge=$oge)" }
             try {
                 val yanit = repo.oturumBaslat(kategori, oge)
                 Logger.d { "oturum başlatıldı" }
-                _state.value = _state.value.copy(
-                    baslik = yanit.baslik,
-                    sessionId = yanit.sessionId,
-                    mesajlar = listOf(Mesaj(metin = yanit.karsilama, benden = false)),
-                    yukleniyor = false,
-                )
+                _state.update {
+                    it.copy(
+                        baslik = yanit.baslik,
+                        sessionId = yanit.sessionId,
+                        mesajlar = listOf(Mesaj(metin = yanit.karsilama, benden = false)),
+                        yukleniyor = false,
+                    )
+                }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "oturum başlatılamadı: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(yukleniyor = false, hata = Metinler.hataMesaji(e))
+                _state.update { it.copy(yukleniyor = false, hata = Metinler.hataMesaji(e)) }
             }
         }
     }
@@ -118,33 +122,30 @@ class ChatViewModel(
         if (mesaj.isBlank()) return
         // Yeni deneme başlar başlamaz eski uyarı kalkar (sonucu beklenmez).
         agUyarisiniKaldir()
-        _state.value = _state.value.copy(
-            mesajlar = _state.value.mesajlar + Mesaj(metin = mesaj, benden = true),
-            yaziyor = true,
-        )
+        _state.update { st ->
+            st.copy(
+                mesajlar = st.mesajlar + Mesaj(metin = mesaj, benden = true),
+                yaziyor = true,
+            )
+        }
         viewModelScope.launch {
             try {
                 val sonuc = repo.guvenliSohbet(kategori, oge, sessionId, mesaj)
-                var mesajlar = _state.value.mesajlar
-                if (sonuc.yenilendi) {
-                    mesajlar = mesajlar + Mesaj(
-                        metin = Metinler.SOHBET_YENILENDI,
-                        benden = false,
-                        sistemNotu = true,
-                    )
+                // Yeni mesajlar, yazma ANINDAKİ listeye eklenir (atomik): istek
+                // sürerken eklenen başka bir mesaj kaybolmaz.
+                val yeniMesajlar = buildList {
+                    if (sonuc.yenilendi) add(Mesaj(metin = Metinler.SOHBET_YENILENDI, benden = false, sistemNotu = true))
+                    add(Mesaj(metin = sonuc.cevap, benden = false))
                 }
-                mesajlar = mesajlar + Mesaj(metin = sonuc.cevap, benden = false)
-                _state.value = _state.value.copy(
-                    sessionId = sonuc.sessionId,
-                    mesajlar = mesajlar,
-                    yaziyor = false,
-                )
+                val guncel = _state.updateAndGet {
+                    it.copy(sessionId = sonuc.sessionId, mesajlar = it.mesajlar + yeniMesajlar, yaziyor = false)
+                }
                 agUyarisiniKaldir()
-                Logger.d { "sohbet yanıtı alındı (yenilendi=${sonuc.yenilendi}, mesaj sayısı=${mesajlar.size})" }
+                Logger.d { "sohbet yanıtı alındı (yenilendi=${sonuc.yenilendi}, mesaj sayısı=${guncel.mesajlar.size})" }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "sohbet hatası: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(yaziyor = false)
+                _state.update { it.copy(yaziyor = false) }
                 agUyarisiGoster(Metinler.hataMesaji(e))
             }
         }
@@ -175,24 +176,19 @@ class ChatViewModel(
         val sessionId = _state.value.sessionId ?: return
         Logger.d { "sesli mesaj gönderiliyor" }
         agUyarisiniKaldir()
-        _state.value = _state.value.copy(yaziyor = true)
+        _state.update { it.copy(yaziyor = true) }
         try {
             val sonuc = repo.guvenliSesliSohbet(kategori, oge, sessionId, ses)
-            var mesajlar = _state.value.mesajlar + Mesaj(metin = sonuc.kullaniciMetni, benden = true)
-            if (sonuc.yenilendi) {
-                mesajlar = mesajlar + Mesaj(
-                    metin = Metinler.SOHBET_YENILENDI,
-                    benden = false,
-                    sistemNotu = true,
-                )
+            val yeniMesajlar = buildList {
+                add(Mesaj(metin = sonuc.kullaniciMetni, benden = true))
+                if (sonuc.yenilendi) add(Mesaj(metin = Metinler.SOHBET_YENILENDI, benden = false, sistemNotu = true))
+                add(Mesaj(metin = sonuc.cevap, benden = false))
             }
-            val botMesajId = mesajlar.size
-            mesajlar = mesajlar + Mesaj(metin = sonuc.cevap, benden = false)
-            _state.value = _state.value.copy(
-                sessionId = sonuc.sessionId,
-                mesajlar = mesajlar,
-                yaziyor = false,
-            )
+            val guncel = _state.updateAndGet {
+                it.copy(sessionId = sonuc.sessionId, mesajlar = it.mesajlar + yeniMesajlar, yaziyor = false)
+            }
+            // Bot cevabı listenin son öğesi: otomatik okunacak mesajın indeksi.
+            val botMesajId = guncel.mesajlar.lastIndex
             agUyarisiniKaldir()
             mesajSesiCal(botMesajId)
         } catch (e: Exception) {
@@ -205,7 +201,7 @@ class ChatViewModel(
             } else {
                 Metinler.hataMesaji(e)
             }
-            _state.value = _state.value.copy(yaziyor = false)
+            _state.update { it.copy(yaziyor = false) }
             agUyarisiGoster(hataMetni)
         }
     }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class RotaYerDuzenleUiState(
@@ -54,13 +55,13 @@ class RotaYerDuzenleViewModel(
     )
     val state: StateFlow<RotaYerDuzenleUiState> = _state.asStateFlow()
 
-    fun adDegisti(v: String) { _state.value = _state.value.copy(ad = v) }
-    fun enlemDegisti(v: String) { _state.value = _state.value.copy(enlem = v) }
-    fun boylamDegisti(v: String) { _state.value = _state.value.copy(boylam = v) }
-    fun sureDkDegisti(v: String) { _state.value = _state.value.copy(sureDk = v) }
-    fun aciklamaDegisti(v: String) { _state.value = _state.value.copy(aciklama = v) }
-    fun anlatimDegisti(v: String) { _state.value = _state.value.copy(anlatim = v) }
-    fun anlatimiKaldirDegisti(v: Boolean) { _state.value = _state.value.copy(anlatimiKaldir = v) }
+    fun adDegisti(v: String) { _state.update { it.copy(ad = v) } }
+    fun enlemDegisti(v: String) { _state.update { it.copy(enlem = v) } }
+    fun boylamDegisti(v: String) { _state.update { it.copy(boylam = v) } }
+    fun sureDkDegisti(v: String) { _state.update { it.copy(sureDk = v) } }
+    fun aciklamaDegisti(v: String) { _state.update { it.copy(aciklama = v) } }
+    fun anlatimDegisti(v: String) { _state.update { it.copy(anlatim = v) } }
+    fun anlatimiKaldirDegisti(v: Boolean) { _state.update { it.copy(anlatimiKaldir = v) } }
 
     /**
      * Kullanıcı anlatım alanına hiç dokunmadıysa (metin çekilen orijinalle
@@ -79,19 +80,19 @@ class RotaYerDuzenleViewModel(
         val boylam = s.boylam.trim().replace(',', '.').toDoubleOrNull()
         val sureDk = s.sureDk.trim().toIntOrNull()
         if (s.ad.isBlank() || s.aciklama.isBlank()) {
-            _state.value = s.copy(genelHata = Metinler.FORM_MEKAN_ZORUNLU_ALANLAR)
+            _state.update { it.copy(genelHata = Metinler.FORM_MEKAN_ZORUNLU_ALANLAR) }
             return
         }
         if (enlem == null || boylam == null) {
-            _state.value = s.copy(genelHata = Metinler.FORM_KOORDINAT_GECERSIZ)
+            _state.update { it.copy(genelHata = Metinler.FORM_KOORDINAT_GECERSIZ) }
             return
         }
         if (sureDk == null || sureDk <= 0) {
-            _state.value = s.copy(genelHata = Metinler.FORM_SURE_GECERSIZ)
+            _state.update { it.copy(genelHata = Metinler.FORM_SURE_GECERSIZ) }
             return
         }
         viewModelScope.launch {
-            _state.value = _state.value.copy(kaydediliyor = true, genelHata = null, basariMesaji = null)
+            _state.update { it.copy(kaydediliyor = true, genelHata = null, basariMesaji = null) }
             try {
                 repo.rotaYeriGuncelle(
                     mekanId = mekanId,
@@ -104,21 +105,25 @@ class RotaYerDuzenleViewModel(
                         anlatim = anlatimGonderilecek(s),
                     ),
                 )
-                _state.value = _state.value.copy(kaydediliyor = false, basariMesaji = Metinler.GUNCELLENDI)
+                _state.update { it.copy(kaydediliyor = false, basariMesaji = Metinler.GUNCELLENDI) }
             } catch (e: AdminApiHatasi) {
                 Logger.d { "rota-yer-guncelle hatası: ${e.logOzeti()}" }
-                _state.value = if (e.httpKodu == 401) {
-                    _state.value.copy(kaydediliyor = false, oturumGecersiz = true)
-                } else {
-                    _state.value.copy(kaydediliyor = false, genelHata = Metinler.adminHataMesaji(e))
+                _state.update { st ->
+                    if (e.httpKodu == 401) {
+                        st.copy(kaydediliyor = false, oturumGecersiz = true)
+                    } else {
+                        st.copy(kaydediliyor = false, genelHata = Metinler.adminHataMesaji(e))
+                    }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "rota-yer-guncelle hatası: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(
-                    kaydediliyor = false,
-                    genelHata = Metinler.hataMesaji(e),
-                )
+                _state.update {
+                    it.copy(
+                        kaydediliyor = false,
+                        genelHata = Metinler.hataMesaji(e),
+                    )
+                }
             }
         }
     }

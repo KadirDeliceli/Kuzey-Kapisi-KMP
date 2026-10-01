@@ -41,20 +41,39 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
         return
     }
 
+    // Son yüklenen HTML (UIView.tag yalnızca Int tutar; bu yüzden remember).
+    val sonYuklenen = remember { SonYuklenenHtml() }
+
     UIKitView(
         factory = {
             runCatching {
-                WKWebView(frame = CGRectZero, configuration = WKWebViewConfiguration()).apply {
-                    loadHTMLString(html, baseURL = null)
-                }
+                // İlk yükleme update'te yapılır (factory'nin hemen ardından çağrılır).
+                WKWebView(frame = CGRectZero, configuration = WKWebViewConfiguration())
             }.getOrElse {
                 hata = true
                 WKWebView(frame = CGRectZero, configuration = WKWebViewConfiguration())
             }
         },
         update = { webView ->
-            runCatching { webView.loadHTMLString(html, baseURL = null) }.onFailure { hata = true }
+            // Yalnızca HTML gerçekten değiştiyse yeniden yükle (titreme yok,
+            // kullanıcının yakınlaştırması korunur).
+            if (sonYuklenen.html != html) {
+                runCatching {
+                    webView.loadHTMLString(html, baseURL = null)
+                    sonYuklenen.html = html
+                }.onFailure { hata = true }
+            }
+        },
+        onRelease = { webView ->
+            runCatching {
+                webView.stopLoading()
+                webView.navigationDelegate = null
+                webView.UIDelegate = null
+            }
+            sonYuklenen.html = null
         },
         modifier = modifier,
     )
 }
+
+private class SonYuklenenHtml(var html: String? = null)

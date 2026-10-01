@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 
@@ -40,7 +41,7 @@ class AdminViewModel(
 
     init {
         viewModelScope.launch {
-            oturum.acik.collect { acik -> _state.value = _state.value.copy(oturumAcik = acik) }
+            oturum.acik.collect { acik -> _state.update { it.copy(oturumAcik = acik) } }
         }
         // Oturum başka bir nedenle kapandıysa giriş dialogu açıldığında
         // kullanıcıya NEDEN yeniden giriş istendiği söylenir.
@@ -51,7 +52,7 @@ class AdminViewModel(
                     OturumSonlanmaNedeni.YETKISIZ -> Metinler.ADMIN_OTURUM_GECERSIZ
                     OturumSonlanmaNedeni.ZAMAN_ASIMI -> Metinler.ADMIN_OTURUM_SURESI_DOLDU
                 }
-                _state.value = _state.value.copy(hata = mesaj, yukleniyor = false)
+                _state.update { it.copy(hata = mesaj, yukleniyor = false) }
             }
         }
         // Hareketsizlik zamanlayıcısı: her admin isteği süreyi yeniler, bu
@@ -73,30 +74,32 @@ class AdminViewModel(
 
     fun girisYap(kullaniciAdi: String, sifre: String) {
         if (kullaniciAdi.isBlank() || sifre.isBlank()) {
-            _state.value = _state.value.copy(hata = Metinler.GIRIS_BILGI_EKSIK)
+            _state.update { it.copy(hata = Metinler.GIRIS_BILGI_EKSIK) }
             return
         }
         viewModelScope.launch {
-            _state.value = _state.value.copy(yukleniyor = true, hata = null)
+            _state.update { it.copy(yukleniyor = true, hata = null) }
             try {
                 val token = repo.adminGiris(kullaniciAdi.trim(), sifre)
                 oturum.baslat(token)
-                _state.value = _state.value.copy(yukleniyor = false, hata = null)
+                _state.update { it.copy(yukleniyor = false, hata = null) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "admin girişi başarısız: ${e.logOzeti()}" }
                 // Yalnızca gerçek 401 "şifre hatalı" demektir; sunucu kapalıyken
                 // kullanıcıya şifresinin yanlış olduğu söylenmez.
-                _state.value = _state.value.copy(
-                    yukleniyor = false,
-                    hata = Metinler.girisHataMesaji(e),
-                )
+                _state.update {
+                    it.copy(
+                        yukleniyor = false,
+                        hata = Metinler.girisHataMesaji(e),
+                    )
+                }
             }
         }
     }
 
     fun hataTemizle() {
-        _state.value = _state.value.copy(hata = null)
+        _state.update { it.copy(hata = null) }
     }
 
     fun cikisYap() {

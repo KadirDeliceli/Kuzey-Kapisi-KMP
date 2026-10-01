@@ -11,6 +11,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class CatalogUiState(
@@ -29,15 +30,15 @@ class CatalogViewModel(private val repo: KuzeyRepository) : ViewModel() {
 
     fun yukle() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(yukleniyor = true, hata = null)
+            _state.update { it.copy(yukleniyor = true, hata = null) }
             try {
                 val katalog = repo.katalog()
                 Logger.d { "katalog yüklendi: ${katalog.size} kategori" }
-                _state.value = _state.value.copy(katalog = katalog, yukleniyor = false)
+                _state.update { it.copy(katalog = katalog, yukleniyor = false) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "katalog yüklenemedi: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(yukleniyor = false, hata = Metinler.hataMesaji(e))
+                _state.update { it.copy(yukleniyor = false, hata = Metinler.hataMesaji(e)) }
             }
         }
     }

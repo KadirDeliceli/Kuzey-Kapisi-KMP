@@ -96,12 +96,11 @@ fun RotaScreen(
     onGeri: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    KonumIzniEfekti()
-
-    // İlk yükleme RotaViewModel oluşurken (init) bir kez yapılır; eski boş
-    // onDispose'lu DisposableEffect'e gerek kalmadı.
+    // Kategoriler RotaViewModel oluşurken yüklenir; konum + varsayılan rotalar
+    // ise konum izni SONUÇLANINCA başlar (izin diyaloğu açıkken konum istenmez).
     val vm = viewModel { RotaViewModel(repo) }
     val ui by vm.state.collectAsState()
+    KonumIzniEfekti(onSonuc = { verildi -> vm.konumIzniSonuclandi(verildi) })
 
     // Rota durağı anlatım overlay'i: RotaDetayGorunumu'nun ÜSTÜNE bindirilir,
     // altındaki içerik (dolayısıyla vm'nin gosterilenRota state'i ve
@@ -278,7 +277,18 @@ private fun RotaGaleriGorunumu(
         AltEtiket("İlgi Alanları (en fazla 4)", modifier = Modifier.padding(start = 6.dp))
         Spacer(modifier = Modifier.height(10.dp))
         val kategoriler = ui.kategoriler
-        if (kategoriler == null) {
+        val kategoriHatasi = ui.kategoriHatasi
+        if (kategoriler == null && kategoriHatasi != null) {
+            // Yükleme başarısız: "yükleniyor"da takılı kalmaz, tekrar denenebilir.
+            Column(modifier = Modifier.padding(start = 6.dp)) {
+                HataMetni(kategoriHatasi)
+                IkincilButon(
+                    metin = "Tekrar dene",
+                    onClick = { vm.kategorileriTekrarDene() },
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+            }
+        } else if (kategoriler == null) {
             BosDurumGorunumu(
                 mesaj = Metinler.ROTA_KATEGORILER_YUKLENIYOR,
                 modifier = Modifier.padding(start = 6.dp),

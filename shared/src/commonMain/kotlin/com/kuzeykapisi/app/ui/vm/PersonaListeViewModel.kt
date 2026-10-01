@@ -14,6 +14,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class PersonaListeUiState(
@@ -39,23 +40,25 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
 
     fun yukle() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(yukleniyor = true, hata = null)
+            _state.update { it.copy(yukleniyor = true, hata = null) }
             try {
                 val katalog = repo.katalog()
-                _state.value = _state.value.copy(katalog = katalog, yukleniyor = false)
+                _state.update { it.copy(katalog = katalog, yukleniyor = false) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "persona listesi yüklenemedi: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(
-                    yukleniyor = false,
-                    hata = Metinler.LISTE_YUKLENEMEDI,
-                )
+                _state.update {
+                    it.copy(
+                        yukleniyor = false,
+                        hata = Metinler.LISTE_YUKLENEMEDI,
+                    )
+                }
             }
         }
     }
 
     fun kategoriSec(kategori: String) {
-        _state.value = _state.value.copy(kategori = kategori)
+        _state.update { it.copy(kategori = kategori) }
     }
 
     /**
@@ -67,63 +70,71 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
     fun duzenlemeyiBaslat(oge: KatalogOge, onHazir: (PersonaDetay) -> Unit) {
         val kategori = _state.value.kategori
         viewModelScope.launch {
-            _state.value = _state.value.copy(duzenlemeYukleniyorKod = oge.kod, duzenlemeHatasi = null)
+            _state.update { it.copy(duzenlemeYukleniyorKod = oge.kod, duzenlemeHatasi = null) }
             try {
                 val detay = repo.personaGetir(kategori = kategori, kod = oge.kod)
-                _state.value = _state.value.copy(duzenlemeYukleniyorKod = null)
+                _state.update { it.copy(duzenlemeYukleniyorKod = null) }
                 onHazir(detay)
             } catch (e: AdminApiHatasi) {
                 Logger.d { "persona-getir hatası: ${e.logOzeti()}" }
-                _state.value = if (e.httpKodu == 401) {
-                    _state.value.copy(duzenlemeYukleniyorKod = null, oturumGecersiz = true)
-                } else {
-                    _state.value.copy(
-                        duzenlemeYukleniyorKod = null,
-                        duzenlemeHatasi = Metinler.adminHataMesaji(e),
-                    )
+                _state.update { st ->
+                    if (e.httpKodu == 401) {
+                        st.copy(duzenlemeYukleniyorKod = null, oturumGecersiz = true)
+                    } else {
+                        st.copy(
+                            duzenlemeYukleniyorKod = null,
+                            duzenlemeHatasi = Metinler.adminHataMesaji(e),
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "persona-getir hatası: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(
-                    duzenlemeYukleniyorKod = null,
-                    duzenlemeHatasi = Metinler.ICERIK_YUKLENEMEDI,
-                )
+                _state.update {
+                    it.copy(
+                        duzenlemeYukleniyorKod = null,
+                        duzenlemeHatasi = Metinler.ICERIK_YUKLENEMEDI,
+                    )
+                }
             }
         }
     }
 
     fun silmeyiBaslat(oge: KatalogOge) {
-        _state.value = _state.value.copy(silinecekOge = oge, silmeHatasi = null)
+        _state.update { it.copy(silinecekOge = oge, silmeHatasi = null) }
     }
 
     fun silmeyiVazgec() {
-        _state.value = _state.value.copy(silinecekOge = null)
+        _state.update { it.copy(silinecekOge = null) }
     }
 
     fun silmeyiOnayla() {
         val oge = _state.value.silinecekOge ?: return
         val kategori = _state.value.kategori
         viewModelScope.launch {
-            _state.value = _state.value.copy(silmeYukleniyor = true, silmeHatasi = null)
+            _state.update { it.copy(silmeYukleniyor = true, silmeHatasi = null) }
             try {
                 repo.personaSil(kategori = kategori, kod = oge.kod)
-                _state.value = _state.value.copy(silmeYukleniyor = false, silinecekOge = null)
+                _state.update { it.copy(silmeYukleniyor = false, silinecekOge = null) }
                 yukle()
             } catch (e: AdminApiHatasi) {
                 Logger.d { "persona-sil hatası: ${e.logOzeti()}" }
-                _state.value = if (e.httpKodu == 401) {
-                    _state.value.copy(silmeYukleniyor = false, oturumGecersiz = true)
-                } else {
-                    _state.value.copy(silmeYukleniyor = false, silmeHatasi = Metinler.adminHataMesaji(e))
+                _state.update { st ->
+                    if (e.httpKodu == 401) {
+                        st.copy(silmeYukleniyor = false, oturumGecersiz = true)
+                    } else {
+                        st.copy(silmeYukleniyor = false, silmeHatasi = Metinler.adminHataMesaji(e))
+                    }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Logger.d { "persona-sil hatası: ${e.logOzeti()}" }
-                _state.value = _state.value.copy(
-                    silmeYukleniyor = false,
-                    silmeHatasi = Metinler.hataMesaji(e),
-                )
+                _state.update {
+                    it.copy(
+                        silmeYukleniyor = false,
+                        silmeHatasi = Metinler.hataMesaji(e),
+                    )
+                }
             }
         }
     }

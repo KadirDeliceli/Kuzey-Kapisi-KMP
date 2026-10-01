@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kuzeykapisi.app.Metinler
+import com.kuzeykapisi.app.log.Logger
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -46,7 +47,8 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
                     )
                     settings.javaScriptEnabled = true
                     webViewClient = WebViewClient()
-                    loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+                    // İlk yükleme burada DEĞİL, hemen ardından çağrılan update'te:
+                    // eskiden ikisi de yüklüyordu ve harita açılışta iki kez çiziliyordu.
                 }
             }.getOrElse {
                 yuklemeHatasi = true
@@ -54,9 +56,27 @@ actual fun RotaHaritasiWebView(html: String, modifier: Modifier) {
             }
         },
         update = { webView ->
+            // Yalnızca HTML GERÇEKTEN değiştiyse yeniden yükle: aynı HTML ile
+            // gelen yeniden kompozisyonlar (scroll, durum değişimi) haritayı
+            // titretip kullanıcının yakınlaştırma/kaydırmasını sıfırlamasın.
+            // Son yüklenen HTML, WebView'ın kendi tag'inde tutulur.
+            if (webView.tag != html) {
+                runCatching {
+                    webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+                    webView.tag = html
+                    Logger.d { "rota haritası HTML yüklendi" }
+                }.onFailure { yuklemeHatasi = true }
+            }
+        },
+        // Görünüm kompozisyondan çıkınca WebView ve renderer kaynakları
+        // (JS motoru, karo indirmeleri) hemen bırakılır.
+        onRelease = { webView ->
             runCatching {
-                webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
-            }.onFailure { yuklemeHatasi = true }
+                webView.stopLoading()
+                webView.tag = null
+                webView.destroy()
+            }
+            Logger.d { "rota haritası WebView yok edildi" }
         },
     )
 }
