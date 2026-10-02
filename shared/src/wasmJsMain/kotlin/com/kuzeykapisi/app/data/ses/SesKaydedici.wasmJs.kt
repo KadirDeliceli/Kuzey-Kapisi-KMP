@@ -41,6 +41,7 @@ private external interface JsIzinAbonesi : JsAny {
     var aktif: Boolean
 }
 
+/*
 /**
  * navigator.mediaDevices.getUserMedia({audio:true}) + JS MediaRecorder ile
  * kayda başlar. TAMAMEN ASENKRONDUR (izin diyaloğu beklenir); [basladi] ya
@@ -141,9 +142,104 @@ private fun jsIzinDurumunuIzle(sonuc: (String) -> Unit, desteklenmiyor: () -> Un
             durum.onchange = function() { if (abone.aktif) sonuc(durum.state); };
         }).catch(function() { desteklenmiyor(); });
         return abone;
-    })();
+    })()
     """,
 )
+
+
+ */
+
+@JsFun("""
+(basladi, hataOldu) => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+        hataOldu('desteklenmiyor');
+        return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+        var mimeType = 'audio/webm';
+        try {
+            if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                mimeType = 'audio/webm;codecs=opus';
+            }
+        } catch (e) { }
+
+        var recorder;
+        try { recorder = new MediaRecorder(stream, { mimeType: mimeType }); }
+        catch (e) { recorder = new MediaRecorder(stream); }
+
+        var chunks = [];
+        recorder.ondataavailable = function(e) {
+            if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+
+        var durduruldu = false;
+        function akisiKapat() {
+            try { stream.getTracks().forEach(function(t) { t.stop(); }); } catch (e) { }
+        }
+
+        var tutamac = {
+            durdurVeAl: function(basarili, hataOldu) {
+                if (durduruldu) { hataOldu('zaten-durduruldu'); return; }
+                durduruldu = true;
+                recorder.onstop = function() {
+                    try {
+                        var blob = new Blob(chunks, { type: recorder.mimeType || mimeType });
+                        var okuyucu = new FileReader();
+                        okuyucu.onload = function(e) {
+                            var sonuc = e.target.result;
+                            var virgul = sonuc.indexOf(',');
+                            var b64 = virgul >= 0 ? sonuc.substring(virgul + 1) : sonuc;
+                            akisiKapat();
+                            basarili({ base64Veri: b64, mimeTipi: blob.type || mimeType });
+                        };
+                        okuyucu.onerror = function() { akisiKapat(); hataOldu('okuma-hatasi'); };
+                        okuyucu.readAsDataURL(blob);
+                    } catch (e) { akisiKapat(); hataOldu('durdurma-hatasi'); }
+                };
+                try { recorder.stop(); } catch (e) { akisiKapat(); hataOldu('durdurma-hatasi'); }
+            },
+            iptalEt: function() {
+                durduruldu = true;
+                try { recorder.onstop = null; recorder.stop(); } catch (e) { }
+                akisiKapat();
+            }
+        };
+
+        try {
+            recorder.start();
+            basladi(tutamac);
+        } catch (e) {
+            akisiKapat();
+            hataOldu('baslatma-hatasi');
+        }
+    }).catch(function(err) {
+        hataOldu((err && err.name) ? err.name : 'izin-reddedildi');
+    });
+}
+""")
+private external fun jsSesKaydiBaslat(
+    basladi: (JsSesKayitTutamaci) -> Unit,
+    hataOldu: (String) -> Unit,
+)
+
+@JsFun("""
+(sonuc, desteklenmiyor) => {
+    if (!navigator.permissions || !navigator.permissions.query) { 
+        desteklenmiyor(); 
+        return null; 
+    }
+    var abone = { aktif: true };
+    navigator.permissions.query({ name: 'microphone' }).then(function(durum) {
+        if (abone.aktif) sonuc(durum.state);
+        durum.onchange = function() { if (abone.aktif) sonuc(durum.state); };
+    }).catch(function() { desteklenmiyor(); });
+    return abone;
+}
+""")
+private external fun jsIzinDurumunuIzle(
+    sonuc: (String) -> Unit,
+    desteklenmiyor: () -> Unit
+): JsIzinAbonesi?
 
 @OptIn(ExperimentalEncodingApi::class)
 actual class SesKaydedici actual constructor() {
