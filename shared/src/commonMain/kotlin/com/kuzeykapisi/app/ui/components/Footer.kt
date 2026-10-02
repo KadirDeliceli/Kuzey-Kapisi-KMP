@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 
@@ -39,7 +40,7 @@ fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
                     Brush.horizontalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            SisGrisi.copy(alpha = 0.30f),
+                            SisGrisi.copy(alpha = Opaklik.YUZDE30),
                             Color.Transparent,
                         ),
                     ),

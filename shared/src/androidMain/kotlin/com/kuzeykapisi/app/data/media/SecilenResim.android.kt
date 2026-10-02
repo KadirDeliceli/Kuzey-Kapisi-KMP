@@ -1,7 +1,6 @@
-package com.kuzeykapisi.app.data.model
+package com.kuzeykapisi.app.data.media
 
-import com.kuzeykapisi.app.data.location.AndroidContextHolder
-import com.kuzeykapisi.app.data.media.ImagePickerHolder
+import com.kuzeykapisi.app.platform.AndroidContextHolder
 
 actual suspend fun resimSec(): SecilenResim? {
     val uri = ImagePickerHolder.sec() ?: return null

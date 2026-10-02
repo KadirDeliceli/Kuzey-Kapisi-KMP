@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
-import com.kuzeykapisi.app.Screen
+import com.kuzeykapisi.app.domain.Screen
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 

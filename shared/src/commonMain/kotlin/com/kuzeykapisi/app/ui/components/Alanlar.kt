@@ -20,15 +20,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.kuzeykapisi.app.data.model.SecilenResim
+import com.kuzeykapisi.app.data.media.SecilenResim
 import com.kuzeykapisi.app.ui.theme.AlanSekli
-import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.Kehribar
+import com.kuzeykapisi.app.ui.theme.NotrGeceAlcak
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 
 /**
  * Tüm form alanlarının ortak renk şeması: koyu, kendi zeminine hafifçe gömülü
@@ -39,21 +42,21 @@ fun kuzeyAlanRenkleri(): TextFieldColors = OutlinedTextFieldDefaults.colors(
     focusedTextColor = TasBeyazi,
     unfocusedTextColor = TasBeyazi,
     disabledTextColor = SisGrisi,
-    focusedContainerColor = AlcakYuzey,
-    unfocusedContainerColor = AlcakYuzey,
-    disabledContainerColor = AlcakYuzey.copy(alpha = 0.5f),
+    focusedContainerColor = NotrGeceAlcak,
+    unfocusedContainerColor = NotrGeceAlcak,
+    disabledContainerColor = NotrGeceAlcak.copy(alpha = Opaklik.YUZDE50),
     cursorColor = FenerAlevi,
     focusedBorderColor = FenerAlevi,
-    unfocusedBorderColor = SisGrisi.copy(alpha = 0.28f),
-    disabledBorderColor = SisGrisi.copy(alpha = 0.15f),
-    errorBorderColor = MaterialTheme.colorScheme.error,
+    unfocusedBorderColor = SisGrisi.copy(alpha = Opaklik.YUZDE28),
+    disabledBorderColor = SisGrisi.copy(alpha = Opaklik.YUZDE15),
+    errorBorderColor = Kehribar,
     focusedLabelColor = FenerAlevi,
     unfocusedLabelColor = SisGrisi,
-    disabledLabelColor = SisGrisi.copy(alpha = 0.5f),
+    disabledLabelColor = SisGrisi.copy(alpha = Opaklik.YUZDE50),
     focusedPlaceholderColor = SisGrisi,
     unfocusedPlaceholderColor = SisGrisi,
-    errorLabelColor = MaterialTheme.colorScheme.error,
-    errorCursorColor = MaterialTheme.colorScheme.error,
+    errorLabelColor = Kehribar,
+    errorCursorColor = Kehribar,
 )
 
 /**
@@ -91,7 +94,7 @@ fun KuzeyMetinAlani(
         textStyle = MaterialTheme.typography.bodyLarge,
         supportingText = when {
             hataMetni != null -> {
-                { Text(hataMetni, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                { Text(hataMetni, color = Kehribar, style = MaterialTheme.typography.bodySmall) }
             }
             yardimMetni != null -> {
                 { Text(yardimMetni, color = SisGrisi, style = MaterialTheme.typography.bodySmall) }
@@ -105,8 +108,8 @@ fun KuzeyMetinAlani(
 @Composable
 fun AlanBasligi(metin: String, modifier: Modifier = Modifier) {
     Text(
-        text = metin.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
+        text = metin.turkceBuyukHarf(),
+        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP14),
         color = SisGrisi,
         modifier = modifier,
     )

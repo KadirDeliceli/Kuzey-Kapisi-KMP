@@ -61,6 +61,7 @@ import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.NotrGeceCizgi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import kotlinx.coroutines.CancellationException
@@ -241,7 +242,7 @@ private fun SohbetButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
         label = "sohbetButonuOlcegi",
     )
     val golge by animateDpAsState(
-        targetValue = if (hoverlu || basili) 12.dp else 6.dp,
+        targetValue = if (hoverlu || basili) Yukseklik.DP12 else Yukseklik.DP6,
         animationSpec = tween(MIKRO_SURE),
         label = "sohbetButonuGolgesi",
     )

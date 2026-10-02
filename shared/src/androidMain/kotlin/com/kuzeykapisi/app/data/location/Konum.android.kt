@@ -1,4 +1,4 @@
-package com.kuzeykapisi.app.data.model
+package com.kuzeykapisi.app.data.location
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -7,7 +7,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.kuzeykapisi.app.data.location.AndroidContextHolder
+import com.kuzeykapisi.app.platform.AndroidContextHolder
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume

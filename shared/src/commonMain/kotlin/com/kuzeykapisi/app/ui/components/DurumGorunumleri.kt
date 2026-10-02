@@ -23,22 +23,30 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.Kehribar
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.hareketAzaltilsin
 
 /**
  * Yükleniyor göstergesi — dönen halka yerine bir fener nabzı: ortada sabit bir
- * ışık noktası, dışa doğru soluklaşarak genişleyen iki halka.
+ * ışık noktası, dışa doğru soluklaşarak genişleyen iki halka. "Hareketi azalt"
+ * tercihinde nabız hiç kurulmaz, halkalar durağan kalır.
  */
 @Composable
 fun NabizGostergesi(modifier: Modifier = Modifier, boyut: Dp = 40.dp) {
-    val gecis = rememberInfiniteTransition(label = "nabiz")
-    val evre by gecis.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(1600, easing = LinearEasing)),
-        label = "nabizEvresi",
-    )
+    val evre: Float = if (hareketAzaltilsin) {
+        0f
+    } else {
+        val gecis = rememberInfiniteTransition(label = "nabiz")
+        val canli by gecis.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(animation = tween(1600, easing = LinearEasing)),
+            label = "nabizEvresi",
+        )
+        canli
+    }
 
     Canvas(modifier = modifier.size(boyut)) {
         val merkezYaricap = size.minDimension * 0.11f
@@ -95,7 +103,7 @@ fun HataGorunumu(
             Text(
                 text = mesaj,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error,
+                color = Kehribar,
                 textAlign = TextAlign.Center,
             )
             if (onTekrarDene != null) {
@@ -115,7 +123,7 @@ fun HataMetni(mesaj: String, modifier: Modifier = Modifier) {
     Text(
         text = mesaj,
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.error,
+        color = Kehribar,
         modifier = modifier,
     )
 }

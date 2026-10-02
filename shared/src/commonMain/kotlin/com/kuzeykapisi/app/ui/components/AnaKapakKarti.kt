@@ -29,15 +29,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
@@ -103,7 +105,7 @@ fun AnaKapakKarti(
                 .aspectRatio(gorselOran)
                 .klavyeOdakHalkasi(odakli, KartSekli)
                 .shadow(
-                    elevation = if (etkilesim.hoverlu || etkilesim.basili) 14.dp else 6.dp,
+                    elevation = if (etkilesim.hoverlu || etkilesim.basili) Yukseklik.DP14 else Yukseklik.DP6,
                     shape = KartSekli,
                     ambientColor = KaranlikLacivert,
                     spotColor = KaranlikLacivert,
@@ -137,9 +139,9 @@ fun AnaKapakKarti(
                         Brush.verticalGradient(
                             colorStops = arrayOf(
                                 0f to Color.Transparent,
-                                0.42f to KaranlikLacivert.copy(alpha = 0.30f),
-                                0.72f to KaranlikLacivert.copy(alpha = 0.80f),
-                                1f to KaranlikLacivert.copy(alpha = 0.96f),
+                                0.42f to KaranlikLacivert.copy(alpha = Opaklik.YUZDE30),
+                                0.72f to KaranlikLacivert.copy(alpha = Opaklik.YUZDE80),
+                                1f to KaranlikLacivert.copy(alpha = Opaklik.YUZDE96),
                             ),
                         ),
                     ),
@@ -160,7 +162,7 @@ fun AnaKapakKarti(
                 if (etiket != null) {
                     Text(
                         text = etiket.turkceBuyukHarf(),
-                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
+                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP16),
                         color = FenerAlevi,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

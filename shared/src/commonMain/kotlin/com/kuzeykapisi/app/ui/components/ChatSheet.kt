@@ -61,20 +61,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.ses.KayitDurumu
 import com.kuzeykapisi.app.data.ses.MikrofonIzniDurumu
-import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.Kehribar
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.NotrGeceAlcak
+import com.kuzeykapisi.app.ui.theme.NotrGeceYuksek
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SatirSekli
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
-import com.kuzeykapisi.app.ui.theme.YuksekYuzey
+import com.kuzeykapisi.app.ui.theme.Yukseklik
+import com.kuzeykapisi.app.ui.theme.hareketAzaltilsin
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.vm.ChatViewModel
+import com.kuzeykapisi.app.ui.vm.Mesaj
 
 @Composable
 fun ChatSheet(
@@ -117,7 +121,7 @@ fun ChatSheet(
         // Başlık çubuğu: dar ekranda panel tam ekran olduğu için durum çubuğu
         // inset'i burada da uygulanır (edge-to-edge). Bu satır klavyeden
         // etkilenmez — sabit üst bölge olarak kalır.
-        Column(modifier = Modifier.fillMaxWidth().background(YuksekYuzey)) {
+        Column(modifier = Modifier.fillMaxWidth().background(NotrGeceYuksek)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -144,7 +148,7 @@ fun ChatSheet(
                         Brush.horizontalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                FenerAlevi.copy(alpha = 0.30f),
+                                FenerAlevi.copy(alpha = Opaklik.YUZDE30),
                                 Color.Transparent,
                             ),
                         ),
@@ -183,7 +187,7 @@ fun ChatSheet(
                                 TypingIndicator(
                                     modifier = Modifier
                                         .clip(SatirSekli)
-                                        .background(YuksekYuzey)
+                                        .background(NotrGeceYuksek)
                                         .padding(horizontal = 14.dp, vertical = 13.dp),
                                 )
                             }
@@ -200,7 +204,7 @@ fun ChatSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(AlcakYuzey)
+                .background(NotrGeceAlcak)
                 .imePadding()
                 .navigationBarsPadding()
                 .padding(12.dp),
@@ -252,7 +256,7 @@ fun ChatSheet(
             if (kayitHatasi != null) {
                 Text(
                     text = kayitHatasi ?: "",
-                    color = MaterialTheme.colorScheme.error,
+                    color = Kehribar,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 6.dp, start = 4.dp),
                 )
@@ -272,13 +276,13 @@ fun ChatSheet(
  * Geçici gönderim uyarısı bandı. [mesaj] null olunca kısa bir fade ile
  * kaybolur; kaybolurken son metni göstermeye devam eder (boş bant görünmez).
  * Ekran okuyucuya "polite" canlı bölge olarak duyurulur. Renk: uyarı tonu
- * (Kehribar / colorScheme.error) — SinopKirmizisi yıkıcı eylemlere kilitli.
+ * [Kehribar] — SinopKirmizisi yıkıcı eylemlere kilitli.
  */
 @Composable
 private fun AgUyarisiBandi(mesaj: String?) {
     var sonMesaj by remember { mutableStateOf(mesaj.orEmpty()) }
     if (mesaj != null && mesaj != sonMesaj) sonMesaj = mesaj
-    val uyariRengi = MaterialTheme.colorScheme.error
+    val uyariRengi = Kehribar
     AnimatedVisibility(
         visible = mesaj != null,
         enter = fadeIn(animationSpec = tween(MIKRO_SURE)),
@@ -289,8 +293,8 @@ private fun AgUyarisiBandi(mesaj: String?) {
                 .fillMaxWidth()
                 .padding(bottom = 10.dp)
                 .clip(SatirSekli)
-                .background(uyariRengi.copy(alpha = 0.12f))
-                .border(1.dp, uyariRengi.copy(alpha = 0.45f), SatirSekli)
+                .background(uyariRengi.copy(alpha = Opaklik.YUZDE12))
+                .border(1.dp, uyariRengi.copy(alpha = Opaklik.YUZDE45), SatirSekli)
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .semantics { liveRegion = LiveRegionMode.Polite },
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -356,9 +360,9 @@ private fun GonderButonu(etkin: Boolean, onClick: () -> Unit) {
     val odakli by interactionSource.collectIsFocusedAsState()
     val zemin by animateColorAsState(
         targetValue = when {
-            !etkin -> FenerAlevi.copy(alpha = 0.22f)
+            !etkin -> FenerAlevi.copy(alpha = Opaklik.YUZDE22)
             etkilesim.hoverlu || etkilesim.basili -> FenerAlevi
-            else -> FenerAlevi.copy(alpha = 0.92f)
+            else -> FenerAlevi.copy(alpha = Opaklik.YUZDE92)
         },
         animationSpec = tween(MIKRO_SURE),
         label = "gonderZemin",
@@ -417,7 +421,7 @@ private fun MesajBalonu(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(SatirSekli)
-                    .border(1.dp, SisGrisi.copy(alpha = 0.25f), SatirSekli)
+                    .border(1.dp, SisGrisi.copy(alpha = Opaklik.YUZDE25), SatirSekli)
                     .padding(horizontal = 14.dp, vertical = 10.dp),
             ) {
                 Text(
@@ -430,8 +434,8 @@ private fun MesajBalonu(
                 modifier = Modifier
                     .widthIn(max = 300.dp)
                     .clip(balonSekli)
-                    .background(FenerAlevi.copy(alpha = 0.14f))
-                    .border(1.dp, FenerAlevi.copy(alpha = 0.55f), balonSekli)
+                    .background(FenerAlevi.copy(alpha = Opaklik.YUZDE14))
+                    .border(1.dp, FenerAlevi.copy(alpha = Opaklik.YUZDE55), balonSekli)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Text(
@@ -443,9 +447,9 @@ private fun MesajBalonu(
             else -> Box(
                 modifier = Modifier
                     .widthIn(max = 300.dp)
-                    .shadow(3.dp, balonSekli, ambientColor = KaranlikLacivert, spotColor = KaranlikLacivert)
+                    .shadow(Yukseklik.DP3, balonSekli, ambientColor = KaranlikLacivert, spotColor = KaranlikLacivert)
                     .clip(balonSekli)
-                    .background(YuksekYuzey)
+                    .background(NotrGeceYuksek)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Text(
@@ -482,7 +486,7 @@ private fun SesButonu(durum: SesButonuDurumu, onClick: () -> Unit, modifier: Mod
     val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = when {
-            !etkin -> SisGrisi.copy(alpha = 0.35f)
+            !etkin -> SisGrisi.copy(alpha = Opaklik.YUZDE35)
             etkilesim.hoverlu || etkilesim.basili -> FenerAlevi
             else -> SisGrisi
         },
@@ -552,19 +556,28 @@ private fun MikrofonButonu(durum: KayitDurumu, onClick: () -> Unit) {
         label = "mikrofonRengi",
     )
 
-    val nabizGecisi = rememberInfiniteTransition(label = "mikrofonNabzi")
-    val nabizOlcek by nabizGecisi.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.18f,
-        animationSpec = infiniteRepeatable(animation = tween(700, easing = LinearEasing)),
-        label = "mikrofonNabzOlcegi",
-    )
-    val donusGecisi = nabizGecisi.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(animation = tween(900, easing = LinearEasing)),
-        label = "mikrofonSpinner",
-    )
+    // "Hareketi azalt" tercihinde ne kayıt nabzı ne de işleniyor spinner'ı
+    // kurulur — ikisi de durağan değerinde kalır (bkz. ui/theme/Hareket.kt).
+    val nabizOlcek: Float
+    val donusDerecesi: Float
+    if (hareketAzaltilsin) {
+        nabizOlcek = 1f
+        donusDerecesi = 0f
+    } else {
+        val nabizGecisi = rememberInfiniteTransition(label = "mikrofonNabzi")
+        nabizOlcek = nabizGecisi.animateFloat(
+            initialValue = 1f,
+            targetValue = 1.18f,
+            animationSpec = infiniteRepeatable(animation = tween(700, easing = LinearEasing)),
+            label = "mikrofonNabzOlcegi",
+        ).value
+        donusDerecesi = nabizGecisi.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(animation = tween(900, easing = LinearEasing)),
+            label = "mikrofonSpinner",
+        ).value
+    }
 
     Box(
         modifier = Modifier
@@ -572,7 +585,7 @@ private fun MikrofonButonu(durum: KayitDurumu, onClick: () -> Unit) {
             .size(44.dp)
             .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
-            .background(if (kayitta) FenerAlevi.copy(alpha = 0.16f) else Color.Transparent)
+            .background(if (kayitta) FenerAlevi.copy(alpha = Opaklik.YUZDE16) else Color.Transparent)
             .etkilesimli(
                 interactionSource,
                 !islemde,
@@ -586,7 +599,6 @@ private fun MikrofonButonu(durum: KayitDurumu, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         if (islemde) {
-            val donusDerecesi by donusGecisi
             Canvas(modifier = Modifier.size(18.dp)) {
                 rotate(donusDerecesi) {
                     drawArc(

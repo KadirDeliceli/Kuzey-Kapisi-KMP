@@ -7,8 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.kuzeykapisi.app.data.location.AndroidContextHolder
 import com.kuzeykapisi.app.data.media.ImagePickerHolder
+import com.kuzeykapisi.app.platform.AndroidContextHolder
 
 class MainActivity : ComponentActivity() {
     private val resimSecLauncher = registerForActivityResult(

@@ -1,7 +1,7 @@
 package com.kuzeykapisi.app.ui.theme
 
 import android.provider.Settings
-import com.kuzeykapisi.app.data.location.AndroidContextHolder
+import com.kuzeykapisi.app.platform.AndroidContextHolder
 
 /** Mobilde glow yok — yalnızca basma geri bildirimi. */
 actual val fenerHalesiDestekli: Boolean = false

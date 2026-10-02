@@ -45,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.tts.AnlatimDurumu
+import com.kuzeykapisi.app.domain.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.components.EkranBasligi
 import com.kuzeykapisi.app.ui.components.HataGorunumu
 import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
@@ -52,10 +53,11 @@ import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.theme.ButonSekli
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.Kehribar
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
-import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.vm.AnlatimViewModel
 
 // BackHandler, App.kt/RotaScreen.kt'deki aynı gerekçeyle (CMP 1.11'de
@@ -75,8 +77,8 @@ fun AnlatimEkrani(
     // döndürmede ViewModel korunur, anlatım kaldığı yerden sürer.
     val vm = viewModel { AnlatimViewModel(repo, kaynak) }
     val ui by vm.state.collectAsState()
-    val durum by vm.oynatici.durum.collectAsState()
-    val sesHatasi by vm.oynatici.hata.collectAsState()
+    val durum by vm.oynatimDurumu.collectAsState()
+    val sesHatasi by vm.sesHatasi.collectAsState()
 
     BackHandler(enabled = true) { onGeri() }
 
@@ -116,16 +118,16 @@ fun AnlatimEkrani(
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     OynatimKontrolleri(
                         durum = durum,
-                        onDinle = { ui.metin?.let { vm.oynatici.oynat(it) } },
-                        onDuraklat = { vm.oynatici.duraklat() },
-                        onDevamEt = { vm.oynatici.devamEt() },
-                        onBastanBasla = { ui.metin?.let { vm.oynatici.oynat(it) } },
+                        onDinle = { vm.dinle() },
+                        onDuraklat = { vm.duraklat() },
+                        onDevamEt = { vm.devamEt() },
+                        onBastanBasla = { vm.bastanBasla() },
                     )
                 }
                 if (sesHatasi != null) {
                     Text(
                         text = sesHatasi ?: "",
-                        color = MaterialTheme.colorScheme.error,
+                        color = Kehribar,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                         textAlign = TextAlign.Center,
@@ -142,7 +144,7 @@ fun AnlatimEkrani(
                     Text(
                         text = ui.metin ?: "",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = TasBeyazi.copy(alpha = 0.92f),
+                        color = TasBeyazi.copy(alpha = Opaklik.YUZDE92),
                         modifier = Modifier
                             .widthIn(max = 680.dp)
                             .fillMaxSize()
@@ -250,7 +252,7 @@ private fun AnlatimButonu(
     val vurgulu = etkilesim.hoverlu || etkilesim.basili
 
     val zemin by animateColorAsState(
-        targetValue = if (vurgulu) FenerAlevi else FenerAlevi.copy(alpha = 0.92f),
+        targetValue = if (vurgulu) FenerAlevi else FenerAlevi.copy(alpha = Opaklik.YUZDE92),
         animationSpec = tween(MIKRO_SURE),
         label = "anlatimZemin",
     )

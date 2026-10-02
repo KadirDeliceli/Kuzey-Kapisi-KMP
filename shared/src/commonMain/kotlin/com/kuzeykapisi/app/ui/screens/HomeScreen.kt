@@ -75,7 +75,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.domain.MAIN_CARDS
@@ -87,12 +86,14 @@ import com.kuzeykapisi.app.ui.components.FenerHalesi
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.hareketAzaltilsin
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
@@ -296,7 +297,7 @@ private fun HeroBolumu(
         ) {
             Text(
                 text = "SİNOP · KUZEY KAPISI",
-                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.4.sp),
+                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = HarfAraligi.SP24),
                 color = FenerAlevi,
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -558,7 +559,7 @@ private fun AnaKart(
         label = "anaKartOlcegi",
     )
     val golge by animateDpAsState(
-        targetValue = if (vurgulu) 12.dp else 4.dp,
+        targetValue = if (vurgulu) Yukseklik.DP12 else Yukseklik.DP4,
         animationSpec = tween(MIKRO_SURE),
         label = "anaKartGolgesi",
     )
@@ -667,7 +668,7 @@ private fun KartMetni(
     Column(modifier = modifier) {
         Text(
             text = kart.altBaslik.turkceBuyukHarf(),
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.8.sp),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP18),
             color = FenerAlevi,
         )
         Spacer(modifier = Modifier.height(8.dp))

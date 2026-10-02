@@ -40,12 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.data.model.KatalogOge
-import com.kuzeykapisi.app.data.model.PersonaDetay
-import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.remote.OturumSonlanmaNedeni
-import com.kuzeykapisi.app.domain.MainCard
+import com.kuzeykapisi.app.domain.AnlatimKaynagi
+import com.kuzeykapisi.app.domain.BotRef
 import com.kuzeykapisi.app.domain.MainCardType
+import com.kuzeykapisi.app.domain.Screen
 import com.kuzeykapisi.app.domain.SubCard
+import com.kuzeykapisi.app.domain.adminEkrani
 import com.kuzeykapisi.app.log.Logger
 import com.kuzeykapisi.app.ui.components.ACILIS_BILGILENDIRME_METNI
 import com.kuzeykapisi.app.ui.components.AdminGirisDialog
@@ -76,48 +77,13 @@ import com.kuzeykapisi.app.ui.screens.SubMenuScreen
 import com.kuzeykapisi.app.ui.theme.KapiGecisi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KuzeyKapisiTheme
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.vm.AdminViewModel
-import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan
-import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
-
-// @Serializable: ekran yığını yapılandırma değişikliğinde (döndürme, karanlık
-// mod) JSON olarak saklanıp aynı derinlikte geri kurulur (bkz. ui/nav/EkranYigini).
-@Serializable
-sealed interface Screen {
-    @Serializable data object Home : Screen
-    @Serializable data class SubMenu(val mainCard: MainCard) : Screen
-    @Serializable data class BotList(val kategori: String, val baslik: String) : Screen
-    @Serializable data class Anlatim(val kaynak: AnlatimKaynagi, val baslik: String) : Screen
-    @Serializable data class PersonaOnizleme(
-        val kategori: String,
-        val kod: String,
-        val ad: String,
-        val anlatimVar: Boolean,
-    ) : Screen
-    @Serializable data object Rota : Screen
-    @Serializable data object AdminAnaSayfa : Screen
-    @Serializable data object AdminPersonaEkle : Screen
-    @Serializable data object AdminRotaYerEkle : Screen
-    @Serializable data object AdminPersonaYonet : Screen
-    @Serializable data class AdminPersonaDuzenle(val detay: PersonaDetay) : Screen
-    @Serializable data object AdminRotaYerYonet : Screen
-    @Serializable data class AdminRotaYerDuzenle(val mekan: RotaMekaniAdmin, val mevcutAnlatim: String?) : Screen
-}
-
-/** Admin token'ı gerektiren ekranlar — token yokken yığında tutulmaz. */
-private val Screen.adminEkrani: Boolean
-    get() = when (this) {
-        Screen.AdminAnaSayfa, Screen.AdminPersonaEkle, Screen.AdminRotaYerEkle,
-        Screen.AdminPersonaYonet, Screen.AdminRotaYerYonet,
-        is Screen.AdminPersonaDuzenle, is Screen.AdminRotaYerDuzenle -> true
-        else -> false
-    }
-
-data class BotRef(val kategori: String, val kod: String)
 
 /** Açık sohbetin hangi bot için olduğu, döndürmede korunmak üzere "kategori\nkod" olarak saklanır. */
 private val BotRefSaver = Saver<BotRef?, String>(
@@ -229,7 +195,7 @@ fun App() {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(KaranlikLacivert.copy(alpha = 0.90f)),
+                        .background(KaranlikLacivert.copy(alpha = Opaklik.YUZDE90)),
                 )
 
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -456,7 +422,7 @@ fun App() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(KaranlikLacivert.copy(alpha = 0.62f))
+                                .background(KaranlikLacivert.copy(alpha = Opaklik.YUZDE62))
                                 .clickable(
                                     interactionSource = scrimInteraction,
                                     indication = null,
@@ -489,7 +455,7 @@ fun App() {
                                         Modifier
                                             .width(CHAT_PANEL_GENISLIGI)
                                             .fillMaxHeight()
-                                            .shadow(16.dp)
+                                            .shadow(Yukseklik.DP16)
                                     } else {
                                         Modifier.fillMaxSize()
                                     },

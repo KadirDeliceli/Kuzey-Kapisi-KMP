@@ -50,7 +50,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.EkranBasligi
@@ -59,13 +58,16 @@ import com.kuzeykapisi.app.ui.components.IkincilButon
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.NotrGeceCizgi
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import kotlinx.coroutines.CancellationException
@@ -254,7 +256,7 @@ private fun AdminBolumu(
 /** Ana sayfa kart etiketleriyle aynı stil; yanında SisGrisi kayıt sayısı. */
 @Composable
 private fun BolumBasligi(etiket: String, sayi: KayitSayisi) {
-    val stil = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.8.sp)
+    val stil = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP18)
     Row(
         // EkranBasligi etiket ve başlığı 6dp içeriden başlatır; bölüm etiketi de aynı hizaya oturur.
         modifier = Modifier
@@ -310,7 +312,7 @@ private fun AdminKart(
                 .fillMaxSize()
                 .klavyeOdakHalkasi(odakli, KartSekli)
                 .shadow(
-                    elevation = if (vurgulu) 12.dp else 6.dp,
+                    elevation = if (vurgulu) Yukseklik.DP12 else Yukseklik.DP6,
                     shape = KartSekli,
                     ambientColor = KaranlikLacivert,
                     spotColor = KaranlikLacivert,
@@ -356,7 +358,7 @@ private fun IkonKutusu(ikon: AdminIkonu, renk: Color) {
         modifier = Modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(renk.copy(alpha = 0.12f)),
+            .background(renk.copy(alpha = Opaklik.YUZDE12)),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(22.dp)) {

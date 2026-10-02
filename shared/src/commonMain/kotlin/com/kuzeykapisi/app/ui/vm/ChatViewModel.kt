@@ -3,8 +3,6 @@ package com.kuzeykapisi.app.ui.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.Metinler
-import com.kuzeykapisi.app.data.model.ChatUiState
-import com.kuzeykapisi.app.data.model.Mesaj
 import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.data.ses.KayitDurumu

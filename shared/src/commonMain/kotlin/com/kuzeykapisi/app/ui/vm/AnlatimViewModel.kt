@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.data.tts.AnlatimDurumu
 import com.kuzeykapisi.app.data.tts.AnlatimOynatici
+import com.kuzeykapisi.app.domain.AnlatimKaynagi
 import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,17 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-
-/** Anlatım ekranının metni nereden çekeceğini belirten kaynak — persona (kategori+kod) ya da rota durağı (mekan id). */
-@Serializable
-sealed interface AnlatimKaynagi {
-    @Serializable
-    data class Persona(val kategori: String, val kod: String) : AnlatimKaynagi
-
-    @Serializable
-    data class RotaDuragi(val mekanId: Int) : AnlatimKaynagi
-}
 
 data class AnlatimUiState(
     val metin: String? = null,
@@ -41,10 +32,36 @@ class AnlatimViewModel(
     private val _state = MutableStateFlow(AnlatimUiState())
     val state: StateFlow<AnlatimUiState> = _state.asStateFlow()
 
-    val oynatici = AnlatimOynatici()
+    private val oynatici = AnlatimOynatici()
+
+    /** Dinleme motorunun anlık durumu — ekran yalnızca bunu izler, motora kendisi erişmez. */
+    val oynatimDurumu: StateFlow<AnlatimDurumu> = oynatici.durum
+
+    /** TR ses desteklenmiyorsa ya da oynatma başarısız olursa kısa, kullanıcıya gösterilebilir mesaj. */
+    val sesHatasi: StateFlow<String?> = oynatici.hata
 
     init {
         yukle()
+    }
+
+    /** BAŞTAN oynatır — "Dinle" butonu. */
+    fun dinle() {
+        _state.value.metin?.let { oynatici.oynat(it) }
+    }
+
+    /** Duraklatır, konumu korur (devamEt() ile sürdürülebilir). */
+    fun duraklat() {
+        oynatici.duraklat()
+    }
+
+    /** Duraklatılan yerden devam eder. */
+    fun devamEt() {
+        oynatici.devamEt()
+    }
+
+    /** Metni BAŞTAN tekrar oynatır — "Baştan başla" butonu. */
+    fun bastanBasla() {
+        _state.value.metin?.let { oynatici.oynat(it) }
     }
 
     fun yukle() {

@@ -3,8 +3,8 @@ package com.kuzeykapisi.app.ui.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.Metinler
-import com.kuzeykapisi.app.data.model.SecilenResim
-import com.kuzeykapisi.app.data.model.resimSec
+import com.kuzeykapisi.app.data.media.SecilenResim
+import com.kuzeykapisi.app.data.media.resimSec
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
 import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
@@ -133,13 +133,13 @@ class PersonaEkleViewModel(private val repo: KuzeyRepository) : ViewModel() {
             } catch (e: AdminApiHatasi) {
                 Logger.d { "persona-ekle hatası: ${e.logOzeti()}" }
                 _state.update { st ->
-                    when {
-                        e.httpKodu == 401 -> st.copy(kaydediliyor = false, oturumGecersiz = true)
-                        e.detay?.contains("zaten var") == true -> st.copy(
-                            kaydediliyor = false,
-                            kodHatasi = Metinler.kodZatenVar(e.detay.orEmpty()),
-                        )
-                        else -> st.copy(kaydediliyor = false, genelHata = Metinler.adminHataMesaji(e))
+                    if (e.detay?.contains("zaten var") == true) {
+                        st.copy(kaydediliyor = false, kodHatasi = Metinler.kodZatenVar(e.detay.orEmpty()))
+                    } else {
+                        when (val sonuc = adminHatasiDegerlendir(e)) {
+                            AdminHataSonucu.OturumGecersiz -> st.copy(kaydediliyor = false, oturumGecersiz = true)
+                            is AdminHataSonucu.Mesaj -> st.copy(kaydediliyor = false, genelHata = sonuc.metin)
+                        }
                     }
                 }
             } catch (e: Exception) {

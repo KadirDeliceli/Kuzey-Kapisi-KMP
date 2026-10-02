@@ -22,6 +22,7 @@ import com.kuzeykapisi.app.data.model.RotaDurak
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
+import com.kuzeykapisi.app.ui.theme.NotrGeceAlcak
 import com.kuzeykapisi.app.ui.theme.NotrGeceYuksek
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
@@ -269,14 +270,14 @@ fun RotaHaritasiHataMesaji(modifier: Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(NotrGeceAlcak)
             .padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = Metinler.ROTA_HARITASI_YUKLENEMIYOR,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = SisGrisi,
         )
     }
 }

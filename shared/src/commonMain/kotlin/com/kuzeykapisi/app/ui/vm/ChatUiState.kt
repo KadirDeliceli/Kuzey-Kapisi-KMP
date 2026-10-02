@@ -1,4 +1,4 @@
-package com.kuzeykapisi.app.data.model
+package com.kuzeykapisi.app.ui.vm
 
 data class Mesaj(
     val metin: String,

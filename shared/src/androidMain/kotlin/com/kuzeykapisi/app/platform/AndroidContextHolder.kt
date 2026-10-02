@@ -1,4 +1,4 @@
-package com.kuzeykapisi.app.data.location
+package com.kuzeykapisi.app.platform
 
 import android.content.Context
 

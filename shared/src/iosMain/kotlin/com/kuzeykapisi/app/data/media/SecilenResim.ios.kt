@@ -1,4 +1,4 @@
-package com.kuzeykapisi.app.data.model
+package com.kuzeykapisi.app.data.media
 
 // Zaman kısıtlaması nedeniyle PHPickerViewController entegrasyonu şimdilik
 // atlandı (bkz. Konum.ios.kt'deki aynı gerekçe) — Android + Web öncelikli,

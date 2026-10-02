@@ -1,5 +1,6 @@
 package com.kuzeykapisi.app.data.repo
 
+import com.kuzeykapisi.app.data.media.SecilenResim
 import com.kuzeykapisi.app.data.model.Katalog
 import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.OturumBaslatYaniti
@@ -10,20 +11,12 @@ import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.model.RotaYerEkleIstek
 import com.kuzeykapisi.app.data.model.RotaYerEkleYaniti
 import com.kuzeykapisi.app.data.model.RotaYeriDetay
-import com.kuzeykapisi.app.data.model.SecilenResim
+import com.kuzeykapisi.app.data.model.SesliSohbetSonuc
+import com.kuzeykapisi.app.data.model.SohbetSonuc
 import com.kuzeykapisi.app.data.remote.ApiService
 import com.kuzeykapisi.app.data.ses.KaydedilenSes
 import com.kuzeykapisi.app.log.Logger
 import io.ktor.client.plugins.ClientRequestException
-
-data class SohbetSonuc(val cevap: String, val sessionId: String, val yenilendi: Boolean)
-
-data class SesliSohbetSonuc(
-    val kullaniciMetni: String,
-    val cevap: String,
-    val sessionId: String,
-    val yenilendi: Boolean,
-)
 
 class KuzeyRepository(private val api: ApiService) {
     suspend fun katalog(): Katalog = api.katalog()

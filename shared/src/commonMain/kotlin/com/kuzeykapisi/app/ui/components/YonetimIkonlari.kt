@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.ui.theme.ButonSekli
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.YosunAcik
@@ -56,7 +57,7 @@ fun DuzenleIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .scale(etkilesim.olcek)
             .size(40.dp)
             .clip(ButonSekli)
-            .background(renk.copy(alpha = 0.08f))
+            .background(renk.copy(alpha = Opaklik.YUZDE8))
             .semantics { contentDescription = "Düzenle" },
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
@@ -97,7 +98,7 @@ fun SilIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val etkilesim = kartEtkilesimi(interactionSource)
     val vurgulu = etkilesim.hoverlu || etkilesim.basili
     val renk by animateColorAsState(
-        targetValue = if (vurgulu) SinopKirmizisi else SinopKirmizisi.copy(alpha = 0.62f),
+        targetValue = if (vurgulu) SinopKirmizisi else SinopKirmizisi.copy(alpha = Opaklik.YUZDE62),
         animationSpec = tween(MIKRO_SURE),
         label = "silRengi",
     )

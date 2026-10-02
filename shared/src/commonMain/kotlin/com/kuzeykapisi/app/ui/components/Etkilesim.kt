@@ -30,6 +30,7 @@ import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.HALE_GECIKMESI
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 
@@ -59,7 +60,7 @@ fun kartEtkilesimi(interactionSource: MutableInteractionSource): KartEtkilesimi 
     val vurgulu = hoverlu || basili
 
     val kenarRengi by animateColorAsState(
-        targetValue = if (vurgulu) FenerAlevi else SisGrisi.copy(alpha = 0.10f),
+        targetValue = if (vurgulu) FenerAlevi else SisGrisi.copy(alpha = Opaklik.YUZDE10),
         animationSpec = tween(MIKRO_SURE),
         label = "kenarRengi",
     )

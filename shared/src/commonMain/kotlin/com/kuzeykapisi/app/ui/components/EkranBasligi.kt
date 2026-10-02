@@ -8,8 +8,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 
@@ -30,7 +30,7 @@ fun EkranBasligi(
         if (etiket != null) {
             Text(
                 text = etiket.turkceBuyukHarf(),
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.2.sp),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP22),
                 color = FenerAlevi,
                 modifier = Modifier.padding(top = 10.dp, start = 6.dp),
             )

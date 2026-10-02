@@ -39,18 +39,21 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
+import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.default_kapak
 import org.jetbrains.compose.resources.painterResource
@@ -114,7 +117,7 @@ fun CoverCard(
                 .fillMaxWidth()
                 .klavyeOdakHalkasi(odakli, KartSekli)
                 .shadow(
-                    elevation = if (etkilesim.hoverlu || etkilesim.basili) 12.dp else 6.dp,
+                    elevation = if (etkilesim.hoverlu || etkilesim.basili) Yukseklik.DP12 else Yukseklik.DP6,
                     shape = KartSekli,
                     ambientColor = KaranlikLacivert,
                     spotColor = KaranlikLacivert,
@@ -172,8 +175,8 @@ fun CoverCard(
                 ) {
                     if (etiket != null) {
                         Text(
-                            text = etiket.uppercase(),
-                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
+                            text = etiket.turkceBuyukHarf(),
+                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP16),
                             color = FenerAlevi,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -206,7 +209,7 @@ internal fun CografiIsaretMuhru(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(26.dp)
             .clip(CircleShape)
-            .background(KaranlikLacivert.copy(alpha = 0.55f)),
+            .background(KaranlikLacivert.copy(alpha = Opaklik.YUZDE55)),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(15.dp)) {
@@ -259,7 +262,7 @@ fun SesIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 .klavyeOdakHalkasi(odakli, CircleShape)
                 .clip(CircleShape)
                 // 0.62: bembeyaz görsel üstünde bile TasBeyazi ikon 4.20:1 (0.50'de 2.88:1, 3:1 altı).
-                .background(KaranlikLacivert.copy(alpha = 0.62f))
+                .background(KaranlikLacivert.copy(alpha = Opaklik.YUZDE62))
                 .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, CircleShape)
                 .hoverable(interactionSource = interactionSource)
                 .clickable(

@@ -27,9 +27,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kuzeykapisi.app.ui.theme.DialogSekli
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.NotrGeceYuksek
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
-import com.kuzeykapisi.app.ui.theme.YuksekYuzey
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 
 /**
  * Projedeki TÜM dialogların ortak kabuğu: yükseltilmiş koyu yüzey, imza
@@ -56,10 +58,10 @@ fun KuzeyDialogKabugu(
         Column(
             modifier = modifier
                 .widthIn(max = 460.dp)
-                .shadow(elevation = 20.dp, shape = DialogSekli)
+                .shadow(elevation = Yukseklik.DP20, shape = DialogSekli)
                 .clip(DialogSekli)
-                .background(YuksekYuzey)
-                .border(1.dp, vurguRengi.copy(alpha = 0.45f), DialogSekli),
+                .background(NotrGeceYuksek)
+                .border(1.dp, vurguRengi.copy(alpha = Opaklik.YUZDE45), DialogSekli),
         ) {
             Box(
                 modifier = Modifier

@@ -20,13 +20,15 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.ButonSekli
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.NotrGeceAlcak
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 
 /**
@@ -50,7 +52,7 @@ fun KuzeyChip(
     val vurgulu = etkilesim.hoverlu || etkilesim.basili
 
     val zemin by animateColorAsState(
-        targetValue = if (secili) FenerAlevi else AlcakYuzey,
+        targetValue = if (secili) FenerAlevi else NotrGeceAlcak,
         animationSpec = tween(MIKRO_SURE),
         label = "chipZemin",
     )
@@ -67,7 +69,7 @@ fun KuzeyChip(
         targetValue = when {
             secili -> FenerAlevi
             vurgulu -> FenerAlevi
-            else -> SisGrisi.copy(alpha = 0.22f)
+            else -> SisGrisi.copy(alpha = Opaklik.YUZDE22)
         },
         animationSpec = tween(MIKRO_SURE),
         label = "chipKenar",
@@ -77,7 +79,7 @@ fun KuzeyChip(
         modifier = modifier
             .scale(etkilesim.olcek)
             .shadow(
-                elevation = if (secili) 3.dp else 0.dp,
+                elevation = if (secili) Yukseklik.DP3 else Yukseklik.DP0,
                 shape = ButonSekli,
                 ambientColor = FenerAlevi,
                 spotColor = FenerAlevi,

@@ -84,14 +84,12 @@ val YosunAcik = Color(0xFF82B49F)
 
 /**
  * DAR ROLLÜ vurgu. Brief'teki tam değer. YALNIZCA:
- *  a) Admin panelindeki yıkıcı/geri alınamaz eylemler,
+ *  a) Yıkıcı/geri alınamaz eylemler (admin silme butonları, "Anlatımı kaldır"
+ *     gibi geri dönüşü olmayan onay kutuları),
  *  b) Tescilli Ürünler kategorisindeki kart köşesindeki mühür detayı.
  * Başka HİÇBİR yerde kullanılmaz.
  */
 val SinopKirmizisi = Color(0xFFCB410B)
-
-/** SinopKirmizisi'nin açık temada / koyu dolgu üstünde okunabilir hâli. 7.18:1 TasBeyazi üzerinde. */
-val SinopKirmizisiDerin = Color(0xFF8F2D08)
 
 // --- 6. Kehribar: hata/uyarı — SinopKirmizisi VE FenerAlevi'nden ayrı -------
 
@@ -116,20 +114,3 @@ val NotrGunCizgi = Color(0xFFDCD5C4)
 val NotrGunCizgiGuclu = Color(0xFF7A8A90)
 val NotrGunMetin = KaranlikLacivert
 val NotrGunMetinIkincil = SisGrisiKoyu
-
-// ---------------------------------------------------------------------------
-// ESKİ ADLAR — köprü katmanı
-//
-// Bir önceki (turkuaz) iterasyonda ekranlar zaten bu adları çağırıyordu.
-// Böylece bu dosya dışında TEK satır ekran kodu değişmeden bütün uygulama
-// brief'in paletini alır (single source of truth, CLAUDE.md non-negotiable #2).
-// ---------------------------------------------------------------------------
-
-/** @see NotrGeceYuksek */
-val YuksekYuzey = NotrGeceYuksek
-
-/** @see NotrGeceAlcak */
-val AlcakYuzey = NotrGeceAlcak
-
-/** @see Kehribar */
-val HataRengi = Kehribar

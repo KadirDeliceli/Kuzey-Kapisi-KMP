@@ -7,7 +7,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import com.kuzeykapisi.app.Metinler
-import com.kuzeykapisi.app.data.location.AndroidContextHolder
+import com.kuzeykapisi.app.platform.AndroidContextHolder
 import com.kuzeykapisi.app.log.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

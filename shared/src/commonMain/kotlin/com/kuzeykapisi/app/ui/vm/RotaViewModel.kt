@@ -3,11 +3,11 @@ package com.kuzeykapisi.app.ui.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.Metinler
+import com.kuzeykapisi.app.data.location.Konum
+import com.kuzeykapisi.app.data.location.VARSAYILAN_KONUM
+import com.kuzeykapisi.app.data.location.guncelKonumAl
 import com.kuzeykapisi.app.data.model.KategoriBilgi
-import com.kuzeykapisi.app.data.model.Konum
 import com.kuzeykapisi.app.data.model.RotaYaniti
-import com.kuzeykapisi.app.data.model.VARSAYILAN_KONUM
-import com.kuzeykapisi.app.data.model.guncelKonumAl
 import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.log.Logger

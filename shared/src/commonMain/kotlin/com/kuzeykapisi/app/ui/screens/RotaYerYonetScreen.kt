@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
@@ -42,10 +41,13 @@ import com.kuzeykapisi.app.ui.components.OnayDialog
 import com.kuzeykapisi.app.ui.components.SilIkonuButonu
 import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SatirSekli
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.vm.RotaYerListeViewModel
 
 /** Web/masaüstünde yönetim listesinin aşırı yayılmasını önleyen üst sınır. */
@@ -95,7 +97,7 @@ fun RotaYerYonetScreen(
             else -> {
                 Text(
                     text = "${ui.mekanlar.size} mekan",
-                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP12),
                     color = SisGrisi,
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
@@ -152,14 +154,14 @@ private fun RotaYerSatiri(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 3.dp,
+                elevation = Yukseklik.DP3,
                 shape = SatirSekli,
                 ambientColor = KaranlikLacivert,
                 spotColor = KaranlikLacivert,
             )
             .clip(SatirSekli)
             .background(DerinDeniz)
-            .border(1.dp, SisGrisi.copy(alpha = 0.10f), SatirSekli)
+            .border(1.dp, SisGrisi.copy(alpha = Opaklik.YUZDE10), SatirSekli)
             .padding(start = 18.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

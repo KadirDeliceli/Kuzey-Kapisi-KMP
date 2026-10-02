@@ -20,33 +20,44 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.Opaklik
+import com.kuzeykapisi.app.ui.theme.hareketAzaltilsin
+
+/** "Hareketi azalt" tercihinde nabzın durağan kaldığı orta değer. */
+private const val NABIZ_DURAGAN = 0.5f
 
 /**
  * "Yazıyor…" göstergesi — üç noktanın fener alevi tonunda nabız gibi
  * canlanması; opaklıkla birlikte hafif bir ölçek değişimi de var, böylece
- * yanıp sönmek yerine soluk alıp veriyormuş gibi görünür.
+ * yanıp sönmek yerine soluk alıp veriyormuş gibi görünür. "Hareketi azalt"
+ * tercihinde animasyon hiç kurulmaz, noktalar durağan kalır.
  */
 @Composable
 fun TypingIndicator(modifier: Modifier = Modifier) {
-    val gecis = rememberInfiniteTransition(label = "yaziyor")
+    val gecis = if (hareketAzaltilsin) null else rememberInfiniteTransition(label = "yaziyor")
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         repeat(3) { sira ->
-            val nabiz by gecis.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(620, delayMillis = sira * 160, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-                label = "nokta$sira",
-            )
+            val nabiz: Float = if (gecis != null) {
+                val canli by gecis.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(620, delayMillis = sira * 160, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                    label = "nokta$sira",
+                )
+                canli
+            } else {
+                NABIZ_DURAGAN
+            }
             Box(
                 modifier = Modifier
                     .padding(horizontal = 3.dp)
                     .size(7.dp)
                     .scale(0.72f + 0.28f * nabiz)
                     .clip(CircleShape)
-                    .background(FenerAlevi.copy(alpha = 0.28f + 0.62f * nabiz)),
+                    .background(FenerAlevi.copy(alpha = Opaklik.YUZDE28 + Opaklik.YUZDE62 * nabiz)),
             )
         }
     }

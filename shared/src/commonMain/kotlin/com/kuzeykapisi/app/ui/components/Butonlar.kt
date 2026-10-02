@@ -32,9 +32,11 @@ import com.kuzeykapisi.app.ui.theme.ButonSekli
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 
 /**
@@ -65,9 +67,9 @@ fun BirincilButon(
     val tiklanabilir = etkin && !yukleniyor
     val zemin by animateColorAsState(
         targetValue = when {
-            !etkin -> FenerAlevi.copy(alpha = 0.30f)
+            !etkin -> FenerAlevi.copy(alpha = Opaklik.YUZDE30)
             etkilesim.hoverlu || etkilesim.basili -> FenerAlevi
-            else -> FenerAlevi.copy(alpha = 0.92f)
+            else -> FenerAlevi.copy(alpha = Opaklik.YUZDE92)
         },
         animationSpec = tween(MIKRO_SURE),
         label = "birincilZemin",
@@ -78,7 +80,7 @@ fun BirincilButon(
         Box(
             modifier = Modifier
                 .shadow(
-                    elevation = if (!etkin) 0.dp else if (etkilesim.hoverlu || etkilesim.basili) 8.dp else 4.dp,
+                    elevation = if (!etkin) Yukseklik.DP0 else if (etkilesim.hoverlu || etkilesim.basili) Yukseklik.DP8 else Yukseklik.DP4,
                     shape = ButonSekli,
                     ambientColor = FenerAlevi,
                     spotColor = FenerAlevi,
@@ -106,7 +108,7 @@ fun BirincilButon(
                 Text(
                     text = metin,
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (etkin) KaranlikLacivert else KaranlikLacivert.copy(alpha = 0.55f),
+                    color = if (etkin) KaranlikLacivert else KaranlikLacivert.copy(alpha = Opaklik.YUZDE55),
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -188,9 +190,9 @@ fun YikiciButon(
     val odakli by interactionSource.collectIsFocusedAsState()
     val zemin by animateColorAsState(
         targetValue = when {
-            !etkin -> SinopKirmizisi.copy(alpha = 0.30f)
+            !etkin -> SinopKirmizisi.copy(alpha = Opaklik.YUZDE30)
             etkilesim.hoverlu || etkilesim.basili -> SinopKirmizisi
-            else -> SinopKirmizisi.copy(alpha = 0.90f)
+            else -> SinopKirmizisi.copy(alpha = Opaklik.YUZDE90)
         },
         animationSpec = tween(MIKRO_SURE),
         label = "yikiciZemin",
@@ -200,7 +202,7 @@ fun YikiciButon(
         modifier = modifier
             .scale(etkilesim.olcek)
             .shadow(
-                elevation = if (!etkin) 0.dp else if (etkilesim.hoverlu || etkilesim.basili) 8.dp else 4.dp,
+                elevation = if (!etkin) Yukseklik.DP0 else if (etkilesim.hoverlu || etkilesim.basili) Yukseklik.DP8 else Yukseklik.DP4,
                 shape = ButonSekli,
                 ambientColor = SinopKirmizisi,
                 spotColor = SinopKirmizisi,
@@ -236,7 +238,7 @@ fun SessizButon(
     val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = when {
-            !etkin -> SisGrisi.copy(alpha = 0.5f)
+            !etkin -> SisGrisi.copy(alpha = Opaklik.YUZDE50)
             etkilesim.hoverlu || etkilesim.basili -> FenerAlevi
             else -> SisGrisi
         },

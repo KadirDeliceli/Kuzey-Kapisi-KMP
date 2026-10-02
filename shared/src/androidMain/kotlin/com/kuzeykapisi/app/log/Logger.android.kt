@@ -2,7 +2,7 @@ package com.kuzeykapisi.app.log
 
 import android.content.pm.ApplicationInfo
 import android.util.Log
-import com.kuzeykapisi.app.data.location.AndroidContextHolder
+import com.kuzeykapisi.app.platform.AndroidContextHolder
 
 // Paylaşılan modül bir kütüphane olduğu için kendi BuildConfig.DEBUG'ı
 // uygulamanın derleme türünü yansıtmaz; APK'nın "debuggable" bayrağı yansıtır.

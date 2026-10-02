@@ -1,6 +1,6 @@
 @file:OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
 
-package com.kuzeykapisi.app.data.model
+package com.kuzeykapisi.app.data.location
 
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull

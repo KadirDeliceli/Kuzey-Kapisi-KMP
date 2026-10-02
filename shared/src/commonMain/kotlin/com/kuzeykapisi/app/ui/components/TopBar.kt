@@ -49,13 +49,15 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
+import com.kuzeykapisi.app.ui.theme.Opaklik
+import com.kuzeykapisi.app.ui.theme.SatirSekli
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
@@ -113,7 +115,7 @@ fun TopBar(
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "KUZEY KAPISI",
-                        style = MaterialTheme.typography.titleSmall.copy(letterSpacing = 2.2.sp),
+                        style = MaterialTheme.typography.titleSmall.copy(letterSpacing = HarfAraligi.SP22),
                         color = TasBeyazi,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -146,7 +148,7 @@ fun TopBar(
                         Brush.horizontalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                FenerAlevi.copy(alpha = 0.28f),
+                                FenerAlevi.copy(alpha = Opaklik.YUZDE28),
                                 Color.Transparent,
                             ),
                         ),
@@ -213,8 +215,8 @@ private fun AdminGirisIkonu(onClick: () -> Unit) {
             .size(34.dp)
             .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
-            .background(renk.copy(alpha = 0.10f))
-            .border(1.dp, renk.copy(alpha = 0.35f), CircleShape)
+            .background(renk.copy(alpha = Opaklik.YUZDE10))
+            .border(1.dp, renk.copy(alpha = Opaklik.YUZDE35), CircleShape)
             .etkilesimli(interactionSource, contentDescription = "Yönetim paneli girişi", onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -327,7 +329,7 @@ private fun UstBarPaneli(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(KaranlikLacivert.copy(alpha = 0.62f))
+                        .background(KaranlikLacivert.copy(alpha = Opaklik.YUZDE62))
                         .clickable(
                             interactionSource = scrimInteraction,
                             indication = null,
@@ -394,7 +396,7 @@ private fun PanelOgesi(metin: String, onClick: () -> Unit) {
         animationSpec = tween(MIKRO_SURE),
         label = "panelOgesiRengi",
     )
-    val panelOgesiSekli = RoundedCornerShape(10.dp)
+    val panelOgesiSekli = SatirSekli
     Box(
         modifier = Modifier
             .fillMaxWidth()

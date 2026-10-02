@@ -36,15 +36,17 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.FenerAleviDerin
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
+import com.kuzeykapisi.app.ui.theme.NotrGeceYuksek
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
-import com.kuzeykapisi.app.ui.theme.YuksekYuzey
+import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.vm.AdminViewModel
 
 /** Giriş kartının köşe yarıçapı — projedeki genel [DialogSekli]'den (20dp) bilinçli olarak daha büyük; bu ekranın kendine ait, daha prestijli bir imzası var. */
@@ -84,8 +86,8 @@ fun AdminGirisDialog(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                FenerAlevi.copy(alpha = 0.28f),
-                                FenerAlevi.copy(alpha = 0f),
+                                FenerAlevi.copy(alpha = Opaklik.YUZDE28),
+                                FenerAlevi.copy(alpha = Opaklik.SIFIR),
                             ),
                         ),
                         shape = CircleShape,
@@ -96,10 +98,10 @@ fun AdminGirisDialog(
                 modifier = Modifier
                     .widthIn(max = 400.dp)
                     .shadow(
-                        elevation = 32.dp,
+                        elevation = Yukseklik.DP32,
                         shape = GIRIS_KART_SEKLI,
                         ambientColor = KaranlikLacivert,
-                        spotColor = FenerAlevi.copy(alpha = 0.5f),
+                        spotColor = FenerAlevi.copy(alpha = Opaklik.YUZDE50),
                     )
                     .clip(GIRIS_KART_SEKLI)
                     // Cam/buzlu yüzey: yarı saydam bir dikey degrade — arkadaki
@@ -107,8 +109,8 @@ fun AdminGirisDialog(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                YuksekYuzey.copy(alpha = 0.90f),
-                                YuksekYuzey.copy(alpha = 0.97f),
+                                NotrGeceYuksek.copy(alpha = Opaklik.YUZDE90),
+                                NotrGeceYuksek.copy(alpha = Opaklik.YUZDE97),
                             ),
                         ),
                     )
@@ -116,9 +118,9 @@ fun AdminGirisDialog(
                         width = 1.dp,
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                FenerAlevi.copy(alpha = 0.55f),
-                                SisGrisi.copy(alpha = 0.10f),
-                                FenerAleviDerin.copy(alpha = 0.30f),
+                                FenerAlevi.copy(alpha = Opaklik.YUZDE55),
+                                SisGrisi.copy(alpha = Opaklik.YUZDE10),
+                                FenerAleviDerin.copy(alpha = Opaklik.YUZDE30),
                             ),
                         ),
                         shape = GIRIS_KART_SEKLI,
@@ -129,7 +131,7 @@ fun AdminGirisDialog(
                 KilitRozeti()
                 Text(
                     text = "YÖNETİM PANELİ",
-                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.4.sp),
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP24),
                     color = FenerAlevi,
                     modifier = Modifier.padding(top = 18.dp),
                 )
@@ -199,8 +201,8 @@ private fun KilitRozeti() {
         modifier = Modifier
             .size(56.dp)
             .clip(CircleShape)
-            .background(FenerAlevi.copy(alpha = 0.14f))
-            .border(1.dp, FenerAlevi.copy(alpha = 0.35f), CircleShape),
+            .background(FenerAlevi.copy(alpha = Opaklik.YUZDE14))
+            .border(1.dp, FenerAlevi.copy(alpha = Opaklik.YUZDE35), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(24.dp)) {

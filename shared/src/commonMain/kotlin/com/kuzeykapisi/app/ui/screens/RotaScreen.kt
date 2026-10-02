@@ -53,6 +53,7 @@ import com.kuzeykapisi.app.data.model.KategoriBilgi
 import com.kuzeykapisi.app.data.model.RotaDurak
 import com.kuzeykapisi.app.data.model.RotaYaniti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
+import com.kuzeykapisi.app.domain.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.components.BirincilButon
 import com.kuzeykapisi.app.ui.components.BosDurumGorunumu
 import com.kuzeykapisi.app.ui.components.EkranBasligi
@@ -69,18 +70,20 @@ import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.components.rememberRotaHaritasiHtml
 import com.kuzeykapisi.app.ui.components.tumRotaGoogleMapsUrl
 import com.kuzeykapisi.app.ui.nav.VmKapsami
-import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
+import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.LocalVeriStili
+import com.kuzeykapisi.app.ui.theme.NotrGeceAlcak
+import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SatirSekli
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.YosunAcik
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
-import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
+import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 import com.kuzeykapisi.app.ui.vm.RotaUiState
 import com.kuzeykapisi.app.ui.vm.RotaViewModel
 import kotlinx.coroutines.delay
@@ -182,8 +185,8 @@ private fun BolumBasligi(metin: String, modifier: Modifier = Modifier) {
 @Composable
 private fun AltEtiket(metin: String, modifier: Modifier = Modifier) {
     Text(
-        text = metin.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
+        text = metin.turkceBuyukHarf(),
+        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP14),
         color = SisGrisi,
         modifier = modifier,
     )
@@ -449,7 +452,7 @@ private fun RotaDetayGorunumu(
                         .padding(top = 16.dp)
                         .height(IntrinsicSize.Min)
                         .clip(SatirSekli)
-                        .background(AlcakYuzey),
+                        .background(NotrGeceAlcak),
                 ) {
                     Box(
                         modifier = Modifier
@@ -460,7 +463,7 @@ private fun RotaDetayGorunumu(
                     Text(
                         text = rota.ozet,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = TasBeyazi.copy(alpha = 0.92f),
+                        color = TasBeyazi.copy(alpha = Opaklik.YUZDE92),
                         modifier = Modifier.padding(16.dp),
                     )
                 }
@@ -498,7 +501,7 @@ private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>, gizli: Boolean) {
                 .height(300.dp)
                 .clip(SatirSekli)
                 .background(DerinDeniz)
-                .border(1.dp, SisGrisi.copy(alpha = 0.18f), SatirSekli),
+                .border(1.dp, SisGrisi.copy(alpha = Opaklik.YUZDE18), SatirSekli),
         ) {
             // Anlatım overlay'i (AnlatimEkrani) bu ekranın ÜSTÜNE bindirildiğinde
             // altındaki LazyColumn kompozisyondan çıkmıyor (scroll pozisyonu bilerek
@@ -535,7 +538,7 @@ private fun RotaDurakKart(durak: RotaDurak, onSesTiklandi: () -> Unit) {
             .fillMaxWidth()
             .clip(KartSekli)
             .background(DerinDeniz)
-            .border(1.dp, SisGrisi.copy(alpha = 0.10f), KartSekli)
+            .border(1.dp, SisGrisi.copy(alpha = Opaklik.YUZDE10), KartSekli)
             .padding(18.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -565,8 +568,8 @@ private fun RotaDurakKart(durak: RotaDurak, onSesTiklandi: () -> Unit) {
             }
         }
         Text(
-            text = durak.tur.uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
+            text = durak.tur.turkceBuyukHarf(),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = HarfAraligi.SP14),
             color = YosunAcik,
             modifier = Modifier.padding(top = 12.dp),
         )
@@ -611,7 +614,7 @@ private fun VeriSatiri(deger: String, aciklama: String) {
         Text(
             text = deger,
             style = LocalVeriStili.current,
-            color = TasBeyazi.copy(alpha = 0.85f),
+            color = TasBeyazi.copy(alpha = Opaklik.YUZDE85),
             modifier = Modifier.padding(start = 6.dp),
         )
     }

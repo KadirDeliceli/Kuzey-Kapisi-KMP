@@ -3,9 +3,9 @@ package com.kuzeykapisi.app.ui.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuzeykapisi.app.Metinler
+import com.kuzeykapisi.app.data.media.SecilenResim
+import com.kuzeykapisi.app.data.media.resimSec
 import com.kuzeykapisi.app.data.model.PersonaDetay
-import com.kuzeykapisi.app.data.model.SecilenResim
-import com.kuzeykapisi.app.data.model.resimSec
 import com.kuzeykapisi.app.data.remote.AdminApiHatasi
 import com.kuzeykapisi.app.data.remote.logOzeti
 import com.kuzeykapisi.app.data.repo.KuzeyRepository

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 // Eski (legacy) Kotlin/JS hedefi — asıl "web" hedefi wasmJs'tir (bkz.
-// AnlatimOynatici.wasmJs.kt / CLAUDE.md §0). Burada güvenli varsayılana düşülür.
+// AnlatimOynatici.wasmJs.kt). Burada güvenli varsayılana düşülür.
 actual class AnlatimOynatici actual constructor() {
     private val _durum = MutableStateFlow(AnlatimDurumu.DURDU)
     actual val durum: StateFlow<AnlatimDurumu> = _durum.asStateFlow()

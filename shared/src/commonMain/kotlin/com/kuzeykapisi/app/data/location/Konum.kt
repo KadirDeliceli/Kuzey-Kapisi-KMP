@@ -1,4 +1,4 @@
-package com.kuzeykapisi.app.data.model
+package com.kuzeykapisi.app.data.location
 
 data class Konum(val enlem: Double, val boylam: Double)
 

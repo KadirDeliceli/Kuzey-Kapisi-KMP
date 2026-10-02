@@ -9,7 +9,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import com.kuzeykapisi.app.Metinler
-import com.kuzeykapisi.app.data.location.AndroidContextHolder
+import com.kuzeykapisi.app.platform.AndroidContextHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,5 +1,7 @@
 package com.kuzeykapisi.app.domain
 
+import com.kuzeykapisi.app.data.model.PersonaDetay
+import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import kotlinx.serialization.Serializable
 
 // @Serializable: Screen.SubMenu bu kartı taşıyor ve ekran yığını
@@ -21,6 +23,41 @@ data class MainCard(
     /** Ana sayfadaki zig-zag satırında görselin yanında gösterilen kısa tanıtım cümlesi. */
     val aciklama: String = "",
 )
+
+// @Serializable: ekran yığını yapılandırma değişikliğinde (döndürme, karanlık
+// mod) JSON olarak saklanıp aynı derinlikte geri kurulur (bkz. ui/nav/EkranYigini).
+@Serializable
+sealed interface Screen {
+    @Serializable data object Home : Screen
+    @Serializable data class SubMenu(val mainCard: MainCard) : Screen
+    @Serializable data class BotList(val kategori: String, val baslik: String) : Screen
+    @Serializable data class Anlatim(val kaynak: AnlatimKaynagi, val baslik: String) : Screen
+    @Serializable data class PersonaOnizleme(
+        val kategori: String,
+        val kod: String,
+        val ad: String,
+        val anlatimVar: Boolean,
+    ) : Screen
+    @Serializable data object Rota : Screen
+    @Serializable data object AdminAnaSayfa : Screen
+    @Serializable data object AdminPersonaEkle : Screen
+    @Serializable data object AdminRotaYerEkle : Screen
+    @Serializable data object AdminPersonaYonet : Screen
+    @Serializable data class AdminPersonaDuzenle(val detay: PersonaDetay) : Screen
+    @Serializable data object AdminRotaYerYonet : Screen
+    @Serializable data class AdminRotaYerDuzenle(val mekan: RotaMekaniAdmin, val mevcutAnlatim: String?) : Screen
+}
+
+/** Admin token'ı gerektiren ekranlar — token yokken yığında tutulmaz. */
+internal val Screen.adminEkrani: Boolean
+    get() = when (this) {
+        Screen.AdminAnaSayfa, Screen.AdminPersonaEkle, Screen.AdminRotaYerEkle,
+        Screen.AdminPersonaYonet, Screen.AdminRotaYerYonet,
+        is Screen.AdminPersonaDuzenle, is Screen.AdminRotaYerDuzenle -> true
+        else -> false
+    }
+
+data class BotRef(val kategori: String, val kod: String)
 
 val MAIN_CARDS = listOf(
     MainCard(

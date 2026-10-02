@@ -1,4 +1,4 @@
-package com.kuzeykapisi.app.data.model
+package com.kuzeykapisi.app.data.media
 
 /** Admin panelinde kullanıcının seçtiği görsel: ham bayt + dosya adı/uzantısı. */
 data class SecilenResim(val bytes: ByteArray, val dosyaAdi: String, val uzanti: String)
