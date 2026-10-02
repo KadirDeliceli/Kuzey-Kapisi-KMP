@@ -13,5 +13,7 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sesli mesaj göndermek için mikrofon erişimi gereklidir.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Size en yakın rota önerilerini sunmak için konumunuza ihtiyacımız var.</string>
 </dict>
 </plist>

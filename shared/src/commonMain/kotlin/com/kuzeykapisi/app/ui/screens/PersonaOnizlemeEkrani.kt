@@ -27,9 +27,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -64,7 +63,8 @@ import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
-import kotlinx.coroutines.CancellationException
+import com.kuzeykapisi.app.ui.vm.PersonaOnizlemeViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 /** Sohbet butonunun çapı ve ekran kenarından uzaklığı. */
 private val FAB_CAPI = 56.dp
@@ -75,12 +75,6 @@ private val FAB_ICIN_ALT_PAY = FAB_CAPI + FAB_KENAR_BOSLUGU * 2
 
 /** AnlatimEkrani'ndaki okuma sütunuyla aynı satır uzunluğu sınırı. */
 private val OKUMA_SUTUNU_GENISLIGI = 680.dp
-
-private sealed interface AnlatimYukleme {
-    data object Yukleniyor : AnlatimYukleme
-    data class Hazir(val metin: String) : AnlatimYukleme
-    data class Hata(val mesaj: String) : AnlatimYukleme
-}
 
 /**
  * Persona kartına dokununca açılan önizleme. Anlatımı olan personada metnin
@@ -131,28 +125,18 @@ fun PersonaOnizlemeEkrani(
 
 @Composable
 private fun AnlatimIcerigi(repo: KuzeyRepository, kategori: String, kod: String) {
-    var deneme by remember { mutableIntStateOf(0) }
-    val durum by produceState<AnlatimYukleme>(AnlatimYukleme.Yukleniyor, repo, kategori, kod, deneme) {
-        value = AnlatimYukleme.Yukleniyor
-        value = try {
-            // null: backend bu öge için anlatım olmadığını söyledi (404) — hata değil.
-            AnlatimYukleme.Hazir(repo.anlatimGetir(kategori, kod).orEmpty())
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            AnlatimYukleme.Hata(Metinler.hataMesaji(e))
-        }
-    }
+    val vm = viewModel { PersonaOnizlemeViewModel(repo, kategori, kod) }
+    val ui by vm.state.collectAsState()
 
-    when (val d = durum) {
-        AnlatimYukleme.Yukleniyor -> YukleniyorGorunumu(modifier = Modifier.fillMaxSize())
-        is AnlatimYukleme.Hata -> HataGorunumu(
-            mesaj = d.mesaj,
+    when {
+        ui.yukleniyor -> YukleniyorGorunumu(modifier = Modifier.fillMaxSize())
+        ui.hata != null -> HataGorunumu(
+            mesaj = ui.hata.orEmpty(),
             modifier = Modifier.fillMaxSize(),
-            onTekrarDene = { deneme++ },
+            onTekrarDene = vm::yukle,
         )
-        is AnlatimYukleme.Hazir ->
-            if (d.metin.isBlank()) AnlatimYokDurumu() else AnlatimMetni(metin = d.metin)
+        ui.metin.isNullOrBlank() -> AnlatimYokDurumu()
+        else -> AnlatimMetni(metin = ui.metin.orEmpty())
     }
 }
 

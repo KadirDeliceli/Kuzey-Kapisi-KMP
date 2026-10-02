@@ -57,6 +57,7 @@ import com.kuzeykapisi.app.ui.components.PROJE_HAKKINDA_METNI
 import com.kuzeykapisi.app.ui.components.TopBar
 import com.kuzeykapisi.app.ui.kurulumYapImageLoader
 import com.kuzeykapisi.app.ui.nav.LocalVmDeposu
+import com.kuzeykapisi.app.ui.nav.Navigator
 import com.kuzeykapisi.app.ui.nav.VmDeposu
 import com.kuzeykapisi.app.ui.nav.VmKapsami
 import com.kuzeykapisi.app.ui.nav.rememberEkranYigini
@@ -138,35 +139,15 @@ fun App() {
     // render edildiğinde gösterilir; kart/ekran geçişlerinde ve döndürmede
     // tekrar açılmaz.
     var acilisBilgilendirmeAcik by rememberSaveable { mutableStateOf(true) }
-    // Yalnızca GÖRSEL geçişin yönü: "kapı açılma" animasyonunun hangi tarafa
-    // işleyeceğini söyler. Navigasyon kararlarına HİÇBİR etkisi yoktur.
-    var gecisIleri by remember { mutableStateOf(true) }
 
-    var adminGirisDialoguAcik by remember { mutableStateOf(false) }
-
+    // Navigasyonun (git/geri/admin-geçit) TEK kaynağı — bkz. Navigator.kt.
     // remember: App() her yeniden çizildiğinde (ör. adminAcik/dialog state'i
-    // değişince) bu callback'ler YENİDEN oluşmasın — referans kimliği sabit
-    // kalsın ki alt ekranlar kendi "skip" optimizasyonundan yararlanabilsin.
-    val git: (Screen) -> Unit = remember(adminOturumu, adminVm, ekranYigini) {
-        { hedef ->
-            // Oturum yokken hiçbir admin ekranı yığına girmez; yerine giriş istenir.
-            if (hedef.adminEkrani && !adminOturumu.acik.value) {
-                adminVm.hataTemizle()
-                adminGirisDialoguAcik = true
-            } else {
-                gecisIleri = true
-                ekranYigini.ekle(hedef)
-            }
-        }
-    }
-    val geriGit: () -> Unit = remember(ekranYigini) {
-        {
-            if (ekranYigini.boyut > 1) {
-                gecisIleri = false
-                ekranYigini.cikar()
-            }
-        }
-    }
+    // değişince) YENİDEN oluşmasın — referans kimliği sabit kalsın ki alt
+    // ekranlar kendi "skip" optimizasyonundan yararlanabilsin.
+    val navigator = remember(ekranYigini, adminOturumu, adminVm) { Navigator(ekranYigini, adminOturumu, adminVm) }
+    val gecisIleri by navigator.gecisIleri
+    val adminGirisDialoguAcik by navigator.adminGirisDialoguAcik
+    val geri: () -> Unit = remember(navigator) { { navigator.geri() } }
     // Admin ekranları 401 görünce bunu çağırır. HttpClient oturumu zaten
     // kapatmış olur; asıl temizlik aşağıdaki sonlanma dinleyicisinde.
     val onAdminYetkisiz: () -> Unit = remember(adminVm) { { adminVm.yetkisizBildir() } }
@@ -177,9 +158,7 @@ fun App() {
     // nedenlerde giriş dialogu, nedeni söyleyen bir mesajla açılır.
     LaunchedEffect(adminOturumu) {
         adminOturumu.sonlanma.collect { neden ->
-            if (ekranYigini.boyut > 1) gecisIleri = false
-            ekranYigini.kaldir { true }
-            if (neden != OturumSonlanmaNedeni.CIKIS) adminGirisDialoguAcik = true
+            navigator.adminOturumuSonlandi(girisIste = neden != OturumSonlanmaNedeni.CIKIS)
         }
     }
 
@@ -211,7 +190,7 @@ fun App() {
                     TopBar(
                         onBizKimizClick = { dialogTuru = DialogTuru.BIZ_KIMIZ },
                         onProjeHakkindaClick = { dialogTuru = DialogTuru.PROJE_HAKKINDA },
-                        onAdminIkonClick = { git(Screen.AdminAnaSayfa) },
+                        onAdminIkonClick = { navigator.git(Screen.AdminAnaSayfa) },
                     )
                     Box(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -246,8 +225,8 @@ fun App() {
                             // ViewModel'i o süre boyunca yaşar; o pencerede biten
                             // bir istek (ör. "Düzenle") artık görünmeyen ekrandan
                             // yeni ekran açmasın.
-                            val git: (Screen) -> Unit = remember(ekranYigini, girdi.id, git) {
-                                { hedef -> if (ekranYigini.ustMu(girdi.id)) git(hedef) }
+                            val git: (Screen) -> Unit = remember(ekranYigini, girdi.id, navigator) {
+                                { hedef -> if (ekranYigini.ustMu(girdi.id)) navigator.git(hedef) }
                             }
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                                 Box(
@@ -281,7 +260,7 @@ fun App() {
                                         )
                                         is Screen.SubMenu -> SubMenuScreen(
                                             mainCard = s.mainCard,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onSubTiklandi = { sub: SubCard ->
                                                 git(Screen.BotList(kategori = sub.kategori, baslik = sub.ad))
                                             },
@@ -291,7 +270,8 @@ fun App() {
                                             repo = repo,
                                             kategori = s.kategori,
                                             baslik = s.baslik,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
+                                            onAnaSayfayaDon = { navigator.anaSayfayaDon() },
                                             onBotTiklandi = { oge: KatalogOge ->
                                                 git(
                                                     Screen.PersonaOnizleme(
@@ -316,7 +296,7 @@ fun App() {
                                             repo = repo,
                                             kaynak = s.kaynak,
                                             baslik = s.baslik,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.PersonaOnizleme -> PersonaOnizlemeEkrani(
@@ -325,18 +305,18 @@ fun App() {
                                             kod = s.kod,
                                             ad = s.ad,
                                             anlatimVar = s.anlatimVar,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onSohbetAc = { aktifBot = BotRef(kategori = s.kategori, kod = s.kod) },
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.Rota -> RotaScreen(
                                             repo = repo,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminAnaSayfa -> AdminAnaSayfaScreen(
                                             repo = repo,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onCikisYap = { adminVm.cikisYap() },
                                             onPersonaEkleTiklandi = { git(Screen.AdminPersonaEkle) },
                                             onRotaYeriEkleTiklandi = { git(Screen.AdminRotaYerEkle) },
@@ -346,19 +326,19 @@ fun App() {
                                         )
                                         is Screen.AdminPersonaEkle -> PersonaEkleScreen(
                                             repo = repo,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminRotaYerEkle -> RotaYerEkleScreen(
                                             repo = repo,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminPersonaYonet -> PersonaYonetScreen(
                                             repo = repo,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onDuzenleTiklandi = { detay -> git(Screen.AdminPersonaDuzenle(detay = detay)) },
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
@@ -366,13 +346,13 @@ fun App() {
                                         is Screen.AdminPersonaDuzenle -> PersonaDuzenleScreen(
                                             repo = repo,
                                             detay = s.detay,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.AdminRotaYerYonet -> RotaYerYonetScreen(
                                             repo = repo,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onDuzenleTiklandi = { mekan, mevcutAnlatim ->
                                                 git(Screen.AdminRotaYerDuzenle(mekan = mekan, mevcutAnlatim = mevcutAnlatim))
                                             },
@@ -383,7 +363,7 @@ fun App() {
                                             repo = repo,
                                             mekan = s.mekan,
                                             mevcutAnlatim = s.mevcutAnlatim,
-                                            onGeri = geriGit,
+                                            onGeri = geri,
                                             onYetkisiz = onAdminYetkisiz,
                                             modifier = Modifier.fillMaxSize(),
                                         )
@@ -415,7 +395,7 @@ fun App() {
                 // kapalıyken devre dışı kalır ki normal uygulamadan çıkış
                 // davranışı sisteme bırakılsın.
                 BackHandler(enabled = chatAcik || ekranYigini.boyut > 1) {
-                    if (chatAcik) aktifBot = null else geriGit()
+                    if (chatAcik) aktifBot = null else geri()
                 }
 
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -503,10 +483,10 @@ fun App() {
                 if (adminGirisDialoguAcik) {
                     AdminGirisDialog(
                         vm = adminVm,
-                        onDismiss = { adminGirisDialoguAcik = false },
+                        onDismiss = { navigator.adminGirisDialoguKapat() },
                         onBasarili = {
-                            adminGirisDialoguAcik = false
-                            git(Screen.AdminAnaSayfa)
+                            navigator.adminGirisDialoguKapat()
+                            navigator.git(Screen.AdminAnaSayfa)
                         },
                     )
                 }

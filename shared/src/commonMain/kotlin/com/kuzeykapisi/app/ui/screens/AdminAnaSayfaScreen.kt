@@ -32,8 +32,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +70,9 @@ import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
-import kotlinx.coroutines.CancellationException
+import com.kuzeykapisi.app.ui.vm.AdminOzetViewModel
+import com.kuzeykapisi.app.ui.vm.KayitSayisi
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private val GENIS_EKRAN_ESIGI = TELEFON_KIRILIMI
 
@@ -79,13 +81,6 @@ private val ICERIK_MAX_GENISLIK = 900.dp
 
 /** İki bölüm (Personalar / Rota Noktaları) arasındaki boşluk. */
 private val BOLUM_ARALIGI = 40.dp
-
-/** Bölüm başlığındaki kayıt sayısı: yükleniyor, geldi ya da (hata/yetki yok) gizli. */
-private sealed interface KayitSayisi {
-    data object Yukleniyor : KayitSayisi
-    data class Hazir(val adet: Int) : KayitSayisi
-    data object Gizli : KayitSayisi
-}
 
 private enum class AdminIkonu { KisiEkle, Liste, KonumEkle, Harita }
 
@@ -100,16 +95,12 @@ fun AdminAnaSayfaScreen(
     onRotaYerleriniYonetTiklandi: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Özet sayıları ikincil bilgidir: birbirinden bağımsız çekilir ve hata
-    // (401 dahil) rozeti sessizce gizler; panelin kendisini asla engellemez.
-    val personaSayisi by produceState<KayitSayisi>(KayitSayisi.Yukleniyor, repo) {
-        value = sayiGetir { repo.katalog().values.sumOf { it.ogeler.size } }
-    }
     // Token'ı HttpClient ekler (bkz. AdminTokenEklentisi); bu ekran yalnızca
     // oturum açıkken çizilir (App.kt), o yüzden burada token kontrolü yok.
-    val rotaSayisi by produceState<KayitSayisi>(KayitSayisi.Yukleniyor, repo) {
-        value = sayiGetir { repo.rotaYerleriListele().size }
-    }
+    val vm = viewModel { AdminOzetViewModel(repo) }
+    val ui by vm.state.collectAsState()
+    val personaSayisi = ui.personaSayisi
+    val rotaSayisi = ui.rotaSayisi
 
     BoxWithConstraints(modifier = modifier) {
         val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
@@ -213,14 +204,6 @@ private fun OturumSatiri(genisEkran: Boolean, onCikisYap: () -> Unit) {
             buton()
         }
     }
-}
-
-private suspend fun sayiGetir(islem: suspend () -> Int): KayitSayisi = try {
-    KayitSayisi.Hazir(islem())
-} catch (e: CancellationException) {
-    throw e
-} catch (e: Exception) {
-    KayitSayisi.Gizli
 }
 
 /**

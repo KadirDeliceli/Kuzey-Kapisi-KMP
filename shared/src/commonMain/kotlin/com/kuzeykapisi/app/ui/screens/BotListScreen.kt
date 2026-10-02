@@ -83,6 +83,7 @@ fun BotListScreen(
     kategori: String,
     baslik: String,
     onGeri: () -> Unit,
+    onAnaSayfayaDon: () -> Unit,
     onBotTiklandi: (KatalogOge) -> Unit,
     onSesTiklandi: (KatalogOge) -> Unit,
     modifier: Modifier = Modifier,
@@ -99,6 +100,7 @@ fun BotListScreen(
                 kategori = kategori,
                 baslik = baslik,
                 onGeri = onGeri,
+                onAnaSayfayaDon = onAnaSayfayaDon,
                 modifier = Modifier.padding(start = gutter, end = gutter, top = 8.dp, bottom = 16.dp),
             )
             when {
@@ -158,14 +160,17 @@ fun BotListScreen(
 /**
  * Breadcrumb + başlık, alt menüdekiyle aynı stil. Üst ana kart (varsa)
  * MAIN_CARDS'tan bulunur: alt menüden gelindiyse yol üç basamaklıdır ve
- * "Ana Sayfa" iki geri adımıdır; doğrudan ana sayfadan gelinen kategoride
- * (tescil) yol iki basamaklıdır.
+ * "Ana Sayfa" kök ekrana TEK ADIMDA döner ([onAnaSayfayaDon] — yığın
+ * derinliğine bağımlı "onGeri() İKİ KEZ" gibi kırılgan bir varsayıma
+ * dayanmaz); doğrudan ana sayfadan gelinen kategoride (tescil) yol iki
+ * basamaklıdır.
  */
 @Composable
 private fun UstBlok(
     kategori: String,
     baslik: String,
     onGeri: () -> Unit,
+    onAnaSayfayaDon: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ustKart = remember(kategori) {
@@ -173,14 +178,11 @@ private fun UstBlok(
     }
     val ustBasamaklar = if (ustKart != null) {
         listOf(
-            BreadcrumbBasamagi("Ana Sayfa") {
-                onGeri()
-                onGeri()
-            },
+            BreadcrumbBasamagi("Ana Sayfa", onAnaSayfayaDon),
             BreadcrumbBasamagi(ustKart.ad, onGeri),
         )
     } else {
-        listOf(BreadcrumbBasamagi("Ana Sayfa", onGeri))
+        listOf(BreadcrumbBasamagi("Ana Sayfa", onAnaSayfayaDon))
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
