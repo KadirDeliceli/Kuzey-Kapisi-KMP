@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,12 +44,10 @@ import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.HarfAraligi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
-import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SinopKirmizisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.Yukseklik
-import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 import kuzeykapisiapp.shared.generated.resources.Res
@@ -97,19 +93,10 @@ fun CoverCard(
     muhur: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val etkilesim = kartEtkilesimi(interactionSource)
+    val etkilesim = kartEtkilesimi(interactionSource, hoverdeBuyur = true)
     val odakli by interactionSource.collectIsFocusedAsState()
-    val olcek by animateFloatAsState(
-        targetValue = when {
-            etkilesim.basili -> 0.97f
-            etkilesim.hoverlu && fenerHalesiDestekli -> 1.02f
-            else -> 1f
-        },
-        animationSpec = tween(MIKRO_SURE),
-        label = "kapakKartiOlcegi",
-    )
 
-    Box(modifier = modifier.scale(olcek)) {
+    Box(modifier = modifier.scale(etkilesim.olcek)) {
         if (hale) FenerHalesi(gorunur = etkilesim.hoverlu, sekil = KartSekli)
 
         Column(

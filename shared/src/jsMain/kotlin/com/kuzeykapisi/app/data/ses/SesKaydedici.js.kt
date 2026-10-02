@@ -30,4 +30,8 @@ actual class SesKaydedici actual constructor() {
     actual fun ayarlariAc() {
         // no-op — bu hedefte ses kaydı zaten desteklenmiyor.
     }
+
+    actual fun serbestBirak() {
+        // no-op — bu hedefte kurulan bir dinleyici/kaynak yok.
+    }
 }

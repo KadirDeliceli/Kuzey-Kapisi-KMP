@@ -30,6 +30,18 @@ private external interface JsSesKayitSonucu : JsAny {
 }
 
 /**
+ * [jsIzinDurumunuIzle]'nin kurduğu dinleyiciyi kapatmak için opak tutamaç.
+ * [aktif] false'a çekildiğinde tarayıcıdaki "onchange" dinleyicisi KALDIRILMAZ
+ * (Permissions API bunu desteklemiyor) ama artık hiçbir şey yapmaz — bu yüzden
+ * her SesKaydedici örneği serbestBirak()'ta kendi tutamacını kapatmalı, yoksa
+ * her sohbet açılışında bir öncekinin (artık anlamsız ama hâlâ canlı)
+ * dinleyicisi birikir.
+ */
+private external interface JsIzinAbonesi : JsAny {
+    var aktif: Boolean
+}
+
+/**
  * navigator.mediaDevices.getUserMedia({audio:true}) + JS MediaRecorder ile
  * kayda başlar. TAMAMEN ASENKRONDUR (izin diyaloğu beklenir); [basladi] ya
  * da [hataOldu] callback'i asıl sonucu bildirir. Veri, Konum.wasmJs.kt /
@@ -119,19 +131,19 @@ private fun jsSesKaydiBaslat(
  * gibi bu sorguyu desteklemeyen tarayıcılarda [desteklenmiyor] çağrılır —
  * o durumda izin durumu yalnızca gerçek bir getUserMedia denemesiyle anlaşılır.
  */
-private fun jsIzinDurumunuIzle(sonuc: (String) -> Unit, desteklenmiyor: () -> Unit) {
-    js(
-        """
-        (function() {
-            if (!navigator.permissions || !navigator.permissions.query) { desteklenmiyor(); return; }
-            navigator.permissions.query({ name: 'microphone' }).then(function(durum) {
-                sonuc(durum.state);
-                durum.onchange = function() { sonuc(durum.state); };
-            }).catch(function() { desteklenmiyor(); });
-        })();
-        """,
-    )
-}
+private fun jsIzinDurumunuIzle(sonuc: (String) -> Unit, desteklenmiyor: () -> Unit): JsIzinAbonesi? = js(
+    """
+    (function() {
+        if (!navigator.permissions || !navigator.permissions.query) { desteklenmiyor(); return null; }
+        var abone = { aktif: true };
+        navigator.permissions.query({ name: 'microphone' }).then(function(durum) {
+            if (abone.aktif) sonuc(durum.state);
+            durum.onchange = function() { if (abone.aktif) sonuc(durum.state); };
+        }).catch(function() { desteklenmiyor(); });
+        return abone;
+    })();
+    """,
+)
 
 @OptIn(ExperimentalEncodingApi::class)
 actual class SesKaydedici actual constructor() {
@@ -153,12 +165,16 @@ actual class SesKaydedici actual constructor() {
     // sessizce iptal etmek için kullanılır.
     private var durdurmaBeklemede = false
 
+    // serbestBirak()'ta kapatılır — yoksa her sohbet açılışında yeni bir
+    // "onchange" dinleyicisi kurulup öncekinin canlı kalması birikirdi.
+    private var izinAbonesi: JsIzinAbonesi? = null
+
     init {
         // Kullanıcı daha mikrofon butonuna hiç basmadan tarayıcının mevcut
         // izin durumunu bilsin — desteklenmiyorsa (Safari/Firefox) sessizce
         // no-op, gerçek durum ilk kayıt denemesinde getUserMedia'dan öğrenilir.
         runCatching {
-            jsIzinDurumunuIzle(
+            izinAbonesi = jsIzinDurumunuIzle(
                 sonuc = { durum ->
                     when (durum) {
                         "denied" -> {
@@ -248,5 +264,10 @@ actual class SesKaydedici actual constructor() {
     actual fun ayarlariAc() {
         // no-op — tarayıcıdan ayarlara güvenlik nedeniyle deep-link yapılamaz;
         // kullanıcı MESAJ_KALICI_RET'teki talimatı elle izlemeli.
+    }
+
+    actual fun serbestBirak() {
+        izinAbonesi?.aktif = false
+        izinAbonesi = null
     }
 }

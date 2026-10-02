@@ -29,7 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -110,7 +111,7 @@ fun ChatSheet(
     // Sonuç ne olursa olsun mikrofonaBasildi() çağrılır: SesKaydedici izni
     // KENDİSİ de kontrol eder ve reddedilmişse hata'yı doldurur — burada
     // ikinci bir dal açmaya gerek yok (bkz. SesKaydedici.android.kt).
-    var mikrofonIstekNo by remember { mutableStateOf(0) }
+    var mikrofonIstekNo by remember { mutableIntStateOf(0) }
     MikrofonIzniEfekti(istekNo = mikrofonIstekNo) { vm.mikrofonaBasildi() }
 
     Column(
@@ -166,16 +167,16 @@ fun ChatSheet(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    itemsIndexed(ui.mesajlar) { index, mesaj ->
+                    items(ui.mesajlar, key = { it.id }) { mesaj ->
                         MesajBalonu(
                             mesaj = mesaj,
                             sesDurumu = when {
                                 mesaj.benden || mesaj.sistemNotu -> null
-                                oynatilanMesajId == index -> SesButonuDurumu.CALIYOR
+                                oynatilanMesajId == mesaj.id -> SesButonuDurumu.CALIYOR
                                 oynatilanMesajId != null -> SesButonuDurumu.PASIF
                                 else -> SesButonuDurumu.OYNAT
                             },
-                            onSesTikla = { vm.mesajSesiCal(index) },
+                            onSesTikla = { vm.mesajSesiCal(mesaj.id) },
                         )
                     }
                     if (ui.hata != null) {

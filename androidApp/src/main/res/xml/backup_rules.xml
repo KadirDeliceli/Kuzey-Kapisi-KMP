@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- API 31 altı için data_extraction_rules.xml'in eski karşılığı — aynı kapsam. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="." />
+</full-backup-content>

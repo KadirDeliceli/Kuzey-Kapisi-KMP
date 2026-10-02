@@ -88,7 +88,9 @@ import com.kuzeykapisi.app.ui.vm.RotaUiState
 import com.kuzeykapisi.app.ui.vm.RotaViewModel
 import kotlinx.coroutines.delay
 
-private val SURE_SECENEKLERI = 3..15
+// Sabit, tek seferlik liste: items() her recomposition'da yeniden .toList()
+// çağırıp yeni bir liste ALLOCATE etmesin diye burada bir kez üretilir.
+private val SURE_SECENEKLERI = (3..15).toList()
 
 // BackHandler, App.kt'deki aynı gerekçeyle (CMP 1.11'de deprecated ama
 // wasm/iOS'ta tek çalışan seçenek) burada da opt-in gerektiriyor.
@@ -278,7 +280,7 @@ private fun RotaGaleriGorunumu(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
         ) {
-            items(SURE_SECENEKLERI.toList()) { saat ->
+            items(SURE_SECENEKLERI) { saat ->
                 KuzeyChip(
                     etiket = "$saat saat",
                     secili = ui.secilenSureSaat == saat,

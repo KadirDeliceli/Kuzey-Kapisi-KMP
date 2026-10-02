@@ -16,7 +16,24 @@ enum class KayitDurumu { BOSTA, KAYIT_YAPILIYOR, ISLENIYOR }
 enum class MikrofonIzniDurumu { SORULMADI, REDDEDILDI, KALICI_REDDEDILDI }
 
 /** Kaydedilen ses — ham bayt + backend'e multipart olarak gönderilecek dosya adı/mime tipi. */
-data class KaydedilenSes(val bytes: ByteArray, val dosyaAdi: String, val mimeTipi: String)
+data class KaydedilenSes(val bytes: ByteArray, val dosyaAdi: String, val mimeTipi: String) {
+    // Kotlin'in otomatik ürettiği equals/hashCode, ByteArray'i İÇERİK değil
+    // REFERANS olarak karşılaştırır — aynı baytları taşıyan iki KaydedilenSes
+    // "eşit değil" görünür (ör. Compose recomposition atlama mantığını
+    // yanıltır). contentEquals/contentHashCode ile elle düzeltilir.
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is KaydedilenSes) return false
+        return bytes.contentEquals(other.bytes) && dosyaAdi == other.dosyaAdi && mimeTipi == other.mimeTipi
+    }
+
+    override fun hashCode(): Int {
+        var sonuc = bytes.contentHashCode()
+        sonuc = 31 * sonuc + dosyaAdi.hashCode()
+        sonuc = 31 * sonuc + mimeTipi.hashCode()
+        return sonuc
+    }
+}
 
 /**
  * Mikrofon ses kaydı sarmalayıcısı — platforma özel gerçek implementasyon
@@ -58,4 +75,13 @@ expect class SesKaydedici() {
 
     /** true ise [ayarlariAc] gerçekten bir ayarlar sayfası açar (Android/iOS); web'de false. */
     val ayarlarDestekleniyor: Boolean
+
+    /**
+     * Bu örneğin kurduğu platforma özel kaynakları/dinleyicileri serbest
+     * bırakır — ekran kapsamı temizlenince (bkz. ChatViewModel.onCleared)
+     * çağrılır. web'de izin durumu dinleyicisini devre dışı bırakır (yoksa
+     * her sohbet açılışında yeni bir dinleyici birikir); Android/iOS'ta
+     * no-op'tur (saklanan bir kaynak yok).
+     */
+    fun serbestBirak()
 }

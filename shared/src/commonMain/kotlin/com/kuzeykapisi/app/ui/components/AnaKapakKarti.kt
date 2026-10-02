@@ -1,7 +1,5 @@
 package com.kuzeykapisi.app.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,7 +38,6 @@ import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.Yukseklik
-import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 import kuzeykapisiapp.shared.generated.resources.Res
@@ -62,7 +59,7 @@ import org.jetbrains.compose.resources.painterResource
  * Durumlar:
  *  - durağan  → neredeyse görünmez kenarlık (SisGrisi %10), ölçek 1.0
  *  - hover    → kenarlık [FenerAlevi] 1.5dp; yalnız fareli web'de
- *               ([fenerHalesiDestekli]) ölçek 1.02 ve arkasında fener halesi
+ *               ölçek 1.02 ve arkasında fener halesi
  *  - basılı   → ölçek 0.97 (mobilde tek geri bildirim budur)
  *  - odak     → kartın 3dp dışında 2dp TasBeyazi halka (klavye)
  * Geçişlerin tamamı [MIKRO_SURE] (200ms).
@@ -80,23 +77,13 @@ fun AnaKapakKarti(
     hale: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val etkilesim = kartEtkilesimi(interactionSource)
+    // hoverdeBuyur: hover büyümesi ana sayfa kartlarıyla aynı kurala bağlıdır
+    // (yalnız fareli web'de) — tek paylaşılan kaynaktan okunur, burada AYRICA
+    // hesaplanmaz.
+    val etkilesim = kartEtkilesimi(interactionSource, hoverdeBuyur = true)
     val odakli by interactionSource.collectIsFocusedAsState()
 
-    // Ölçek burada yerel olarak hesaplanır: paylaşılan [kartEtkilesimi]
-    // yalnızca basma küçülmesini bilir. Hover büyümesi ana sayfa kartlarıyla
-    // aynı kurala bağlıdır: yalnız fareli web'de.
-    val olcek by animateFloatAsState(
-        targetValue = when {
-            etkilesim.basili -> 0.97f
-            etkilesim.hoverlu && fenerHalesiDestekli -> 1.02f
-            else -> 1f
-        },
-        animationSpec = tween(MIKRO_SURE),
-        label = "kapakKartiOlcegi",
-    )
-
-    Box(modifier = modifier.scale(olcek)) {
+    Box(modifier = modifier.scale(etkilesim.olcek)) {
         if (hale) FenerHalesi(gorunur = etkilesim.hoverlu, sekil = KartSekli)
 
         Box(

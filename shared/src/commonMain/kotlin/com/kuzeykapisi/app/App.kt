@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -82,7 +81,7 @@ import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.vm.AdminViewModel
 import kuzeykapisiapp.shared.generated.resources.Res
-import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan
+import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan_bulanik
 import org.jetbrains.compose.resources.painterResource
 
 /** Açık sohbetin hangi bot için olduğu, döndürmede korunmak üzere "kategori\nkod" olarak saklanır. */
@@ -145,25 +144,32 @@ fun App() {
 
     var adminGirisDialoguAcik by remember { mutableStateOf(false) }
 
-    val git: (Screen) -> Unit = { hedef ->
-        // Oturum yokken hiçbir admin ekranı yığına girmez; yerine giriş istenir.
-        if (hedef.adminEkrani && !adminOturumu.acik.value) {
-            adminVm.hataTemizle()
-            adminGirisDialoguAcik = true
-        } else {
-            gecisIleri = true
-            ekranYigini.ekle(hedef)
+    // remember: App() her yeniden çizildiğinde (ör. adminAcik/dialog state'i
+    // değişince) bu callback'ler YENİDEN oluşmasın — referans kimliği sabit
+    // kalsın ki alt ekranlar kendi "skip" optimizasyonundan yararlanabilsin.
+    val git: (Screen) -> Unit = remember(adminOturumu, adminVm, ekranYigini) {
+        { hedef ->
+            // Oturum yokken hiçbir admin ekranı yığına girmez; yerine giriş istenir.
+            if (hedef.adminEkrani && !adminOturumu.acik.value) {
+                adminVm.hataTemizle()
+                adminGirisDialoguAcik = true
+            } else {
+                gecisIleri = true
+                ekranYigini.ekle(hedef)
+            }
         }
     }
-    val geriGit: () -> Unit = {
-        if (ekranYigini.boyut > 1) {
-            gecisIleri = false
-            ekranYigini.cikar()
+    val geriGit: () -> Unit = remember(ekranYigini) {
+        {
+            if (ekranYigini.boyut > 1) {
+                gecisIleri = false
+                ekranYigini.cikar()
+            }
         }
     }
     // Admin ekranları 401 görünce bunu çağırır. HttpClient oturumu zaten
     // kapatmış olur; asıl temizlik aşağıdaki sonlanma dinleyicisinde.
-    val onAdminYetkisiz: () -> Unit = { adminVm.yetkisizBildir() }
+    val onAdminYetkisiz: () -> Unit = remember(adminVm) { { adminVm.yetkisizBildir() } }
 
     // Oturum NASIL biterse bitsin (401, "Çıkış yap", hareketsizlik) tek yol:
     // yığındaki TÜM admin ekranları TEK SEFERDE atılır ve Ana Sayfa'ya dönülür;
@@ -183,14 +189,17 @@ fun App() {
             Box(modifier = Modifier.fillMaxSize()) {
                 // En alt katman: sabit arka plan fotoğrafı. Üstündeki yüksek
                 // opaklıklı gece denizi katmanıyla birlikte, göz yormayan hafif
-                // buğulu bir doku olarak hissedilir. Not: Modifier.blur()
-                // Android API 31 altında sessizce devre dışı kalır (minSdk=24);
-                // o cihazlarda yalnızca opaklık katmanı devreye girer.
+                // buğulu bir doku olarak hissedilir. Görsel STATİK olduğu için
+                // bulanıklık Modifier.blur() ile CANLI hesaplanmaz (bu hem her
+                // karede maliyetliydi hem de Android API 31 altında zaten
+                // sessizce devre dışı kalıyordu) — önceden bulanıklaştırılmış
+                // ayrı bir kaynak (sinop_arkaplan_bulanik) kullanılır; HomeScreen'in
+                // kendi arka planı ayrı, NET sinop_arkaplan kaynağını kullanmaya devam eder.
                 Image(
-                    painter = painterResource(Res.drawable.sinop_arkaplan),
+                    painter = painterResource(Res.drawable.sinop_arkaplan_bulanik),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().blur(7.dp),
+                    modifier = Modifier.fillMaxSize(),
                 )
                 Box(
                     modifier = Modifier
@@ -237,7 +246,9 @@ fun App() {
                             // ViewModel'i o süre boyunca yaşar; o pencerede biten
                             // bir istek (ör. "Düzenle") artık görünmeyen ekrandan
                             // yeni ekran açmasın.
-                            val git: (Screen) -> Unit = { hedef -> if (ekranYigini.ustMu(girdi.id)) git(hedef) }
+                            val git: (Screen) -> Unit = remember(ekranYigini, girdi.id, git) {
+                                { hedef -> if (ekranYigini.ustMu(girdi.id)) git(hedef) }
+                            }
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                                 Box(
                                     modifier = if (s is Screen.Home || s is Screen.BotList) {

@@ -83,6 +83,7 @@ import com.kuzeykapisi.app.ui.components.ChevronIkonu
 import com.kuzeykapisi.app.ui.components.ChevronYonu
 import com.kuzeykapisi.app.ui.components.CografiIsaretMuhru
 import com.kuzeykapisi.app.ui.components.FenerHalesi
+import com.kuzeykapisi.app.ui.components.etkilesimOlcegi
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
@@ -94,7 +95,6 @@ import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.Yukseklik
-import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.hareketAzaltilsin
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
@@ -550,14 +550,9 @@ private fun AnaKart(
     modifier: Modifier = Modifier,
 ) {
     val kaynak = remember { MutableInteractionSource() }
-    val etkilesim = kartEtkilesimi(kaynak)
+    val etkilesim = kartEtkilesimi(kaynak, hoverdeBuyur = true)
     val odakli by kaynak.collectIsFocusedAsState()
     val vurgulu = etkilesim.hoverlu || etkilesim.basili
-    val olcek by animateFloatAsState(
-        targetValue = etkilesimOlcegi(etkilesim.hoverlu, etkilesim.basili),
-        animationSpec = tween(MIKRO_SURE),
-        label = "anaKartOlcegi",
-    )
     val golge by animateDpAsState(
         targetValue = if (vurgulu) Yukseklik.DP12 else Yukseklik.DP4,
         animationSpec = tween(MIKRO_SURE),
@@ -574,7 +569,7 @@ private fun AnaKart(
         .hoverable(interactionSource = kaynak)
         .clickable(interactionSource = kaynak, indication = null, role = Role.Button, onClick = onClick)
 
-    Box(modifier = modifier.scale(olcek)) {
+    Box(modifier = modifier.scale(etkilesim.olcek)) {
         FenerHalesi(gorunur = etkilesim.hoverlu, sekil = KartSekli)
 
         when (yerlesim) {
@@ -695,9 +690,3 @@ private fun KartMetni(
     }
 }
 
-/** Hover büyümesi yalnızca fareli web'de; dokunmatikte yalnızca basma küçülmesi. */
-private fun etkilesimOlcegi(hoverlu: Boolean, basili: Boolean): Float = when {
-    basili -> 0.97f
-    hoverlu && fenerHalesiDestekli -> 1.02f
-    else -> 1f
-}

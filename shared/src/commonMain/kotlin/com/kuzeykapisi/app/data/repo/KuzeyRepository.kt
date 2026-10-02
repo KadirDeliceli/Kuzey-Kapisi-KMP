@@ -19,7 +19,16 @@ import com.kuzeykapisi.app.log.Logger
 import io.ktor.client.plugins.ClientRequestException
 
 class KuzeyRepository(private val api: ApiService) {
-    suspend fun katalog(): Katalog = api.katalog()
+    // Basit bellek içi önbellek: Katalog nadiren değişen, birden fazla
+    // ekran/ViewModel tarafından ayrı ayrı (her açılışta yeniden) çekilen bir
+    // veridir. personaEkle/personaGuncelle/personaSil bu önbelleği GEÇERSİZ
+    // KILAR — bir sonraki okuma tazeyi çeker.
+    private var katalogOnbellek: Katalog? = null
+
+    suspend fun katalog(): Katalog {
+        katalogOnbellek?.let { return it }
+        return api.katalog().also { katalogOnbellek = it }
+    }
 
     suspend fun oturumBaslat(kategori: String, oge: String): OturumBaslatYaniti =
         api.oturumBaslat(kategori, oge)
@@ -45,7 +54,8 @@ class KuzeyRepository(private val api: ApiService) {
         icerik: String,
         anlatim: String?,
         gorsel: SecilenResim,
-    ): PersonaEkleYaniti = api.personaEkle(kategori, ad, kod, karsilama, icerik, anlatim, gorsel)
+    ): PersonaEkleYaniti =
+        api.personaEkle(kategori, ad, kod, karsilama, icerik, anlatim, gorsel).also { katalogOnbellek = null }
 
     suspend fun personaGuncelle(
         kategori: String,
@@ -56,10 +66,15 @@ class KuzeyRepository(private val api: ApiService) {
         anlatim: String,
         anlatimKaldir: Boolean,
         gorsel: SecilenResim?,
-    ) = api.personaGuncelle(kategori, kod, ad, karsilama, icerik, anlatim, anlatimKaldir, gorsel)
+    ) {
+        api.personaGuncelle(kategori, kod, ad, karsilama, icerik, anlatim, anlatimKaldir, gorsel)
+        katalogOnbellek = null
+    }
 
-    suspend fun personaSil(kategori: String, kod: String) =
+    suspend fun personaSil(kategori: String, kod: String) {
         api.personaSil(kategori, kod)
+        katalogOnbellek = null
+    }
 
     suspend fun personaGetir(kategori: String, kod: String): PersonaDetay =
         api.personaGetir(kategori, kod)

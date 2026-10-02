@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.platform.guncelYil
 import com.kuzeykapisi.app.ui.theme.Opaklik
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
@@ -29,7 +30,7 @@ private const val ILETISIM_METNI =
     "0 (366) 212 58 52 · bilgi@kuzka.gov.tr"
 
 @Composable
-fun Footer(modifier: Modifier = Modifier, yil: Int = 2026) {
+fun Footer(modifier: Modifier = Modifier, yil: Int = guncelYil()) {
     Column(modifier = modifier.fillMaxWidth()) {
         // Üst çubuktaki ışık hattının eşi — uçlara doğru sönen ince ayraç.
         Box(

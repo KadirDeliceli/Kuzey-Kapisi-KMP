@@ -171,4 +171,8 @@ actual class SesKaydedici actual constructor() {
             UIApplication.sharedApplication.openURL(url, options = emptyMap<Any?, Any?>(), completionHandler = null)
         }
     }
+
+    // iOS'ta bu sınıfın kurduğu, ekran kapanınca elle temizlenmesi gereken
+    // bir global dinleyici/kaynak yok — no-op.
+    actual fun serbestBirak() {}
 }

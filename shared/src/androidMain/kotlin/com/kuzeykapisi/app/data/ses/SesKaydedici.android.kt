@@ -159,4 +159,9 @@ actual class SesKaydedici actual constructor() {
         }
         runCatching { context.startActivity(intent) }
     }
+
+    // Android'de bu sınıfın kurduğu, ekran kapanınca elle temizlenmesi
+    // gereken bir global dinleyici/kaynak yok (web'deki permissions.onchange
+    // dinleyicisinin karşılığı burada mevcut değil) — no-op.
+    actual fun serbestBirak() {}
 }

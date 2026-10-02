@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Şu an yedeklenen tek yerel veri, önemsiz bir tercih (mikrofon izni ret
+    sayacı — bkz. SesKaydedici.android.kt). sharedpref alanı bilerek hariç
+    tutulur ki ileride hassas bir veri eklenirse (ör. bir kimlik bilgisi)
+    yanlışlıkla buluta/cihazlar arası aktarıma dahil olmasın.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" />
+    </device-transfer>
+</data-extraction-rules>

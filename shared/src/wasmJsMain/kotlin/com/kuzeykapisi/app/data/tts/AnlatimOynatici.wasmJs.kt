@@ -31,7 +31,13 @@ actual class AnlatimOynatici actual constructor() {
         // (Anlatım ekranı açılırken) oluşturulduğu için liste o ana kadar
         // hazır olur. Böylece oynat() içinde ASENKRON BEKLEMEYE GİRMEDEN
         // (bkz. oynat) kaliteli ses seçilebilir.
-        runCatching { jsSesleriIsit() }
+        //
+        // sesleriIsit yalnızca BİR KEZ (modül seviyesinde, uygulama ömrü
+        // boyunca) çalışır: içindeki "voiceschanged" dinleyicisi window'a
+        // eklenir ve asla kaldırılmaz; her AnlatimOynatici örneği (ekran her
+        // açılışta yeni bir örnek oluşturur) için tekrar eklenirse dinleyici
+        // sayfa ömrü boyunca birikirdi.
+        runCatching { sesleriIsit }
     }
 
     actual fun oynat(metin: String) {
@@ -98,8 +104,14 @@ actual class AnlatimOynatici actual constructor() {
  * bazı sürümlerde her getVoices() çağrısında yeni nesneler üretir ve eski
  * bir referansı utterance.voice'a atamak sessizce başarısız olur; bu yüzden
  * seçim her zaman oynat() içinde TAZE listeden yapılır.
+ *
+ * `by lazy`: ilk AnlatimOynatici örneği oluşturulduğunda BİR KEZ çalışır —
+ * içindeki "voiceschanged" dinleyicisi kalıcıdır (kaldırılmaz), bu yüzden
+ * modül ömrü boyunca yalnızca bir kez eklenmelidir.
  */
-private fun jsSesleriIsit() {
+private val sesleriIsit: Unit by lazy { jsSesleriIsitGercek() }
+
+private fun jsSesleriIsitGercek() {
     js(
         """
         (function() {

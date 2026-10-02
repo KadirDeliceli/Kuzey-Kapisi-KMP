@@ -43,6 +43,10 @@ import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
  * - Hover'da (web) / basılıyken (mobil) kenarlık [FenerAlevi]'ne döner ve
  *   kalınlığı 1dp → 1.5dp artar; geçiş ~200ms yumuşaktır.
  * - Basılıyken mobil geri bildirimi olarak kart %97'ye küçülür.
+ * - [hoverdeBuyur] true ise (ana sayfa/kapak kartları) fareli web'de hover'da
+ *   kart ayrıca %102'ye büyür — her kart bu tek kaynaktan [olcek] okumalı,
+ *   kendi ayrı animateFloatAsState'ini kurmamalı (aynı ölçeğin iki kez
+ *   hesaplanmasını önler).
  */
 @Immutable
 data class KartEtkilesimi(
@@ -54,7 +58,7 @@ data class KartEtkilesimi(
 )
 
 @Composable
-fun kartEtkilesimi(interactionSource: MutableInteractionSource): KartEtkilesimi {
+fun kartEtkilesimi(interactionSource: MutableInteractionSource, hoverdeBuyur: Boolean = false): KartEtkilesimi {
     val hoverlu by interactionSource.collectIsHoveredAsState()
     val basili by interactionSource.collectIsPressedAsState()
     val vurgulu = hoverlu || basili
@@ -70,7 +74,7 @@ fun kartEtkilesimi(interactionSource: MutableInteractionSource): KartEtkilesimi 
         label = "kenarKalinligi",
     )
     val olcek by animateFloatAsState(
-        targetValue = if (basili) 0.97f else 1f,
+        targetValue = if (hoverdeBuyur) etkilesimOlcegi(hoverlu, basili) else if (basili) 0.97f else 1f,
         animationSpec = tween(MIKRO_SURE),
         label = "kartOlcegi",
     )
@@ -82,6 +86,17 @@ fun kartEtkilesimi(interactionSource: MutableInteractionSource): KartEtkilesimi 
         kenarKalinligi = kenarKalinligi,
         olcek = olcek,
     )
+}
+
+/**
+ * Hover büyümesi yalnızca fareli web'de; dokunmatikte yalnızca basma
+ * küçülmesi. [kartEtkilesimi]'nin `hoverdeBuyur=true` hâli ve kart
+ * soyutlamasına uymayan bileşenler (ör. KesfetButonu) bu TEK formülü paylaşır.
+ */
+fun etkilesimOlcegi(hoverlu: Boolean, basili: Boolean): Float = when {
+    basili -> 0.97f
+    hoverlu && fenerHalesiDestekli -> 1.02f
+    else -> 1f
 }
 
 /**

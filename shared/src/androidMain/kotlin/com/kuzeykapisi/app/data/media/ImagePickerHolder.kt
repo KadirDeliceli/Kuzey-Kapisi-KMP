@@ -31,6 +31,11 @@ object ImagePickerHolder {
             cont.resume(null)
         } else {
             bekleyenDevam = cont
+            // Çağıran coroutine iptal edilirse (ör. ekran kapanıp ViewModel
+            // temizlenirse) bekleyen referans silinir — yoksa kullanıcı daha
+            // sonra bir görsel seçtiğinde sonucGeldi() iptal edilmiş bu
+            // continuation'ı resume etmeye çalışıp çöker.
+            cont.invokeOnCancellation { bekleyenDevam = null }
             l.launch("image/*")
         }
     }

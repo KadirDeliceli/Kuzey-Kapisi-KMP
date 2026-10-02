@@ -53,13 +53,42 @@ class ChatViewModel(
 
     // Sesli mesaj gönderimi + "tekrar dinle" TEK bir paylaşılan TTS motorunu
     // ve TEK bir "hangi mesaj çalıyor" kaynağını kullanır (bkz. mesajSesiCal).
-    private val oynatici = AnlatimOynatici()
-    private val _oynatilanMesajId = MutableStateFlow<Int?>(null)
-    val oynatilanMesajId: StateFlow<Int?> = _oynatilanMesajId.asStateFlow()
+    // LAZY: motor, kullanıcı hiç bir ses butonuna basmadıkça hiç kurulmaz —
+    // bkz. oynaticiyaEris.
+    private var oynatici: AnlatimOynatici? = null
+    private val _oynatilanMesajId = MutableStateFlow<Long?>(null)
+    val oynatilanMesajId: StateFlow<Long?> = _oynatilanMesajId.asStateFlow()
 
     private var kayitBaslangic: TimeSource.Monotonic.ValueTimeMark? = null
 
     private var agUyarisiZamanlayici: Job? = null
+
+    // Mesaj kimlikleri listedeki konumdan BAĞIMSIZ, kalıcı ve artan — bkz. [Mesaj.id].
+    private var sonMesajId = 0L
+
+    private fun yeniMesaj(metin: String, benden: Boolean, sistemNotu: Boolean = false): Mesaj =
+        Mesaj(id = ++sonMesajId, metin = metin, benden = benden, sistemNotu = sistemNotu)
+
+    /**
+     * TTS motorunu İLK gerçek kullanımda (kullanıcı bir ses butonuna ilk
+     * bastığında) kurar ve durumunu dinlemeye başlar — sohbet ekranı her
+     * açılışında (sesli yanıt hiç kullanılmasa bile) motor kurulmasın diye.
+     */
+    private fun oynaticiyaEris(): AnlatimOynatici {
+        oynatici?.let { return it }
+        val yeni = AnlatimOynatici()
+        oynatici = yeni
+        viewModelScope.launch {
+            yeni.durum.collect { d ->
+                // Ses kendiliğinden bitince (kullanıcı durdurmadan) buton
+                // otomatik eski hâline dönsün.
+                if (d == AnlatimDurumu.DURDU && _oynatilanMesajId.value != null) {
+                    _oynatilanMesajId.value = null
+                }
+            }
+        }
+        return yeni
+    }
 
     /** Gönderim uyarısını gösterir ve [AG_UYARISI_SURESI] sonra kendiliğinden kaldırır. */
     private fun agUyarisiGoster(mesaj: String) {
@@ -78,15 +107,6 @@ class ChatViewModel(
     }
 
     init {
-        viewModelScope.launch {
-            oynatici.durum.collect { d ->
-                // Ses kendiliğinden bitince (kullanıcı durdurmadan) buton
-                // otomatik eski hâline dönsün.
-                if (d == AnlatimDurumu.DURDU && _oynatilanMesajId.value != null) {
-                    _oynatilanMesajId.value = null
-                }
-            }
-        }
         // Oturum ViewModel oluşurken bir kez açılır; döndürmede ViewModel
         // korunduğu için yeniden açılmaz (sohbet geçmişi de korunur).
         basla()
@@ -103,7 +123,7 @@ class ChatViewModel(
                     it.copy(
                         baslik = yanit.baslik,
                         sessionId = yanit.sessionId,
-                        mesajlar = listOf(Mesaj(metin = yanit.karsilama, benden = false)),
+                        mesajlar = listOf(yeniMesaj(metin = yanit.karsilama, benden = false)),
                         yukleniyor = false,
                     )
                 }
@@ -122,7 +142,7 @@ class ChatViewModel(
         agUyarisiniKaldir()
         _state.update { st ->
             st.copy(
-                mesajlar = st.mesajlar + Mesaj(metin = mesaj, benden = true),
+                mesajlar = st.mesajlar + yeniMesaj(metin = mesaj, benden = true),
                 yaziyor = true,
             )
         }
@@ -132,8 +152,8 @@ class ChatViewModel(
                 // Yeni mesajlar, yazma ANINDAKİ listeye eklenir (atomik): istek
                 // sürerken eklenen başka bir mesaj kaybolmaz.
                 val yeniMesajlar = buildList {
-                    if (sonuc.yenilendi) add(Mesaj(metin = Metinler.SOHBET_YENILENDI, benden = false, sistemNotu = true))
-                    add(Mesaj(metin = sonuc.cevap, benden = false))
+                    if (sonuc.yenilendi) add(yeniMesaj(metin = Metinler.SOHBET_YENILENDI, benden = false, sistemNotu = true))
+                    add(yeniMesaj(metin = sonuc.cevap, benden = false))
                 }
                 val guncel = _state.updateAndGet {
                     it.copy(sessionId = sonuc.sessionId, mesajlar = it.mesajlar + yeniMesajlar, yaziyor = false)
@@ -178,15 +198,15 @@ class ChatViewModel(
         try {
             val sonuc = repo.guvenliSesliSohbet(kategori, oge, sessionId, ses)
             val yeniMesajlar = buildList {
-                add(Mesaj(metin = sonuc.kullaniciMetni, benden = true))
-                if (sonuc.yenilendi) add(Mesaj(metin = Metinler.SOHBET_YENILENDI, benden = false, sistemNotu = true))
-                add(Mesaj(metin = sonuc.cevap, benden = false))
+                add(yeniMesaj(metin = sonuc.kullaniciMetni, benden = true))
+                if (sonuc.yenilendi) add(yeniMesaj(metin = Metinler.SOHBET_YENILENDI, benden = false, sistemNotu = true))
+                add(yeniMesaj(metin = sonuc.cevap, benden = false))
             }
             val guncel = _state.updateAndGet {
                 it.copy(sessionId = sonuc.sessionId, mesajlar = it.mesajlar + yeniMesajlar, yaziyor = false)
             }
-            // Bot cevabı listenin son öğesi: otomatik okunacak mesajın indeksi.
-            val botMesajId = guncel.mesajlar.lastIndex
+            // Bot cevabı listenin son öğesi: otomatik okunacak mesajın kalıcı kimliği.
+            val botMesajId = guncel.mesajlar.last().id
             agUyarisiniKaldir()
             mesajSesiCal(botMesajId)
         } catch (e: Exception) {
@@ -209,19 +229,19 @@ class ChatViewModel(
      * okunması (gonderSesliMesaj) hem de manuel "tekrar dinle" butonu
      * (ChatSheet) bunu çağırır.
      */
-    fun mesajSesiCal(mesajId: Int) {
+    fun mesajSesiCal(mesajId: Long) {
         val simdikiId = _oynatilanMesajId.value
         when {
             simdikiId == mesajId -> {
-                oynatici.durdur()
+                oynatici?.durdur()
                 _oynatilanMesajId.value = null
             }
             // Başka bir mesaj çalıyor — bu bir savunma kontrolüdür, UI zaten
             // bu durumda ilgili butonu devre dışı bırakır.
             simdikiId != null -> Unit
             else -> {
-                val metin = _state.value.mesajlar.getOrNull(mesajId)?.metin ?: return
-                oynatici.oynat(metin)
+                val metin = _state.value.mesajlar.find { it.id == mesajId }?.metin ?: return
+                oynaticiyaEris().oynat(metin)
                 _oynatilanMesajId.value = mesajId
             }
         }
@@ -236,12 +256,15 @@ class ChatViewModel(
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCleared() {
         _state.value.sessionId?.let { id -> GlobalScope.launch { repo.oturumKapat(id) } }
-        oynatici.durdur()
-        oynatici.serbestBirak()
+        oynatici?.let {
+            it.durdur()
+            it.serbestBirak()
+        }
         _oynatilanMesajId.value = null
         if (sesKaydedici.durum.value != KayitDurumu.BOSTA) {
             // Devam eden kayıt varsa iptal edilip temizlenir — sonuç GÖNDERİLMEZ.
             GlobalScope.launch { sesKaydedici.kayidiDurdurVeAl() }
         }
+        sesKaydedici.serbestBirak()
     }
 }
