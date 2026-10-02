@@ -5,6 +5,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -19,6 +21,9 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
@@ -77,6 +82,36 @@ fun kartEtkilesimi(interactionSource: MutableInteractionSource): KartEtkilesimi 
         olcek = olcek,
     )
 }
+
+/**
+ * TÜM tıklanabilir bileşenlerin (buton, chip, kart, bağlantı) paylaştığı
+ * ORTAK etkileşim modifier'ı: hover (web) + basma + [Role.Button] semantiği,
+ * ve (verilirse) [contentDescription] TEK yerden uygulanır. Klavye odak
+ * halkası [klavyeOdakHalkasi] ile AYRI kalır — şeklin dışına taştığı için
+ * `clip`'ten önce, bu modifier'dan (ki genelde clip'ten SONRA gelir) önce
+ * uygulanmalıdır.
+ */
+fun Modifier.etkilesimli(
+    interactionSource: MutableInteractionSource,
+    etkin: Boolean = true,
+    contentDescription: String? = null,
+    onClick: () -> Unit,
+): Modifier = this
+    .hoverable(interactionSource = interactionSource, enabled = etkin)
+    .clickable(
+        interactionSource = interactionSource,
+        indication = null,
+        enabled = etkin,
+        role = Role.Button,
+        onClick = onClick,
+    )
+    .let { m ->
+        if (contentDescription != null) {
+            m.semantics { this.contentDescription = contentDescription }
+        } else {
+            m
+        }
+    }
 
 /**
  * İMZA MİKRO-ETKİLEŞİM — fener ışığı halesi.

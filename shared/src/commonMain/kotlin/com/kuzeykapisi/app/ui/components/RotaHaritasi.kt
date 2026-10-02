@@ -1,14 +1,23 @@
 package com.kuzeykapisi.app.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import com.kuzeykapisi.app.Metinler
 import com.kuzeykapisi.app.data.model.RotaDurak
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
@@ -249,3 +258,25 @@ fun tumRotaGoogleMapsUrl(duraklar: List<RotaDurak>): String {
  */
 @Composable
 expect fun RotaHaritasiWebView(html: String, modifier: Modifier)
+
+/**
+ * Harita yüklenemediğinde (WebView/WKWebView/iframe oluşturulamadığında ya da
+ * yüklemesi başarısız olduğunda) TÜM platformlarda gösterilen tek hata kutusu
+ * — dört platform dosyasında ayrı ayrı tekrarlanan kopyanın yerine.
+ */
+@Composable
+fun RotaHaritasiHataMesaji(modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = Metinler.ROTA_HARITASI_YUKLENEMIYOR,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}

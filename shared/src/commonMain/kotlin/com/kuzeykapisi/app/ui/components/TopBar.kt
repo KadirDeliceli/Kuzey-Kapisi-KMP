@@ -12,8 +12,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -47,8 +47,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,13 +57,15 @@ import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import kotlinx.coroutines.delay
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.kuzey_kapisi_logo
 import org.jetbrains.compose.resources.painterResource
 
-private val GENIS_EKRAN_ESIGI = 600.dp
+private val GENIS_EKRAN_ESIGI = TELEFON_KIRILIMI
 
 /** Dar ekranda hamburger'dan açılan yan panelin sabit genişliği. */
 private val PANEL_GENISLIGI = 300.dp
@@ -169,6 +169,7 @@ fun TopBar(
 private fun UstBarBaglantisi(metin: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else SisGrisi,
         animationSpec = tween(MIKRO_SURE),
@@ -176,9 +177,9 @@ private fun UstBarBaglantisi(metin: String, onClick: () -> Unit) {
     )
     Box(
         modifier = Modifier
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .etkilesimli(interactionSource, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         Text(
@@ -200,6 +201,7 @@ private fun UstBarBaglantisi(metin: String, onClick: () -> Unit) {
 private fun AdminGirisIkonu(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else SisGrisi,
         animationSpec = tween(MIKRO_SURE),
@@ -209,11 +211,11 @@ private fun AdminGirisIkonu(onClick: () -> Unit) {
         modifier = Modifier
             .scale(etkilesim.olcek)
             .size(34.dp)
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
             .background(renk.copy(alpha = 0.10f))
             .border(1.dp, renk.copy(alpha = 0.35f), CircleShape)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+            .etkilesimli(interactionSource, contentDescription = "Yönetim paneli girişi", onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(15.dp)) {
@@ -238,6 +240,7 @@ private fun AdminGirisIkonu(onClick: () -> Unit) {
 private fun HamburgerDugmesi(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else SisGrisi,
         animationSpec = tween(MIKRO_SURE),
@@ -247,10 +250,9 @@ private fun HamburgerDugmesi(onClick: () -> Unit) {
         modifier = Modifier
             .scale(etkilesim.olcek)
             .size(40.dp)
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .semantics { contentDescription = "Menü" },
+            .etkilesimli(interactionSource, contentDescription = "Menü", onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(20.dp)) {
@@ -386,17 +388,19 @@ private fun UstBarPaneliIcerik(
 private fun PanelOgesi(metin: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else TasBeyazi,
         animationSpec = tween(MIKRO_SURE),
         label = "panelOgesiRengi",
     )
+    val panelOgesiSekli = RoundedCornerShape(10.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .klavyeOdakHalkasi(odakli, panelOgesiSekli)
+            .clip(panelOgesiSekli)
+            .etkilesimli(interactionSource, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 15.dp),
     ) {
         Text(
@@ -411,6 +415,7 @@ private fun PanelOgesi(metin: String, onClick: () -> Unit) {
 private fun KapatIkonu(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else SisGrisi,
         animationSpec = tween(MIKRO_SURE),
@@ -420,10 +425,9 @@ private fun KapatIkonu(onClick: () -> Unit) {
         modifier = Modifier
             .scale(etkilesim.olcek)
             .size(38.dp)
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .semantics { contentDescription = "Kapat" },
+            .etkilesimli(interactionSource, contentDescription = "Kapat", onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(16.dp)) {

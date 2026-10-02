@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 data class SubCard(val id: String, val ad: String, val kategori: String, val kapak: String)
 
 @Serializable
-enum class MainCardType { SUBMENU, WIP, DIRECT, ROTA_PLANLAYICI }
+enum class MainCardType { SUBMENU, DIRECT, ROTA_PLANLAYICI }
 
 @Serializable
 data class MainCard(

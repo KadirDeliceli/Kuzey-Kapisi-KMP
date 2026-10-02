@@ -52,8 +52,12 @@ kotlin {
     
     sourceSets {
         androidMain.dependencies {
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
+            // rememberLauncherForActivityResult/ActivityResultContracts (ImagePickerHolder,
+            // KonumIzniEfekti, MikrofonIzniEfekti) ve ContextCompat (Konum, SesKaydedici,
+            // KonumIzniEfekti, MikrofonIzniEfekti) — önceden compose.uiTooling'in (geliştirme
+            // bağımlılığı) dolaylı getirdiği sınıflardı; o kaldırıldığı için açıkça eklendi.
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.core)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.play.services.location)
         }
@@ -64,9 +68,7 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.ui.backhandler)
             implementation(libs.compose.components.resources)
-            implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.serialization.kotlinxJson)
@@ -96,8 +98,4 @@ kotlin {
         getByName("iosArm64Main").dependsOn(iosMain)
         getByName("iosSimulatorArm64Main").dependsOn(iosMain)
     }
-}
-
-dependencies {
-    androidRuntimeClasspath(libs.compose.uiTooling)
 }

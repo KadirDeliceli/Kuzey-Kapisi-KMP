@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,24 +52,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -90,6 +80,8 @@ import coil3.compose.AsyncImage
 import com.kuzeykapisi.app.config.Config
 import com.kuzeykapisi.app.domain.MAIN_CARDS
 import com.kuzeykapisi.app.domain.MainCard
+import com.kuzeykapisi.app.ui.components.ChevronIkonu
+import com.kuzeykapisi.app.ui.components.ChevronYonu
 import com.kuzeykapisi.app.ui.components.CografiIsaretMuhru
 import com.kuzeykapisi.app.ui.components.FenerHalesi
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
@@ -99,9 +91,12 @@ import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.hareketAzaltilsin
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
+import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -115,7 +110,7 @@ import org.jetbrains.compose.resources.painterResource
 // --- Kırılım noktaları --------------------------------------------------------
 
 /** Bunun altı telefon: kartlar dikey (görsel üstte, metin altta), gutter 24dp. */
-private val TELEFON_ESIGI = 600.dp
+private val TELEFON_ESIGI = TELEFON_KIRILIMI
 
 /** Hero başlığının iki satıra bölünüp `displaySmall`'a çıktığı eşik. */
 private val ORTA_BASLIK_ESIGI = 700.dp
@@ -183,8 +178,6 @@ private val ACIKLAMA_MIN_GENISLIK = 240.dp
 private val HapSekli = RoundedCornerShape(percent = 50)
 
 private enum class KartYerlesimi { Yatay, Dikey }
-
-private enum class ChevronYonu { Asagi, Sag }
 
 /** Hero metni ile kart bölümünün ORTAK yan boşluğu — iki bölüm aynı sol hizaya oturur. */
 private fun kenarBoslugu(genislik: Dp): Dp = when {
@@ -454,7 +447,7 @@ private fun KesfetButonu(onClick: (klavyeyle: Boolean) -> Unit, modifier: Modifi
         FenerHalesi(gorunur = hoverlu, sekil = HapSekli)
         Row(
             modifier = Modifier
-                .odakHalkasi(odakli, HapSekli)
+                .klavyeOdakHalkasi(odakli, HapSekli)
                 .clip(HapSekli)
                 .background(FenerAlevi)
                 .hoverable(interactionSource = kaynak)
@@ -572,7 +565,7 @@ private fun AnaKart(
 
     val kabuk = Modifier
         .fillMaxSize()
-        .odakHalkasi(odakli, KartSekli)
+        .klavyeOdakHalkasi(odakli, KartSekli)
         .shadow(elevation = golge, shape = KartSekli, ambientColor = KaranlikLacivert, spotColor = KaranlikLacivert)
         .clip(KartSekli)
         .background(DerinDeniz)
@@ -701,75 +694,9 @@ private fun KartMetni(
     }
 }
 
-/**
- * lucide `chevron-down` / `chevron-right` geometrisi (24'lük ızgara), tek renk
- * çizgi. Emoji ya da metin oku yerine gerçek ikon.
- */
-@Composable
-private fun ChevronIkonu(yon: ChevronYonu, renk: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val b = size.width / 24f
-        val yol = Path().apply {
-            when (yon) {
-                ChevronYonu.Asagi -> {
-                    moveTo(6f * b, 9f * b)
-                    lineTo(12f * b, 15f * b)
-                    lineTo(18f * b, 9f * b)
-                }
-                ChevronYonu.Sag -> {
-                    moveTo(9f * b, 6f * b)
-                    lineTo(15f * b, 12f * b)
-                    lineTo(9f * b, 18f * b)
-                }
-            }
-        }
-        drawPath(
-            path = yol,
-            color = renk,
-            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-        )
-    }
-}
-
 /** Hover büyümesi yalnızca fareli web'de; dokunmatikte yalnızca basma küçülmesi. */
 private fun etkilesimOlcegi(hoverlu: Boolean, basili: Boolean): Float = when {
     basili -> 0.97f
     hoverlu && fenerHalesiDestekli -> 1.02f
     else -> 1f
-}
-
-/**
- * Klavye odağı göstergesi: şeklin 3dp dışında 2dp TasBeyazi halka. Yerleşimi
- * değiştirmez (yalnızca çizim), bu yüzden odak gelince içerik kaymaz.
- */
-private fun Modifier.odakHalkasi(odakli: Boolean, sekil: Shape): Modifier = drawWithContent {
-    drawContent()
-    if (odakli) {
-        val kalinlik = 2.dp.toPx()
-        val pay = 3.dp.toPx() + kalinlik / 2f
-        val halka = sekil.createOutline(
-            Size(size.width + pay * 2f, size.height + pay * 2f),
-            layoutDirection,
-            this,
-        )
-        translate(left = -pay, top = -pay) {
-            drawOutline(outline = halka, color = TasBeyazi, style = Stroke(width = kalinlik))
-        }
-    }
-}
-
-/**
- * Türkçe büyük harf: `uppercase()` yerel ayardan bağımsızdır ve "i"yi "I"ya
- * çevirir ("Sinop'un İmzası" → "SINOP'UN"). i/ı burada elle eşlenir.
- */
-private fun String.turkceBuyukHarf(): String = buildString(length) {
-    for (harf in this@turkceBuyukHarf) {
-        append(
-            when (harf) {
-                'i' -> 'İ'
-                'ı' -> 'I'
-                else -> harf.uppercaseChar()
-            },
-        )
-    }
 }

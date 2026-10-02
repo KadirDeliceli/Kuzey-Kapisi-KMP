@@ -35,18 +35,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -67,6 +62,7 @@ import com.kuzeykapisi.app.ui.theme.NotrGeceCizgi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import kotlinx.coroutines.CancellationException
 
 /** Sohbet butonunun çapı ve ekran kenarından uzaklığı. */
@@ -255,7 +251,7 @@ private fun SohbetButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .size(FAB_CAPI)
-                .odakHalkasi(odakli, CircleShape)
+                .klavyeOdakHalkasi(odakli, CircleShape)
                 .shadow(elevation = golge, shape = CircleShape, ambientColor = KaranlikLacivert, spotColor = KaranlikLacivert)
                 .clip(CircleShape)
                 .background(FenerAlevi)
@@ -288,25 +284,5 @@ private fun YapayZekaSimgesi(modifier: Modifier = Modifier) {
         drawLine(KaranlikLacivert, Offset(17f * b, 5f * b), Offset(21f * b, 5f * b), cizgi.width, StrokeCap.Round)
         drawLine(KaranlikLacivert, Offset(18f * b, 16f * b), Offset(18f * b, 20f * b), cizgi.width, StrokeCap.Round)
         drawLine(KaranlikLacivert, Offset(16f * b, 18f * b), Offset(20f * b, 18f * b), cizgi.width, StrokeCap.Round)
-    }
-}
-
-/**
- * Klavye odağı göstergesi: şeklin 3dp dışında 2dp TasBeyazi halka. Yalnızca
- * çizimdir, yerleşimi değiştirmez; `clip`'ten ÖNCE uygulanmalıdır.
- */
-private fun Modifier.odakHalkasi(odakli: Boolean, sekil: Shape): Modifier = drawWithContent {
-    drawContent()
-    if (odakli) {
-        val kalinlik = 2.dp.toPx()
-        val pay = 3.dp.toPx() + kalinlik / 2f
-        val halka = sekil.createOutline(
-            Size(size.width + pay * 2f, size.height + pay * 2f),
-            layoutDirection,
-            this,
-        )
-        translate(left = -pay, top = -pay) {
-            drawOutline(outline = halka, color = TasBeyazi, style = Stroke(width = kalinlik))
-        }
     }
 }

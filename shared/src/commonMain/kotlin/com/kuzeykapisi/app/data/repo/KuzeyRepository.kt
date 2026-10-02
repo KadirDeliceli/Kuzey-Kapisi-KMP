@@ -105,17 +105,8 @@ class KuzeyRepository(private val api: ApiService) {
     }
 
     suspend fun guvenliSohbet(kategori: String, oge: String, sessionId: String, mesaj: String): SohbetSonuc {
-        return try {
-            val y = api.sohbet(sessionId, mesaj)
-            SohbetSonuc(y.cevap, sessionId, yenilendi = false)
-        } catch (e: ClientRequestException) {
-            if (e.response.status.value == 404) {
-                Logger.d { "guvenliSohbet: oturum süresi dolmuş (404), yeniden başlatılıyor (kategori=$kategori, oge=$oge)" }
-                val yeni = api.oturumBaslat(kategori, oge)
-                val y = api.sohbet(yeni.sessionId, mesaj)
-                SohbetSonuc(y.cevap, yeni.sessionId, yenilendi = true)
-            } else throw e
-        }
+        val r = oturumYenileyerekDene(kategori, oge, "guvenliSohbet", sessionId) { sid -> api.sohbet(sid, mesaj) }
+        return SohbetSonuc(r.deger.cevap, r.sessionId, r.yenilendi)
     }
 
     /**
@@ -129,16 +120,33 @@ class KuzeyRepository(private val api: ApiService) {
         sessionId: String,
         ses: KaydedilenSes,
     ): SesliSohbetSonuc {
-        return try {
-            val y = api.sesliSohbet(sessionId, ses)
-            SesliSohbetSonuc(y.kullaniciMetni, y.cevap, sessionId, yenilendi = false)
-        } catch (e: ClientRequestException) {
-            if (e.response.status.value == 404) {
-                Logger.d { "guvenliSesliSohbet: oturum süresi dolmuş (404), yeniden başlatılıyor (kategori=$kategori, oge=$oge)" }
-                val yeni = api.oturumBaslat(kategori, oge)
-                val y = api.sesliSohbet(yeni.sessionId, ses)
-                SesliSohbetSonuc(y.kullaniciMetni, y.cevap, yeni.sessionId, yenilendi = true)
-            } else throw e
+        val r = oturumYenileyerekDene(kategori, oge, "guvenliSesliSohbet", sessionId) { sid -> api.sesliSohbet(sid, ses) }
+        return SesliSohbetSonuc(r.deger.kullaniciMetni, r.deger.cevap, r.sessionId, r.yenilendi)
+    }
+
+    /**
+     * guvenliSohbet/guvenliSesliSohbet'in paylaştığı ORTAK desen: [cagir]
+     * [sessionId] ile denenir; 404 alırsa (oturum süresi dolmuş) sessizce
+     * yeni oturum açılıp AYNI çağrı yeni sessionId ile bir kez daha yapılır.
+     * Başka bir HTTP hatası olduğu gibi yukarı fırlatılır.
+     */
+    private suspend fun <T> oturumYenileyerekDene(
+        kategori: String,
+        oge: String,
+        etiket: String,
+        sessionId: String,
+        cagir: suspend (sessionId: String) -> T,
+    ): OturumYenilemeSonucu<T> = try {
+        OturumYenilemeSonucu(cagir(sessionId), sessionId, yenilendi = false)
+    } catch (e: ClientRequestException) {
+        if (e.response.status.value == 404) {
+            Logger.d { "$etiket: oturum süresi dolmuş (404), yeniden başlatılıyor (kategori=$kategori, oge=$oge)" }
+            val yeni = api.oturumBaslat(kategori, oge)
+            OturumYenilemeSonucu(cagir(yeni.sessionId), yeni.sessionId, yenilendi = true)
+        } else {
+            throw e
         }
     }
 }
+
+private data class OturumYenilemeSonucu<T>(val deger: T, val sessionId: String, val yenilendi: Boolean)

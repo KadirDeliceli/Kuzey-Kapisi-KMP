@@ -111,10 +111,9 @@ class PersonaDuzenleViewModel(
             } catch (e: AdminApiHatasi) {
                 Logger.d { "persona-guncelle hatası: ${e.logOzeti()}" }
                 _state.update { st ->
-                    if (e.httpKodu == 401) {
-                        st.copy(kaydediliyor = false, oturumGecersiz = true)
-                    } else {
-                        st.copy(kaydediliyor = false, genelHata = Metinler.adminHataMesaji(e))
+                    when (val sonuc = adminHatasiDegerlendir(e)) {
+                        AdminHataSonucu.OturumGecersiz -> st.copy(kaydediliyor = false, oturumGecersiz = true)
+                        is AdminHataSonucu.Mesaj -> st.copy(kaydediliyor = false, genelHata = sonuc.metin)
                     }
                 }
             } catch (e: Exception) {

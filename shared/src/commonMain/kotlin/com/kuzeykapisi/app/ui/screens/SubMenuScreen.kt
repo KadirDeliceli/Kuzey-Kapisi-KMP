@@ -1,25 +1,13 @@
 package com.kuzeykapisi.app.ui.screens
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -28,38 +16,21 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.domain.MainCard
 import com.kuzeykapisi.app.domain.SubCard
 import com.kuzeykapisi.app.ui.components.AnaKapakKarti
-import com.kuzeykapisi.app.ui.theme.ButonSekli
-import com.kuzeykapisi.app.ui.theme.FenerAlevi
-import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
-import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.components.Breadcrumb
+import com.kuzeykapisi.app.ui.components.BreadcrumbBasamagi
+import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 
 /** Ana sayfadaki telefon eşiğiyle aynı: altında kartlar alt alta dizilir. */
-private val GENIS_EKRAN_ESIGI = 600.dp
+private val GENIS_EKRAN_ESIGI = TELEFON_KIRILIMI
 
 /** İki alt kart arasındaki boşluk. */
 private val ALT_KART_ARASI_BOSLUK = 32.dp
@@ -149,7 +120,12 @@ fun SubMenuScreen(
 @Composable
 private fun UstBlok(mainCard: MainCard, onGeri: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Breadcrumb(aktif = mainCard.ad, onAnaSayfa = onGeri)
+        // Tek üst basamaklı breadcrumb: "Ana Sayfa › {Kategori}" — paylaşılan
+        // bileşen (bkz. components/Breadcrumb.kt), ekrana özel kopya değil.
+        Breadcrumb(
+            ustBasamaklar = listOf(BreadcrumbBasamagi(ad = "Ana Sayfa", onClick = onGeri)),
+            aktif = mainCard.ad,
+        )
         Text(
             text = mainCard.ad,
             style = MaterialTheme.typography.headlineMedium,
@@ -158,96 +134,5 @@ private fun UstBlok(mainCard: MainCard, onGeri: () -> Unit, modifier: Modifier =
                 .padding(top = 8.dp, start = 6.dp)
                 .semantics { heading() },
         )
-    }
-}
-
-/**
- * "Ana Sayfa › {Kategori}". Bağlantı SisGrisi, üzerine gelince/basılınca
- * TasBeyazi + alt çizgi; aktif (son) öğe FenerAlevi ve tıklanamaz. Ayraç
- * ince bir chevron çizgisidir, ekran okuyucuya okunmaz.
- */
-@Composable
-private fun Breadcrumb(aktif: String, onAnaSayfa: () -> Unit, modifier: Modifier = Modifier) {
-    val kaynak = remember { MutableInteractionSource() }
-    val hoverlu by kaynak.collectIsHoveredAsState()
-    val basili by kaynak.collectIsPressedAsState()
-    val odakli by kaynak.collectIsFocusedAsState()
-    val vurgulu = hoverlu || basili
-    val baglantiRengi by animateColorAsState(
-        targetValue = if (vurgulu) TasBeyazi else SisGrisi,
-        animationSpec = tween(MIKRO_SURE),
-        label = "breadcrumbBaglantisi",
-    )
-
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .odakHalkasi(odakli, ButonSekli)
-                .clip(ButonSekli)
-                .hoverable(interactionSource = kaynak)
-                .clickable(
-                    interactionSource = kaynak,
-                    indication = null,
-                    role = Role.Button,
-                    onClick = onAnaSayfa,
-                )
-                .heightIn(min = 40.dp)
-                .padding(horizontal = 6.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "Ana Sayfa",
-                style = MaterialTheme.typography.labelLarge.copy(
-                    textDecoration = if (vurgulu) TextDecoration.Underline else TextDecoration.None,
-                ),
-                color = baglantiRengi,
-            )
-        }
-
-        Canvas(modifier = Modifier.padding(horizontal = 2.dp).size(14.dp)) {
-            val b = size.width / 24f
-            val yol = Path().apply {
-                moveTo(9f * b, 6f * b)
-                lineTo(15f * b, 12f * b)
-                lineTo(9f * b, 18f * b)
-            }
-            drawPath(
-                path = yol,
-                color = SisGrisi,
-                style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-            )
-        }
-
-        Text(
-            text = aktif,
-            style = MaterialTheme.typography.labelLarge,
-            color = FenerAlevi,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .padding(horizontal = 6.dp)
-                .semantics { stateDescription = "geçerli sayfa" },
-        )
-    }
-}
-
-/**
- * Klavye odağı göstergesi: şeklin 3dp dışında 2dp TasBeyazi halka. Yalnızca
- * çizimdir, yerleşimi değiştirmez; `clip`'ten ÖNCE uygulanmalıdır.
- */
-private fun Modifier.odakHalkasi(odakli: Boolean, sekil: Shape): Modifier = drawWithContent {
-    drawContent()
-    if (odakli) {
-        val kalinlik = 2.dp.toPx()
-        val pay = 3.dp.toPx() + kalinlik / 2f
-        val halka = sekil.createOutline(
-            Size(size.width + pay * 2f, size.height + pay * 2f),
-            layoutDirection,
-            this,
-        )
-        translate(left = -pay, top = -pay) {
-            drawOutline(outline = halka, color = TasBeyazi, style = Stroke(width = kalinlik))
-        }
     }
 }

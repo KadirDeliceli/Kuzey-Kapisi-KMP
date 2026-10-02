@@ -21,16 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,6 +39,8 @@ import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
+import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 import kuzeykapisiapp.shared.generated.resources.Res
 import kuzeykapisiapp.shared.generated.resources.default_kapak
 import org.jetbrains.compose.resources.painterResource
@@ -105,7 +101,7 @@ fun AnaKapakKarti(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(gorselOran)
-                .odakHalkasi(odakli, KartSekli)
+                .klavyeOdakHalkasi(odakli, KartSekli)
                 .shadow(
                     elevation = if (etkilesim.hoverlu || etkilesim.basili) 14.dp else 6.dp,
                     shape = KartSekli,
@@ -180,41 +176,5 @@ fun AnaKapakKarti(
                 )
             }
         }
-    }
-}
-
-/**
- * Klavye odağı göstergesi: şeklin 3dp dışında 2dp TasBeyazi halka. Yalnızca
- * çizimdir, yerleşimi değiştirmez; `clip`'ten ÖNCE uygulanmalıdır.
- */
-private fun Modifier.odakHalkasi(odakli: Boolean, sekil: Shape): Modifier = drawWithContent {
-    drawContent()
-    if (odakli) {
-        val kalinlik = 2.dp.toPx()
-        val pay = 3.dp.toPx() + kalinlik / 2f
-        val halka = sekil.createOutline(
-            Size(size.width + pay * 2f, size.height + pay * 2f),
-            layoutDirection,
-            this,
-        )
-        translate(left = -pay, top = -pay) {
-            drawOutline(outline = halka, color = TasBeyazi, style = Stroke(width = kalinlik))
-        }
-    }
-}
-
-/**
- * Türkçe büyük harf: `uppercase()` yerel ayardan bağımsızdır ve "i"yi "I"ya
- * çevirir. i/ı burada elle eşlenir.
- */
-private fun String.turkceBuyukHarf(): String = buildString(length) {
-    for (harf in this@turkceBuyukHarf) {
-        append(
-            when (harf) {
-                'i' -> 'İ'
-                'ı' -> 'I'
-                else -> harf.uppercaseChar()
-            },
-        )
     }
 }

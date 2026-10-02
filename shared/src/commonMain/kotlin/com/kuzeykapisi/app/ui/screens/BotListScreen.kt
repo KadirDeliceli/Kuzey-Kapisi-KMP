@@ -44,11 +44,12 @@ import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.NotrGeceCizgi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.vm.CatalogViewModel
 
 /** Ana sayfadaki telefon eşiğiyle aynı. */
-private val TELEFON_ESIGI = 600.dp
+private val TELEFON_ESIGI = TELEFON_KIRILIMI
 
 /** Ana sayfada kenar boşluğunun 48dp'ye çıktığı eşik. */
 private val GENIS_ESIK = 1200.dp

@@ -2,8 +2,6 @@ package com.kuzeykapisi.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,7 +41,6 @@ import com.kuzeykapisi.app.ui.components.NabizGostergesi
 import com.kuzeykapisi.app.ui.components.OnayDialog
 import com.kuzeykapisi.app.ui.components.SilIkonuButonu
 import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
-import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.theme.DerinDeniz
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.SatirSekli
@@ -149,22 +145,21 @@ private fun RotaYerSatiri(
     onDuzenle: () -> Unit,
     onSil: () -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val etkilesim = kartEtkilesimi(interactionSource)
-
+    // Satırın kendisi tıklanabilir DEĞİL (yalnızca Düzenle/Sil ikon butonları
+    // tıklanır) — bu yüzden hover'da vurgulanan bir gölge/kenarlık YOK,
+    // durağan hâldeki (kartEtkilesimi'nin dinlenme değeri) sakin görünüm sabit kalır.
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = if (etkilesim.hoverlu) 6.dp else 3.dp,
+                elevation = 3.dp,
                 shape = SatirSekli,
                 ambientColor = KaranlikLacivert,
                 spotColor = KaranlikLacivert,
             )
             .clip(SatirSekli)
             .background(DerinDeniz)
-            .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, SatirSekli)
-            .hoverable(interactionSource = interactionSource)
+            .border(1.dp, SisGrisi.copy(alpha = 0.10f), SatirSekli)
             .padding(start = 18.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

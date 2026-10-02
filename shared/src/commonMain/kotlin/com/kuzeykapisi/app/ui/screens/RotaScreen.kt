@@ -2,9 +2,8 @@ package com.kuzeykapisi.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,6 +64,7 @@ import com.kuzeykapisi.app.ui.components.KuzeyChip
 import com.kuzeykapisi.app.ui.components.RotaHaritasiWebView
 import com.kuzeykapisi.app.ui.components.SesIkonuButonu
 import com.kuzeykapisi.app.ui.components.YukleniyorGorunumu
+import com.kuzeykapisi.app.ui.components.etkilesimli
 import com.kuzeykapisi.app.ui.components.kartEtkilesimi
 import com.kuzeykapisi.app.ui.components.rememberRotaHaritasiHtml
 import com.kuzeykapisi.app.ui.components.tumRotaGoogleMapsUrl
@@ -79,6 +79,7 @@ import com.kuzeykapisi.app.ui.theme.SatirSekli
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.YosunAcik
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import com.kuzeykapisi.app.ui.vm.RotaUiState
 import com.kuzeykapisi.app.ui.vm.RotaViewModel
@@ -334,9 +335,10 @@ private fun RotaGaleriGorunumu(
         }
 
         BirincilButon(
-            metin = if (ui.yukleniyorOzel) "Aranıyor…" else "Ara",
+            metin = "Ara",
             onClick = { vm.ara() },
-            etkin = ui.secilenSureSaat != null && !ui.yukleniyorOzel,
+            etkin = ui.secilenSureSaat != null,
+            yukleniyor = ui.yukleniyorOzel,
             hale = true,
             modifier = Modifier.padding(top = 22.dp, start = 6.dp),
         )
@@ -377,15 +379,16 @@ private fun TurKart(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
 
     Column(
         modifier = modifier
             .scale(etkilesim.olcek)
+            .klavyeOdakHalkasi(odakli, KartSekli)
             .clip(KartSekli)
             .background(DerinDeniz)
             .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, KartSekli)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .etkilesimli(interactionSource, onClick = onClick)
             .padding(18.dp),
     ) {
         Text(
@@ -521,17 +524,18 @@ private fun RotaHaritasiBolumu(duraklar: List<RotaDurak>, gizli: Boolean) {
 @Composable
 private fun RotaDurakKart(durak: RotaDurak, onSesTiklandi: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val etkilesim = kartEtkilesimi(interactionSource)
     val veriStili = LocalVeriStili.current
 
+    // Tıklanabilir DEĞİL (sesli anlatım ikonu ve "Google Maps'te aç" butonu
+    // kendi hedefleriyle ayrı ayrı tıklanır) — bu yüzden hover'da vurgulanan
+    // bir kenarlık YOK, durağan hâldeki (kartEtkilesimi'nin dinlenme değeri)
+    // sakin kenarlık sabit kalır.
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(KartSekli)
             .background(DerinDeniz)
-            .border(etkilesim.kenarKalinligi, etkilesim.kenarRengi, KartSekli)
-            .hoverable(interactionSource = interactionSource)
+            .border(1.dp, SisGrisi.copy(alpha = 0.10f), KartSekli)
             .padding(18.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {

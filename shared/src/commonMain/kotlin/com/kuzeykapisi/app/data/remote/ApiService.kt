@@ -152,19 +152,15 @@ class ApiService(private val client: HttpClient) {
         return apiJson.decodeFromString(hamCevap)
     }
 
-    suspend fun adminGiris(kullaniciAdi: String, sifre: String): String {
+    suspend fun adminGiris(kullaniciAdi: String, sifre: String): String = adminCagri {
         val istek = AdminGirisIstek(kullaniciAdi, sifre)
-        return try {
-            val hamCevap = calVeHamMetniAl {
-                client.post("${Config.BASE_URL}admin/giris") {
-                    contentType(ContentType.Application.Json)
-                    setBody(istek)
-                }
+        val hamCevap = calVeHamMetniAl {
+            client.post("${Config.BASE_URL}admin/giris") {
+                contentType(ContentType.Application.Json)
+                setBody(istek)
             }
-            apiJson.decodeFromString<AdminGirisYaniti>(hamCevap).token
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
         }
+        apiJson.decodeFromString<AdminGirisYaniti>(hamCevap).token
     }
 
     suspend fun personaEkle(
@@ -175,31 +171,27 @@ class ApiService(private val client: HttpClient) {
         icerik: String,
         anlatim: String?,
         gorsel: SecilenResim,
-    ): PersonaEkleYaniti {
-        return try {
-            val yanit = client.submitFormWithBinaryData(
-                url = "${Config.BASE_URL}admin/persona-ekle",
-                formData = formData {
-                    append("kategori", kategori)
-                    append("ad", ad)
-                    append("kod", kod)
-                    append("karsilama", karsilama)
-                    append("icerik", icerik)
-                    if (!anlatim.isNullOrBlank()) append("anlatim", anlatim)
-                    append(
-                        "gorsel",
-                        gorsel.bytes,
-                        Headers.build {
-                            append(HttpHeaders.ContentType, mimeTipiIcin(gorsel.uzanti))
-                            append(HttpHeaders.ContentDisposition, "filename=\"${gorsel.dosyaAdi}\"")
-                        },
-                    )
-                },
-            )
-            apiJson.decodeFromString(yanit.bodyAsText())
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
-        }
+    ): PersonaEkleYaniti = adminCagri {
+        val yanit = client.submitFormWithBinaryData(
+            url = "${Config.BASE_URL}admin/persona-ekle",
+            formData = formData {
+                append("kategori", kategori)
+                append("ad", ad)
+                append("kod", kod)
+                append("karsilama", karsilama)
+                append("icerik", icerik)
+                if (!anlatim.isNullOrBlank()) append("anlatim", anlatim)
+                append(
+                    "gorsel",
+                    gorsel.bytes,
+                    Headers.build {
+                        append(HttpHeaders.ContentType, mimeTipiIcin(gorsel.uzanti))
+                        append(HttpHeaders.ContentDisposition, "filename=\"${gorsel.dosyaAdi}\"")
+                    },
+                )
+            },
+        )
+        apiJson.decodeFromString(yanit.bodyAsText())
     }
 
     /**
@@ -216,7 +208,9 @@ class ApiService(private val client: HttpClient) {
         anlatimKaldir: Boolean,
         gorsel: SecilenResim?,
     ) {
-        try {
+        // Block gövde BİLEREK (expression değil): orijinal davranış gibi Unit
+        // döner — decode edilmiş HTTP yanıtı burada hiç kullanılmaz.
+        adminCagri {
             val parcalar = formData {
                 append("ad", ad)
                 append("karsilama", karsilama)
@@ -242,85 +236,67 @@ class ApiService(private val client: HttpClient) {
             ) {
                 method = HttpMethod.Put
             }
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
         }
     }
 
-    suspend fun personaGetir(kategori: String, kod: String): PersonaDetay {
-        return try {
-            val hamCevap = calVeHamMetniAl {
-                client.get("${Config.BASE_URL}admin/persona/${yol(kategori, kod)}")
-            }
-            apiJson.decodeFromString(hamCevap)
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
+    suspend fun personaGetir(kategori: String, kod: String): PersonaDetay = adminCagri {
+        val hamCevap = calVeHamMetniAl {
+            client.get("${Config.BASE_URL}admin/persona/${yol(kategori, kod)}")
         }
+        apiJson.decodeFromString(hamCevap)
     }
 
+    /** Block gövde: Unit döner (orijinal davranış), HTTP yanıtı kullanılmaz. */
     suspend fun personaSil(kategori: String, kod: String) {
-        try {
+        adminCagri {
             client.delete("${Config.BASE_URL}admin/persona-sil/${yol(kategori, kod)}")
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
         }
     }
 
-    suspend fun rotaYerEkle(istek: RotaYerEkleIstek): RotaYerEkleYaniti {
-        return try {
-            val hamCevap = calVeHamMetniAl {
-                client.post("${Config.BASE_URL}admin/rota-yer-ekle") {
-                    contentType(ContentType.Application.Json)
-                    setBody(istek)
-                }
+    suspend fun rotaYerEkle(istek: RotaYerEkleIstek): RotaYerEkleYaniti = adminCagri {
+        val hamCevap = calVeHamMetniAl {
+            client.post("${Config.BASE_URL}admin/rota-yer-ekle") {
+                contentType(ContentType.Application.Json)
+                setBody(istek)
             }
-            apiJson.decodeFromString(hamCevap)
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
         }
+        apiJson.decodeFromString(hamCevap)
     }
 
-    suspend fun rotaYerleriListele(): List<RotaMekaniAdmin> {
-        return try {
-            val hamCevap = calVeHamMetniAl {
-                client.get("${Config.BASE_URL}admin/rota-yerleri")
-            }
-            apiJson.decodeFromString<RotaYerleriYaniti>(hamCevap).mekanlar
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
+    suspend fun rotaYerleriListele(): List<RotaMekaniAdmin> = adminCagri {
+        val hamCevap = calVeHamMetniAl {
+            client.get("${Config.BASE_URL}admin/rota-yerleri")
         }
+        apiJson.decodeFromString<RotaYerleriYaniti>(hamCevap).mekanlar
     }
 
-    suspend fun rotaYeriGetir(mekanId: Int): RotaYeriDetay {
-        return try {
-            val hamCevap = calVeHamMetniAl {
-                client.get("${Config.BASE_URL}admin/rota-yeri/$mekanId")
-            }
-            apiJson.decodeFromString(hamCevap)
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
+    suspend fun rotaYeriGetir(mekanId: Int): RotaYeriDetay = adminCagri {
+        val hamCevap = calVeHamMetniAl {
+            client.get("${Config.BASE_URL}admin/rota-yeri/$mekanId")
         }
+        apiJson.decodeFromString(hamCevap)
     }
 
-    /** anlatim null ise gövdeye hiç eklenmez (encodeDefaults=false) — backend bunu "mevcut anlatıma dokunma" olarak yorumluyor. */
+    /**
+     * anlatim null ise gövdeye hiç eklenmez (encodeDefaults=false) — backend bunu
+     * "mevcut anlatıma dokunma" olarak yorumluyor. Block gövde: Unit döner
+     * (orijinal davranış), ham yanıt metni kullanılmaz.
+     */
     suspend fun rotaYeriGuncelle(mekanId: Int, istek: RotaYerEkleIstek) {
-        try {
+        adminCagri {
             calVeHamMetniAl {
                 client.put("${Config.BASE_URL}admin/rota-yer-guncelle/$mekanId") {
                     contentType(ContentType.Application.Json)
                     setBody(istek)
                 }
             }
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
         }
     }
 
+    /** Block gövde: Unit döner (orijinal davranış), HTTP yanıtı kullanılmaz. */
     suspend fun rotaYeriSil(mekanId: Int) {
-        try {
+        adminCagri {
             client.delete("${Config.BASE_URL}admin/rota-yer-sil/$mekanId")
-        } catch (e: ClientRequestException) {
-            adminHataFirlat(e)
         }
     }
 
@@ -330,6 +306,19 @@ class ApiService(private val client: HttpClient) {
         ".jpg", ".jpeg" -> "image/jpeg"
         else -> "application/octet-stream"
     }
+
+    /**
+     * TÜM admin uç noktalarının paylaştığı try/catch: [blok] 4xx ile
+     * başarısız olursa (ClientRequestException) backend'in hata gövdesi
+     * [adminHataFirlat] ile [AdminApiHatasi]'na çevrilip fırlatılır. Önceden
+     * her admin fonksiyonunda ayrı ayrı tekrarlanan 10 kopyanın yerine.
+     */
+    private suspend inline fun <T> adminCagri(crossinline blok: suspend () -> T): T =
+        try {
+            blok()
+        } catch (e: ClientRequestException) {
+            adminHataFirlat(e)
+        }
 
     /**
      * Backend'in FastAPI HTTPException'ları hep {"detail": "..."} şeklinde döner.

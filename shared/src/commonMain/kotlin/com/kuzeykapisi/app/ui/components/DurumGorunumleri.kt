@@ -131,6 +131,22 @@ fun BasariMetni(mesaj: String, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * Admin form ekranlarının (Persona/Rota Yeri Ekle/Düzenle) paylaştığı genel
+ * hata + başarı gösterim bloğu — kaydet butonundan hemen önce. Dört ekranda
+ * ayrı ayrı tekrarlanan aynı `if (genelHata != null) ... if (basariMesaji
+ * != null) ...` kalıbının yerine.
+ */
+@Composable
+fun FormDurumMesajlari(genelHata: String?, basariMesaji: String?, modifier: Modifier = Modifier) {
+    if (genelHata != null) {
+        HataMetni(genelHata, modifier = modifier.padding(bottom = 12.dp))
+    }
+    if (basariMesaji != null) {
+        BasariMetni(basariMesaji, modifier = modifier.padding(bottom = 12.dp))
+    }
+}
+
 /** Boş liste durumu — sakin, suçlayıcı olmayan tek satır. */
 @Composable
 fun BosDurumGorunumu(mesaj: String, modifier: Modifier = Modifier) {

@@ -12,9 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -74,6 +73,7 @@ import com.kuzeykapisi.app.ui.theme.SatirSekli
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.YuksekYuzey
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.vm.ChatViewModel
 
 @Composable
@@ -324,6 +324,7 @@ private fun AgUyarisiBandi(mesaj: String?) {
 private fun KapatButonu(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = if (etkilesim.hoverlu || etkilesim.basili) FenerAlevi else SisGrisi,
         animationSpec = tween(MIKRO_SURE),
@@ -333,9 +334,9 @@ private fun KapatButonu(onClick: () -> Unit) {
         modifier = Modifier
             .scale(etkilesim.olcek)
             .size(38.dp)
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+            .etkilesimli(interactionSource, contentDescription = "Kapat", onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(16.dp)) {
@@ -352,6 +353,7 @@ private fun KapatButonu(onClick: () -> Unit) {
 private fun GonderButonu(etkin: Boolean, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val zemin by animateColorAsState(
         targetValue = when {
             !etkin -> FenerAlevi.copy(alpha = 0.22f)
@@ -365,15 +367,10 @@ private fun GonderButonu(etkin: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .scale(etkilesim.olcek)
             .size(48.dp)
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
             .background(zemin)
-            .hoverable(interactionSource = interactionSource, enabled = etkin)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = etkin,
-                onClick = onClick,
-            ),
+            .etkilesimli(interactionSource, etkin, contentDescription = "Gönder", onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(19.dp)) {
@@ -482,6 +479,7 @@ private fun SesButonu(durum: SesButonuDurumu, onClick: () -> Unit, modifier: Mod
     val etkin = durum != SesButonuDurumu.PASIF
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val renk by animateColorAsState(
         targetValue = when {
             !etkin -> SisGrisi.copy(alpha = 0.35f)
@@ -495,9 +493,14 @@ private fun SesButonu(durum: SesButonuDurumu, onClick: () -> Unit, modifier: Mod
         modifier = modifier
             .scale(etkilesim.olcek)
             .size(30.dp)
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
-            .hoverable(interactionSource = interactionSource, enabled = etkin)
-            .clickable(interactionSource = interactionSource, indication = null, enabled = etkin, onClick = onClick),
+            .etkilesimli(
+                interactionSource,
+                etkin,
+                contentDescription = if (durum == SesButonuDurumu.CALIYOR) "Durdur" else "Dinle",
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(14.dp)) {
@@ -535,6 +538,7 @@ private fun SesButonu(durum: SesButonuDurumu, onClick: () -> Unit, modifier: Mod
 private fun MikrofonButonu(durum: KayitDurumu, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val kayitta = durum == KayitDurumu.KAYIT_YAPILIYOR
     val islemde = durum == KayitDurumu.ISLENIYOR
 
@@ -566,10 +570,19 @@ private fun MikrofonButonu(durum: KayitDurumu, onClick: () -> Unit) {
         modifier = Modifier
             .scale(if (kayitta) nabizOlcek else etkilesim.olcek)
             .size(44.dp)
+            .klavyeOdakHalkasi(odakli, CircleShape)
             .clip(CircleShape)
             .background(if (kayitta) FenerAlevi.copy(alpha = 0.16f) else Color.Transparent)
-            .hoverable(interactionSource = interactionSource, enabled = !islemde)
-            .clickable(interactionSource = interactionSource, indication = null, enabled = !islemde, onClick = onClick),
+            .etkilesimli(
+                interactionSource,
+                !islemde,
+                contentDescription = when {
+                    islemde -> "Ses işleniyor"
+                    kayitta -> "Kaydı durdur"
+                    else -> "Sesli mesaj kaydet"
+                },
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         if (islemde) {

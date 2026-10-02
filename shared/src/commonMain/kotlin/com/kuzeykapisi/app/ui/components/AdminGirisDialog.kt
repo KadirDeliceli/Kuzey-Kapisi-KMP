@@ -172,9 +172,9 @@ fun AdminGirisDialog(
                 }
 
                 BirincilButon(
-                    metin = if (ui.yukleniyor) "Giriş yapılıyor…" else "Giriş yap",
+                    metin = "Giriş yap",
                     onClick = { vm.girisYap(kullaniciAdi, sifre) },
-                    etkin = !ui.yukleniyor,
+                    yukleniyor = ui.yukleniyor,
                     hale = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
                 )

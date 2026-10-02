@@ -20,8 +20,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 
-private val GENIS_EKRAN_ESIGI = 600.dp
+private val GENIS_EKRAN_ESIGI = TELEFON_KIRILIMI
 
 private const val ILETISIM_METNI =
     "0 (366) 212 58 52 · bilgi@kuzka.gov.tr"

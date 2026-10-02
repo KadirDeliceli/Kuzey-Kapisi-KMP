@@ -20,11 +20,11 @@ import androidx.compose.ui.unit.dp
 /** Buton, chip, form alanı, liste satırı, mesaj balonu, harita çerçevesi. */
 val ButonSekli = RoundedCornerShape(16.dp)
 
-/** Metin alanı (OutlinedTextField). */
-val AlanSekli = RoundedCornerShape(16.dp)
+/** Metin alanı (OutlinedTextField) — ButonSekli ile BİREBİR aynı, tek kaynaktan. */
+val AlanSekli = ButonSekli
 
-/** Liste satırı, küçük kart, harita çerçevesi, mesaj balonu. */
-val SatirSekli = RoundedCornerShape(16.dp)
+/** Liste satırı, küçük kart, harita çerçevesi, mesaj balonu — ButonSekli ile BİREBİR aynı, tek kaynaktan. */
+val SatirSekli = ButonSekli
 
 /**
  * İmza kart geometrisi — ana/alt/bot kartları, rota tur kartları. Üç köşe
@@ -37,10 +37,5 @@ val KartSekli = RoundedCornerShape(
     bottomEnd = 4.dp,
 )
 
-/** Dialog kabuğu — kart geometrisiyle aynı imza, aynı sağ-alt kesim. */
-val DialogSekli = RoundedCornerShape(
-    topStart = 20.dp,
-    topEnd = 20.dp,
-    bottomStart = 20.dp,
-    bottomEnd = 4.dp,
-)
+/** Dialog kabuğu — kart geometrisiyle BİREBİR aynı imza, tek kaynaktan. */
+val DialogSekli = KartSekli

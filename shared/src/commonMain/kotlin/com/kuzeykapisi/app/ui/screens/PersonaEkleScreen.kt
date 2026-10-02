@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,27 +11,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.ADMIN_PERSONA_KATEGORILERI
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.AlanBasligi
-import com.kuzeykapisi.app.ui.components.BasariMetni
-import com.kuzeykapisi.app.ui.components.BirincilButon
 import com.kuzeykapisi.app.ui.components.EkranBasligi
-import com.kuzeykapisi.app.ui.components.HataMetni
-import com.kuzeykapisi.app.ui.components.IkincilButon
+import com.kuzeykapisi.app.ui.components.FormDurumMesajlari
+import com.kuzeykapisi.app.ui.components.GorselSeciciAlani
+import com.kuzeykapisi.app.ui.components.KaydetButonu
 import com.kuzeykapisi.app.ui.components.KuzeyChip
 import com.kuzeykapisi.app.ui.components.KuzeyMetinAlani
-import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.vm.PersonaEkleViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -131,41 +125,14 @@ fun PersonaEkleScreen(
         )
         Spacer(modifier = Modifier.height(20.dp))
 
-        AlanBasligi("Görsel")
-        Spacer(modifier = Modifier.height(10.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            IkincilButon(
-                metin = if (ui.gorsel == null) "Görsel seç" else "Görseli değiştir",
-                onClick = { vm.gorselSec() },
-            )
-            val secilenGorsel = ui.gorsel
-            if (secilenGorsel != null) {
-                Text(
-                    text = "Seçildi: ${secilenGorsel.dosyaAdi}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SisGrisi,
-                )
-            }
-        }
+        GorselSeciciAlani(gorsel = ui.gorsel, onGorselSec = { vm.gorselSec() })
         Spacer(modifier = Modifier.height(24.dp))
 
-        val genelHata = ui.genelHata
-        if (genelHata != null) {
-            HataMetni(genelHata, modifier = Modifier.padding(bottom = 12.dp))
-        }
-        val basariMesaji = ui.basariMesaji
-        if (basariMesaji != null) {
-            BasariMetni(basariMesaji, modifier = Modifier.padding(bottom = 12.dp))
-        }
+        FormDurumMesajlari(genelHata = ui.genelHata, basariMesaji = ui.basariMesaji)
 
-        BirincilButon(
-            metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
+        KaydetButonu(
+            kaydediliyor = ui.kaydediliyor,
             onClick = { vm.kaydet() },
-            etkin = !ui.kaydediliyor,
-            hale = true,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(24.dp))

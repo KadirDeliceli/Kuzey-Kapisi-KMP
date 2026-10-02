@@ -20,10 +20,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.data.model.RotaMekaniAdmin
 import com.kuzeykapisi.app.data.repo.KuzeyRepository
 import com.kuzeykapisi.app.ui.components.AnlatimiKaldirSecimi
-import com.kuzeykapisi.app.ui.components.BasariMetni
-import com.kuzeykapisi.app.ui.components.BirincilButon
 import com.kuzeykapisi.app.ui.components.EkranBasligi
-import com.kuzeykapisi.app.ui.components.HataMetni
+import com.kuzeykapisi.app.ui.components.FormDurumMesajlari
+import com.kuzeykapisi.app.ui.components.KaydetButonu
 import com.kuzeykapisi.app.ui.components.KuzeyMetinAlani
 import com.kuzeykapisi.app.ui.vm.RotaYerDuzenleViewModel
 
@@ -118,20 +117,11 @@ fun RotaYerDuzenleScreen(
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        val genelHata = ui.genelHata
-        if (genelHata != null) {
-            HataMetni(genelHata, modifier = Modifier.padding(bottom = 12.dp))
-        }
-        val basariMesaji = ui.basariMesaji
-        if (basariMesaji != null) {
-            BasariMetni(basariMesaji, modifier = Modifier.padding(bottom = 12.dp))
-        }
+        FormDurumMesajlari(genelHata = ui.genelHata, basariMesaji = ui.basariMesaji)
 
-        BirincilButon(
-            metin = if (ui.kaydediliyor) "Kaydediliyor…" else "Kaydet",
+        KaydetButonu(
+            kaydediliyor = ui.kaydediliyor,
             onClick = { vm.kaydet() },
-            etkin = !ui.kaydediliyor,
-            hale = true,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(24.dp))

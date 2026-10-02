@@ -4,9 +4,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +27,7 @@ import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SisGrisi
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 
 /**
  * Projedeki TEK seçim chip'i — rota süresi/ilgi alanları ve admin kategori
@@ -46,6 +46,7 @@ fun KuzeyChip(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val vurgulu = etkilesim.hoverlu || etkilesim.basili
 
     val zemin by animateColorAsState(
@@ -81,11 +82,11 @@ fun KuzeyChip(
                 ambientColor = FenerAlevi,
                 spotColor = FenerAlevi,
             )
+            .klavyeOdakHalkasi(odakli, ButonSekli)
             .clip(ButonSekli)
             .background(zemin)
             .border(etkilesim.kenarKalinligi, kenar, ButonSekli)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .etkilesimli(interactionSource, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {

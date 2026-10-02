@@ -45,10 +45,9 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
             } catch (e: AdminApiHatasi) {
                 Logger.d { "rota-yerleri listesi hatası: ${e.logOzeti()}" }
                 _state.update { st ->
-                    if (e.httpKodu == 401) {
-                        st.copy(yukleniyor = false, oturumGecersiz = true)
-                    } else {
-                        st.copy(yukleniyor = false, hata = Metinler.adminHataMesaji(e))
+                    when (val sonuc = adminHatasiDegerlendir(e)) {
+                        AdminHataSonucu.OturumGecersiz -> st.copy(yukleniyor = false, oturumGecersiz = true)
+                        is AdminHataSonucu.Mesaj -> st.copy(yukleniyor = false, hata = sonuc.metin)
                     }
                 }
             } catch (e: Exception) {
@@ -80,12 +79,11 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
             } catch (e: AdminApiHatasi) {
                 Logger.d { "rota-yeri-getir hatası: ${e.logOzeti()}" }
                 _state.update { st ->
-                    if (e.httpKodu == 401) {
-                        st.copy(duzenlemeYukleniyorId = null, oturumGecersiz = true)
-                    } else {
-                        st.copy(
+                    when (val sonuc = adminHatasiDegerlendir(e)) {
+                        AdminHataSonucu.OturumGecersiz -> st.copy(duzenlemeYukleniyorId = null, oturumGecersiz = true)
+                        is AdminHataSonucu.Mesaj -> st.copy(
                             duzenlemeYukleniyorId = null,
-                            duzenlemeHatasi = Metinler.adminHataMesaji(e),
+                            duzenlemeHatasi = sonuc.metin,
                         )
                     }
                 }
@@ -121,10 +119,9 @@ class RotaYerListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
             } catch (e: AdminApiHatasi) {
                 Logger.d { "rota-yer-sil hatası: ${e.logOzeti()}" }
                 _state.update { st ->
-                    if (e.httpKodu == 401) {
-                        st.copy(silmeYukleniyor = false, oturumGecersiz = true)
-                    } else {
-                        st.copy(silmeYukleniyor = false, silmeHatasi = Metinler.adminHataMesaji(e))
+                    when (val sonuc = adminHatasiDegerlendir(e)) {
+                        AdminHataSonucu.OturumGecersiz -> st.copy(silmeYukleniyor = false, oturumGecersiz = true)
+                        is AdminHataSonucu.Mesaj -> st.copy(silmeYukleniyor = false, silmeHatasi = sonuc.metin)
                     }
                 }
             } catch (e: Exception) {

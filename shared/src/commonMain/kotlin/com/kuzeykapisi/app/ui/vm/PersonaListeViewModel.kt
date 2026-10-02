@@ -78,12 +78,11 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
             } catch (e: AdminApiHatasi) {
                 Logger.d { "persona-getir hatası: ${e.logOzeti()}" }
                 _state.update { st ->
-                    if (e.httpKodu == 401) {
-                        st.copy(duzenlemeYukleniyorKod = null, oturumGecersiz = true)
-                    } else {
-                        st.copy(
+                    when (val sonuc = adminHatasiDegerlendir(e)) {
+                        AdminHataSonucu.OturumGecersiz -> st.copy(duzenlemeYukleniyorKod = null, oturumGecersiz = true)
+                        is AdminHataSonucu.Mesaj -> st.copy(
                             duzenlemeYukleniyorKod = null,
-                            duzenlemeHatasi = Metinler.adminHataMesaji(e),
+                            duzenlemeHatasi = sonuc.metin,
                         )
                     }
                 }
@@ -120,10 +119,9 @@ class PersonaListeViewModel(private val repo: KuzeyRepository) : ViewModel() {
             } catch (e: AdminApiHatasi) {
                 Logger.d { "persona-sil hatası: ${e.logOzeti()}" }
                 _state.update { st ->
-                    if (e.httpKodu == 401) {
-                        st.copy(silmeYukleniyor = false, oturumGecersiz = true)
-                    } else {
-                        st.copy(silmeYukleniyor = false, silmeHatasi = Metinler.adminHataMesaji(e))
+                    when (val sonuc = adminHatasiDegerlendir(e)) {
+                        AdminHataSonucu.OturumGecersiz -> st.copy(silmeYukleniyor = false, oturumGecersiz = true)
+                        is AdminHataSonucu.Mesaj -> st.copy(silmeYukleniyor = false, silmeHatasi = sonuc.metin)
                     }
                 }
             } catch (e: Exception) {

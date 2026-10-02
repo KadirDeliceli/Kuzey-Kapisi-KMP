@@ -73,10 +73,10 @@ import com.kuzeykapisi.app.ui.screens.RotaYerDuzenleScreen
 import com.kuzeykapisi.app.ui.screens.RotaYerEkleScreen
 import com.kuzeykapisi.app.ui.screens.RotaYerYonetScreen
 import com.kuzeykapisi.app.ui.screens.SubMenuScreen
-import com.kuzeykapisi.app.ui.screens.WipScreen
 import com.kuzeykapisi.app.ui.theme.KapiGecisi
 import com.kuzeykapisi.app.ui.theme.KaranlikLacivert
 import com.kuzeykapisi.app.ui.theme.KuzeyKapisiTheme
+import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.vm.AdminViewModel
 import com.kuzeykapisi.app.ui.vm.AnlatimKaynagi
 import kuzeykapisiapp.shared.generated.resources.Res
@@ -98,7 +98,6 @@ sealed interface Screen {
         val ad: String,
         val anlatimVar: Boolean,
     ) : Screen
-    @Serializable data object Wip : Screen
     @Serializable data object Rota : Screen
     @Serializable data object AdminAnaSayfa : Screen
     @Serializable data object AdminPersonaEkle : Screen
@@ -129,7 +128,7 @@ private val BotRefSaver = Saver<BotRef?, String>(
 private enum class DialogTuru { YOK, BIZ_KIMIZ, PROJE_HAKKINDA }
 
 /** Bu genişliğin altında sohbet tam ekran, üstünde sağdan dar panel olarak açılır. */
-private val CHAT_GENIS_EKRAN_ESIGI = 600.dp
+private val CHAT_GENIS_EKRAN_ESIGI = TELEFON_KIRILIMI
 
 /** Geniş ekranda sohbet panelinin sabit genişliği. */
 private val CHAT_PANEL_GENISLIGI = 400.dp
@@ -293,7 +292,6 @@ fun App() {
                                                 git(
                                                     when (kart.type) {
                                                         MainCardType.SUBMENU -> Screen.SubMenu(kart)
-                                                        MainCardType.WIP -> Screen.Wip
                                                         MainCardType.ROTA_PLANLAYICI -> Screen.Rota
                                                         MainCardType.DIRECT -> Screen.BotList(
                                                             kategori = "tescil",
@@ -352,10 +350,6 @@ fun App() {
                                             anlatimVar = s.anlatimVar,
                                             onGeri = geriGit,
                                             onSohbetAc = { aktifBot = BotRef(kategori = s.kategori, kod = s.kod) },
-                                            modifier = Modifier.fillMaxSize(),
-                                        )
-                                        is Screen.Wip -> WipScreen(
-                                            onGeri = geriGit,
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                         is Screen.Rota -> RotaScreen(

@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kuzeykapisi.app.ui.theme.ButonSekli
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
@@ -54,7 +56,8 @@ fun DuzenleIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .scale(etkilesim.olcek)
             .size(40.dp)
             .clip(ButonSekli)
-            .background(renk.copy(alpha = 0.08f)),
+            .background(renk.copy(alpha = 0.08f))
+            .semantics { contentDescription = "Düzenle" },
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
             rotate(45f) {
@@ -111,7 +114,8 @@ fun SilIkonuButonu(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .scale(etkilesim.olcek)
             .size(40.dp)
             .clip(ButonSekli)
-            .background(zemin),
+            .background(zemin)
+            .semantics { contentDescription = "Sil" },
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
             val w = size.width

@@ -4,9 +4,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -29,6 +28,7 @@ import com.kuzeykapisi.app.ui.theme.ButonSekli
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 
 /**
  * Geri oku + etiket. İkon görsel olarak ince ve küçük (18dp), ama dokunma
@@ -40,6 +40,7 @@ import com.kuzeykapisi.app.ui.theme.SisGrisi
 fun GeriButonu(metin: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interactionSource = remember { MutableInteractionSource() }
     val etkilesim = kartEtkilesimi(interactionSource)
+    val odakli by interactionSource.collectIsFocusedAsState()
     val vurgulu = etkilesim.hoverlu || etkilesim.basili
 
     val renk by animateColorAsState(
@@ -55,9 +56,9 @@ fun GeriButonu(metin: String, onClick: () -> Unit, modifier: Modifier = Modifier
 
     Row(
         modifier = modifier
+            .klavyeOdakHalkasi(odakli, ButonSekli)
             .clip(ButonSekli)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .etkilesimli(interactionSource, onClick = onClick)
             .heightIn(min = 40.dp)
             .padding(vertical = 8.dp, horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,

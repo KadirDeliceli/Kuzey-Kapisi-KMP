@@ -1,8 +1,11 @@
 package com.kuzeykapisi.app.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Checkbox
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kuzeykapisi.app.data.model.SecilenResim
 import com.kuzeykapisi.app.ui.theme.AlanSekli
 import com.kuzeykapisi.app.ui.theme.AlcakYuzey
 import com.kuzeykapisi.app.ui.theme.FenerAlevi
@@ -152,5 +156,42 @@ fun AnlatimiKaldirSecimi(
             style = MaterialTheme.typography.bodyMedium,
             color = if (isaretli) SinopKirmizisi else TasBeyazi,
         )
+    }
+}
+
+/**
+ * Admin form ekranlarının (Persona Ekle/Düzenle) paylaştığı "Görsel" alanı:
+ * başlık + seç/değiştir butonu + seçilen dosya adı. Düzenleme ekranı mevcut
+ * görselle ilgili ek bir ipucu metni gösterebilir ([ekIcerik]) — bu yüzden
+ * Ekle/Düzenle arasındaki TEK fark bir slot parametresiyle karşılanır,
+ * ortak kısım tekrarlanmaz.
+ */
+@Composable
+fun GorselSeciciAlani(
+    gorsel: SecilenResim?,
+    onGorselSec: () -> Unit,
+    modifier: Modifier = Modifier,
+    ekIcerik: (@Composable () -> Unit)? = null,
+) {
+    Column(modifier = modifier) {
+        AlanBasligi("Görsel")
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            IkincilButon(
+                metin = if (gorsel == null) "Görsel seç" else "Görseli değiştir",
+                onClick = onGorselSec,
+            )
+            if (gorsel != null) {
+                Text(
+                    text = "Seçildi: ${gorsel.dosyaAdi}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SisGrisi,
+                )
+            }
+        }
+        ekIcerik?.invoke()
     }
 }

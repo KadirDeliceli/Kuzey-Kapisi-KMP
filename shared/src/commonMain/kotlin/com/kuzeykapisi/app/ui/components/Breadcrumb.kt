@@ -2,7 +2,6 @@ package com.kuzeykapisi.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,10 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -58,7 +53,14 @@ fun Breadcrumb(
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         for (basamak in ustBasamaklar) {
             BreadcrumbBaglantisi(basamak)
-            BreadcrumbAyraci()
+            // 1.5dp kalınlık BİLEREK korunur: ana sayfadaki paylaşılan
+            // ChevronIkonu'nun varsayılanı (2dp) bu küçük ayraç için fazla kalın.
+            ChevronIkonu(
+                yon = ChevronYonu.Sag,
+                renk = SisGrisi,
+                modifier = Modifier.padding(horizontal = 2.dp).size(14.dp),
+                kalinlik = 1.5.dp,
+            )
         }
         Text(
             text = aktif,
@@ -110,23 +112,6 @@ private fun BreadcrumbBaglantisi(basamak: BreadcrumbBasamagi) {
             color = renk,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-private fun BreadcrumbAyraci() {
-    Canvas(modifier = Modifier.padding(horizontal = 2.dp).size(14.dp)) {
-        val b = size.width / 24f
-        val yol = Path().apply {
-            moveTo(9f * b, 6f * b)
-            lineTo(15f * b, 12f * b)
-            lineTo(9f * b, 18f * b)
-        }
-        drawPath(
-            path = yol,
-            color = SisGrisi,
-            style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
         )
     }
 }

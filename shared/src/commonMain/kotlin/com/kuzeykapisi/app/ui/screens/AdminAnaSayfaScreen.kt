@@ -64,12 +64,13 @@ import com.kuzeykapisi.app.ui.theme.KartSekli
 import com.kuzeykapisi.app.ui.theme.MIKRO_SURE
 import com.kuzeykapisi.app.ui.theme.NotrGeceCizgi
 import com.kuzeykapisi.app.ui.theme.SisGrisi
+import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 import com.kuzeykapisi.app.ui.theme.TasBeyazi
 import com.kuzeykapisi.app.ui.theme.fenerHalesiDestekli
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import kotlinx.coroutines.CancellationException
 
-private val GENIS_EKRAN_ESIGI = 600.dp
+private val GENIS_EKRAN_ESIGI = TELEFON_KIRILIMI
 
 /** Web/masaüstünde yönetim panelinin aşırı yayılmasını önleyen üst sınır. */
 private val ICERIK_MAX_GENISLIK = 900.dp
