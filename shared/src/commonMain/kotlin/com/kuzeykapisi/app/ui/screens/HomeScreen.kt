@@ -104,8 +104,8 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlinx.coroutines.launch
 import kuzeykapisiapp.shared.generated.resources.Res
-import kuzeykapisiapp.shared.generated.resources.default_kapak
 import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan
+import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan_bulanik
 import org.jetbrains.compose.resources.painterResource
 
 // --- Kırılım noktaları --------------------------------------------------------
@@ -636,8 +636,8 @@ private fun KartGorseli(
             model = Config.gorselUrl("kart", kart.kapak),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            error = painterResource(Res.drawable.default_kapak),
-            placeholder = painterResource(Res.drawable.default_kapak),
+            error = painterResource(Res.drawable.sinop_arkaplan_bulanik),
+            placeholder = painterResource(Res.drawable.sinop_arkaplan_bulanik),
             modifier = Modifier.matchParentSize(),
         )
         Box(modifier = Modifier.matchParentSize().background(erime))

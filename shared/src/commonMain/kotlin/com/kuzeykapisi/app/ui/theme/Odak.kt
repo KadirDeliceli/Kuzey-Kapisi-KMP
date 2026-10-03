@@ -3,6 +3,7 @@ package com.kuzeykapisi.app.ui.theme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -13,9 +14,10 @@ import androidx.compose.ui.unit.dp
  * Klavye odağı göstergesi: şeklin 3dp dışında 2dp [TasBeyazi] halka (koyu
  * zeminde 11:1 ve üstü). Yalnızca çizimdir, yerleşimi değiştirmez, bu yüzden
  * odak gelince içerik kaymaz. Halka şeklin dışına taştığı için `clip`'ten ÖNCE
- * uygulanmalıdır.
+ * uygulanmalıdır. Açık zeminde (ör. sözleşme ekranı) [renk] koyu bir tonla
+ * değiştirilir.
  */
-fun Modifier.klavyeOdakHalkasi(odakli: Boolean, sekil: Shape): Modifier = drawWithContent {
+fun Modifier.klavyeOdakHalkasi(odakli: Boolean, sekil: Shape, renk: Color = TasBeyazi): Modifier = drawWithContent {
     drawContent()
     if (odakli) {
         val kalinlik = 2.dp.toPx()
@@ -26,7 +28,7 @@ fun Modifier.klavyeOdakHalkasi(odakli: Boolean, sekil: Shape): Modifier = drawWi
             this,
         )
         translate(left = -pay, top = -pay) {
-            drawOutline(outline = halka, color = TasBeyazi, style = Stroke(width = kalinlik))
+            drawOutline(outline = halka, color = renk, style = Stroke(width = kalinlik))
         }
     }
 }

@@ -38,6 +38,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kuzeykapisi.app.config.Config
+import com.kuzeykapisi.app.data.depo.KULLANIM_KOSULLARI_ANAHTARI
+import com.kuzeykapisi.app.data.depo.YerelDepo
 import com.kuzeykapisi.app.data.model.KatalogOge
 import com.kuzeykapisi.app.data.remote.OturumSonlanmaNedeni
 import com.kuzeykapisi.app.domain.AnlatimKaynagi
@@ -65,6 +67,7 @@ import com.kuzeykapisi.app.ui.screens.AdminAnaSayfaScreen
 import com.kuzeykapisi.app.ui.screens.AnlatimEkrani
 import com.kuzeykapisi.app.ui.screens.BotListScreen
 import com.kuzeykapisi.app.ui.screens.HomeScreen
+import com.kuzeykapisi.app.ui.screens.KullanimKosullariDialogu
 import com.kuzeykapisi.app.ui.screens.PersonaDuzenleScreen
 import com.kuzeykapisi.app.ui.screens.PersonaEkleScreen
 import com.kuzeykapisi.app.ui.screens.PersonaOnizlemeEkrani
@@ -112,6 +115,14 @@ fun App() {
         Logger.d { "Config.BASE_URL = ${Config.BASE_URL}" }
         Unit
     }
+    // Kullanım Koşulları: kalıcı bayrak ilk composition'da BİR KEZ okunur.
+    // Kabul edilene kadar ana sayfanın üstünde kapatılamaz bir dialog olarak
+    // gösterilir; kabul bu cihazda (web'de bu tarayıcıda) kalıcıdır, sonraki
+    // açılışlarda dialog hiç görünmez.
+    val yerelDepo = remember { YerelDepo() }
+    var kosullarKabulEdildi by remember {
+        mutableStateOf(yerelDepo.getBoolean(KULLANIM_KOSULLARI_ANAHTARI, varsayilan = false))
+    }
     // Uygulama düzeyi ViewModel'ler (Activity'nin store'unda, döndürmeden sağ
     // çıkar): repository + ekran kapsamlarının store'ları, ve admin oturumu.
     val vmDeposu = viewModel { VmDeposu() }
@@ -137,7 +148,8 @@ fun App() {
     var dialogTuru by remember { mutableStateOf(DialogTuru.YOK) }
     // Açılış bilgilendirme dialog'u: yalnızca uygulama bu oturumda ilk kez
     // render edildiğinde gösterilir; kart/ekran geçişlerinde ve döndürmede
-    // tekrar açılmaz.
+    // tekrar açılmaz. İlk açılışta Kullanım Koşulları kabul edildikten SONRA
+    // görünür.
     var acilisBilgilendirmeAcik by rememberSaveable { mutableStateOf(true) }
 
     // Navigasyonun (git/geri/admin-geçit) TEK kaynağı — bkz. Navigator.kt.
@@ -470,7 +482,17 @@ fun App() {
                     DialogTuru.YOK -> {}
                 }
 
-                if (acilisBilgilendirmeAcik) {
+                if (!kosullarKabulEdildi) {
+                    KullanimKosullariDialogu(
+                        onKabulEt = {
+                            yerelDepo.setBoolean(KULLANIM_KOSULLARI_ANAHTARI, true)
+                            kosullarKabulEdildi = true
+                        },
+                    )
+                }
+
+                // Koşullar kabul edilmeden açılmaz: iki dialog asla üst üste binmez.
+                if (kosullarKabulEdildi && acilisBilgilendirmeAcik) {
                     InfoDialog(
                         baslik = "Bilgilendirme",
                         metin = ACILIS_BILGILENDIRME_METNI,

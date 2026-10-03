@@ -1,8 +1,7 @@
 # Kuzey Kapısı
 
-**Kuzey Kapısı**, Kuzey Anadolu Kalkınma Ajansı (KUZKA) Sinop Yatırım Destek
-Ofisi bünyesinde yürütülen bölgesel bir akıllı turizm ve yapay zekâ
-rehberlik projesidir. Uygulama; Sinop'un tarihini, kültürel mirasını,
+**Kuzey Kapısı**, Sinop'u tanıtan bağımsız, yapay zekâ destekli bir turizm
+ve rehberlik uygulamasıdır. Uygulama; Sinop'un tarihini, kültürel mirasını,
 yöresel mutfağını, doğal güzelliklerini ve tescilli değerlerini, konuya özel
 yapay zekâ rehberleriyle birebir sohbet edebileceğiniz etkileşimli bir
 deneyimle ziyaretçilere sunar.
@@ -50,7 +49,7 @@ platformda da tutarlı bir kullanıcı deneyimi sağlar.
   404 dönerse arayüz kırılmadan varsayılan bir kapak görseline düşer.
 - **Platformlar arası konum erişimi:** Android, iOS ve Web'de platforma özel
   `expect`/`actual` uygulamalarıyla konum izni isteme ve konum okuma.
-- **Kurumsal bilgilendirme diyalogları:** "Biz Kimiz" ve "Proje Hakkında"
+- **Bilgilendirme diyalogları:** "Biz Kimiz" ve "Proje Hakkında"
   bilgilendirme pencereleri, üst gezinme çubuğundan erişilebilir.
 - **Tek kod tabanından çoklu platform:** Aynı ekranlar, aynı gezinme akışı ve
   aynı iş mantığı Android, iOS, Kotlin/Wasm ve Kotlin/JS web hedeflerinde
@@ -148,7 +147,7 @@ KuzeyKapisiApp/
 │     │  │     ├─ screens/              # HomeScreen, SubMenuScreen, BotListScreen, RotaScreen, WipScreen
 │     │  │     ├─ theme/                # Color, Type, Theme (Material 3 renk paleti ve tipografi)
 │     │  │     └─ vm/                   # CatalogViewModel, ChatViewModel, RotaViewModel (sade Kotlin + StateFlow)
-│     │  └─ composeResources/         # Paylaşımlı görseller (default_kapak, logo, arka plan)
+│     │  └─ composeResources/         # Paylaşımlı görseller (logo, arka plan)
 │     ├─ androidMain/                # Android'e özel: HttpClientFactory (OkHttp), konum/izin uygulamaları
 │     ├─ iosMain/                    # iOS'e özel: HttpClientFactory (Darwin), MainViewController, konum uygulaması
 │     ├─ jsMain/ , wasmJsMain/       # Web'e özel: HttpClientFactory (Js), konum uygulamaları

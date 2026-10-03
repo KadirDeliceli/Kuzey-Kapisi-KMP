@@ -41,7 +41,7 @@ import com.kuzeykapisi.app.ui.theme.Yukseklik
 import com.kuzeykapisi.app.ui.theme.klavyeOdakHalkasi
 import com.kuzeykapisi.app.ui.theme.turkceBuyukHarf
 import kuzeykapisiapp.shared.generated.resources.Res
-import kuzeykapisiapp.shared.generated.resources.default_kapak
+import kuzeykapisiapp.shared.generated.resources.sinop_arkaplan_bulanik
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -112,8 +112,8 @@ fun AnaKapakKarti(
                 model = Config.gorselUrl(kategori, kod),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                error = painterResource(Res.drawable.default_kapak),
-                placeholder = painterResource(Res.drawable.default_kapak),
+                error = painterResource(Res.drawable.sinop_arkaplan_bulanik),
+                placeholder = painterResource(Res.drawable.sinop_arkaplan_bulanik),
                 modifier = Modifier.matchParentSize(),
             )
 

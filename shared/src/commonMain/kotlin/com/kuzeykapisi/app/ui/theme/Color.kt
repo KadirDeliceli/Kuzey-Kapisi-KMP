@@ -114,3 +114,27 @@ val NotrGunCizgi = Color(0xFFDCD5C4)
 val NotrGunCizgiGuclu = Color(0xFF7A8A90)
 val NotrGunMetin = KaranlikLacivert
 val NotrGunMetinIkincil = SisGrisiKoyu
+
+// --- 8. Sözleşme yüzeyi: KASITLI OLARAK temanın dışında -----------------------
+//
+// YALNIZCA ilk açılıştaki Kullanım Koşulları ekranı. Resmi bir "sözleşme okuma"
+// hissi için gece denizi teması yerine düz beyaz zemin + siyah metin kullanılır.
+// Oranlar scripts/contrast.py çıktısıdır.
+
+/** Sözleşme ekranı zemini. */
+val SozlesmeZemini = Color(0xFFFFFFFF)
+
+/** Sözleşme metni, onay kutusu ve buton dolgusu. 21.00:1 zemin üzerinde. */
+val SozlesmeMetni = Color(0xFF000000)
+
+/** İkincil sözleşme metni ve ayraç. 8.86:1 zemin, 7.92:1 vurgu yüzeyi üzerinde. */
+val SozlesmeMetniIkincil = Color(0xFF4A4A4A)
+
+/** Onay satırının hover/basılı yüzeyi. Siyah metin 18.76:1. */
+val SozlesmeVurguYuzeyi = Color(0xFFF2F2F2)
+
+/** Buton hover dolgusu. Beyaz metin 14.16:1. */
+val SozlesmeButonHover = Color(0xFF2B2B2B)
+
+/** Buton basılı dolgusu. Beyaz metin 9.29:1. */
+val SozlesmeButonBasili = Color(0xFF474747)

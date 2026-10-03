@@ -26,8 +26,7 @@ import com.kuzeykapisi.app.ui.theme.TELEFON_KIRILIMI
 
 private val GENIS_EKRAN_ESIGI = TELEFON_KIRILIMI
 
-private const val ILETISIM_METNI =
-    "0 (366) 212 58 52 · bilgi@kuzka.gov.tr"
+private const val ILETISIM_METNI = "kadirdeliceli.dev@gmail.com"
 
 @Composable
 fun Footer(modifier: Modifier = Modifier, yil: Int = guncelYil()) {
@@ -49,7 +48,7 @@ fun Footer(modifier: Modifier = Modifier, yil: Int = guncelYil()) {
         )
         BoxWithConstraints {
             val genisEkran = maxWidth >= GENIS_EKRAN_ESIGI
-            val telifMetni = "© $yil KUZKA"
+            val telifMetni = "© $yil Kuzey Kapısı"
             if (genisEkran) {
                 // Geniş ekran: solda iletişim, sağda telif — uçlara yaslı.
                 Row(

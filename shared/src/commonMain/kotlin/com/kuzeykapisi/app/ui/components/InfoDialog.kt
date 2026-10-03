@@ -2,20 +2,20 @@ package com.kuzeykapisi.app.ui.components
 
 import androidx.compose.runtime.Composable
 
-const val BIZ_KIMIZ_METNI = "Kuzey Kapısı, Kuzey Anadolu Kalkınma Ajansı (KUZKA) Sinop " +
-    "Yatırım Destek Ofisi bünyesinde yürütülen bölgesel bir turizm ve yapay zeka " +
-    "rehberlik projesidir. Amacımız; Sinop'un tarihini, kültürel mirasını, yöresel " +
-    "mutfağını ve doğal güzelliklerini çağdaş bir dijital deneyimle ziyaretçilere " +
-    "ulaştırmaktır."
+const val BIZ_KIMIZ_METNI = "Kuzey Kapısı, Sinop'u tanıtmak için geliştirilmiş bağımsız, " +
+    "yapay zeka destekli bir turizm uygulamasıdır. Amacımız; Sinop'un tarihini, " +
+    "kültürel mirasını, yöresel mutfağını ve doğal güzelliklerini çağdaş bir " +
+    "dijital deneyimle ziyaretçilere ulaştırmaktır."
 
 const val PROJE_HAKKINDA_METNI = "Kuzey Kapısı, Sinop'u dört başlık altında keşfe açar: " +
     "tarihî şahsiyetler, kültürel mekânlar, yöresel lezzetler ve doğal " +
     "güzellikler. Her başlık, o konuya özel bir yapay zeka rehberiyle sohbet etme " +
-    "imkânı sunar."
+    "imkânı sunar. Akıllı rota planlayıcı ise ayırdığınız süreye ve ilgi " +
+    "alanlarınıza göre size özel bir gezi rotası hazırlar."
 
 const val ACILIS_BILGILENDIRME_METNI = "Buradaki karakterler kurgusaldır ve yapay zeka " +
     "tarafından üretilmektedir. Yanlış veya eksik bilgi verebilirler. Verdikleri " +
-    "cevaplar kurumumuzun resmi görüşünü yansıtmaz."
+    "cevaplar resmi bir görüş niteliği taşımaz."
 
 @Composable
 fun InfoDialog(
