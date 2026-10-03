@@ -3,6 +3,8 @@
 :root {
     --kk-karanlik-lacivert: #0B1E2D; /* KaranlikLacivert — navy.500 */
     --kk-fener-alevi: #E8A33D;       /* FenerAlevi — amber.400 */
+    --kk-tas-beyazi: #F2EFE7;        /* TasBeyazi — 14.76:1 zemin üzerinde */
+    --kk-sis-grisi: #93A3AA;         /* SisGrisi — 6.51:1 zemin üzerinde */
 }
 
 html, body {
@@ -17,10 +19,35 @@ html, body {
 
 .kk-yukleniyor {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
     width: 100%;
     height: 100%;
+    padding: 0 16px;
     align-items: center;
     justify-content: center;
+    text-align: center;
+    font-family: system-ui, sans-serif;
+}
+
+/* Uygulamanın adı + tek cümlelik açıklaması: canvas çizilene kadar görünür,
+   sonra canvas'ın arkasında kalır. Arama motorlarının okuyabildiği tek metin. */
+.kk-yukleniyor-baslik {
+    margin: 8px 0 0;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--kk-tas-beyazi);
+}
+
+.kk-yukleniyor-metin {
+    margin: 0;
+    max-width: 36ch;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--kk-sis-grisi);
 }
 
 .kk-yukleniyor-iz {

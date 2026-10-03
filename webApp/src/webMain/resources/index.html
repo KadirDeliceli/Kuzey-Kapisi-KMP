@@ -5,20 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Mobil tarayıcı çubuğu da gece denizi zemininde (KaranlikLacivert) açılsın. -->
     <meta name="theme-color" content="#0B1E2D">
-    <title>Kuzey Kapısı</title>
+    <title>Kuzey Kapısı — Sinop Akıllı Turizm Platformu</title>
+    <meta name="description" content="Sinop'un tarihini, kültürünü, doğasını ve lezzetlerini yapay zeka destekli rehberlerle keşfedin; size özel rotalar planlayın, sesli anlatımlarla dinleyin.">
+    <meta name="keywords" content="Sinop, turizm, yapay zeka, rota planlayıcı, Sinop gezi rehberi, Sinop tarihi, Sinop kültürü">
+    <link rel="canonical" href="https://kuzey-kapisi-kmp-six.vercel.app/">
+
+    <!-- Paylaşım önizlemesi (Open Graph / Twitter) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Kuzey Kapısı">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://kuzey-kapisi-kmp-six.vercel.app/">
+    <meta property="og:title" content="Kuzey Kapısı — Sinop Akıllı Turizm Platformu">
+    <meta property="og:description" content="Sinop'un tarihini, kültürünü, doğasını ve lezzetlerini yapay zeka destekli rehberlerle keşfedin; size özel rotalar planlayın, sesli anlatımlarla dinleyin.">
+    <meta property="og:image" content="https://kuzey-kapisi-kmp-six.vercel.app/og-kapak.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="675">
+    <meta property="og:image:alt" content="Havadan Sinop yarımadası ve Karadeniz">
+    <meta name="twitter:card" content="summary_large_image">
+
     <link rel="icon" type="image/png" href="favicon.png?v=2">
     <link type="text/css" rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Uygulama yüklenene kadarki gösterge: markalı zemin, fener alevi halkası
          (renkler styles.css'teki token değişkenlerinden). Compose canvas'ı
-         açılınca bu öğeler arkada kalır. -->
-    <div class="kk-yukleniyor" role="progressbar" aria-label="Kuzey Kapısı yükleniyor">
-        <svg width="40" height="40" viewBox="0 0 50 50" aria-hidden="true">
+         açılınca bu öğeler arkada kalır.
+         Uygulamanın asıl içeriği <canvas>'a çizildiği için arama motorlarının
+         okuyabileceği tek gerçek metin buradaki ad + açıklamadır. -->
+    <div class="kk-yukleniyor">
+        <svg width="40" height="40" viewBox="0 0 50 50" role="progressbar" aria-label="Kuzey Kapısı yükleniyor">
             <circle class="kk-yukleniyor-iz" cx="25" cy="25" r="20" stroke-width="4" fill="none"/>
             <circle class="kk-yukleniyor-yay" cx="25" cy="25" r="20" stroke-width="4" fill="none"
                     stroke-linecap="round" stroke-dasharray="90 125"/>
         </svg>
+        <h1 class="kk-yukleniyor-baslik">Kuzey Kapısı</h1>
+        <p class="kk-yukleniyor-metin">Sinop'un tarihini, kültürünü, doğasını ve lezzetlerini yapay zeka destekli rehberlerle keşfedin.</p>
     </div>
     <script type="application/javascript" src="webApp.js"></script>
 </body>

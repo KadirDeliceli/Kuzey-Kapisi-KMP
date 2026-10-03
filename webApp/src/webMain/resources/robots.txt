@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kuzey-kapisi-kmp-six.vercel.app/sitemap.xml
